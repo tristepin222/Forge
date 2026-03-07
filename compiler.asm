@@ -9,7 +9,7 @@
 section .data
 
 in_file     db "program.imp",0
-out_file    db "program.asm",0
+out_file    db "output/program.asm",0
 
 msg_open    db "Open failed",10
 msg_open_len equ $-msg_open
