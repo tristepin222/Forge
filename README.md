@@ -38,4 +38,18 @@ ld -o program program.o
 ./program
 ```
 
-and it should beautifully output hello, world
+
+### building pipeline
+
+if you're too lazy to run all the commands above, just run
+```
+./build.sh
+```
+
+you may need to 
+```
+chmod +x build.sh 
+```
+first tho
+
+and it should beautifully output hello, world and test
