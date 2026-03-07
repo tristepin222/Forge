@@ -1,162 +1,268 @@
-; bootcompiler.asm
-; Stage-1 bootstrap compiler
-; Supports: println("text")
-
-; build:
-; nasm -f elf32 bootcompiler.asm -o bootcompiler.o
-; ld -m elf_i386 bootcompiler.o -o bootcompiler
-
+; bootcompiler_stage2.asm - Stage-2 bootstrap compiler (x86-64)
 section .data
+    in_file      db "program.imp",0
+    out_file     db "output/program.asm",0
 
-in_file     db "program.imp",0
-out_file    db "output/program.asm",0
+    msg_prefix     db 'msg'
+    msg_prefix_len equ $-msg_prefix
+    msg_mid        db ': db "'
+    msg_mid_len    equ $-msg_mid
+    msg_end        db '",10',10
+    msg_end_len    equ $-msg_end
 
-msg_open    db "Open failed",10
-msg_open_len equ $-msg_open
+    section_text   db 10,'section .text',10,'global _start',10,'_start:',10
+    section_text_len equ $-section_text
 
-msg_write   db "Write failed",10
-msg_write_len equ $-msg_write
+    mov_rdx_prefix db '    mov rdx, '
+    mov_rdx_prefix_len equ $-mov_rdx_prefix
 
-data_prefix db "section .data",10
-            db 'msg: db "'
-data_prefix_len equ $-data_prefix
+    mov_rax_1     db '    mov rax, 1',10
+    mov_rax_1_len equ $-mov_rax_1
 
-data_suffix db '"',',10',10
-            db "len: equ $ - msg",10
-            db "section .text",10
-            db "global _start",10
-            db "_start:",10
-            db "    mov eax,4",10
-            db "    mov ebx,1",10
-            db "    mov ecx,msg",10
-            db "    mov edx,len",10
-            db "    int 0x80",10
-            db "    mov eax,1",10
-            db "    xor ebx,ebx",10
-            db "    int 0x80",10
-data_suffix_len equ $-data_suffix
+    mov_rdi_1     db '    mov rdi, 1',10
+    mov_rdi_1_len equ $-mov_rdi_1
+
+    mov_rsi_msg   db '    mov rsi, msg'
+    mov_rsi_msg_len equ $-mov_rsi_msg
+
+    syscall_inst  db '    syscall',10
+    syscall_inst_len equ $-syscall_inst
+
+    asm_exit       db '    mov rax, 60',10,'    xor rdi, rdi',10,'    syscall',10
+    asm_exit_len   equ $-asm_exit
+
+    newline db 10
+
+
 
 section .bss
-
-infd        resd 1
-outfd       resd 1
-buf         resb 512
-strlen      resd 1
-strptr      resd 1
+    infd         resq 1
+    outfd        resq 1
+    buf          resb 4096
+    strlen       resq 1
+    msg_count    resq 1
+    numbuf       resb 16
+    msg_len      resq 128       ; store length of each message
 
 section .text
 global _start
 
 _start:
+    ; --- Open and read source ---
+    mov rax, 2
+    mov rdi, in_file
+    xor rsi, rsi
+    syscall
+    mov [infd], rax
 
-; open source
-mov eax,5
-mov ebx,in_file
-mov ecx,0
-int 0x80
-cmp eax,0
-jl open_fail
-mov [infd],eax
+    mov rax, 0
+    mov rdi, [infd]
+    mov rsi, buf
+    mov rdx, 4096
+    syscall
+    mov [strlen], rax
 
-; read source
-mov eax,3
-mov ebx,[infd]
-mov ecx,buf
-mov edx,512
-int 0x80
-cmp eax,0
-jle open_fail
+    ; --- Open output ---
+    mov rax, 2
+    mov rdi, out_file
+    mov rsi, 0101o | 01000o
+    mov rdx, 0644o
+    syscall
+    mov [outfd], rax
 
-; close source
-mov eax,6
-mov ebx,[infd]
-int 0x80
+    ; --- Scan source for strings ---
+    xor rsi, rsi
+    xor rbx, rbx
 
-; find first quote
-mov esi,buf
+scan_loop:
+    cmp rsi, [strlen]
+    jge done_scan
+    mov al, [buf+rsi]
+    cmp al, '"'
+    jne .next_byte
 
-find_quote:
-mov al,[esi]
-cmp al,'"'
-je quote_found
-inc esi
-jmp find_quote
+    ; found opening quote
+    inc rsi
+    mov r12, rsi
+    xor r13, r13
 
-quote_found:
-inc esi
-mov [strptr],esi
+.measure:
+    cmp rsi, [strlen]
+    jge .string_end
+    mov al, [buf+rsi]
+    cmp al, '"'
+    je .string_end
+    inc r13
+    inc rsi
+    jmp .measure
 
-; measure string length
-xor ecx,ecx
+.string_end:
+    cmp r13, 0
+    je .skip_message
 
-len_loop:
-mov al,[esi]
-cmp al,'"'
-je len_done
-inc esi
-inc ecx
-jmp len_loop
+.write_data:
+    push rsi
+    ; write msgN: db "..."
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel msg_prefix]
+    mov rdx, msg_prefix_len
+    syscall
 
-len_done:
-mov [strlen],ecx
+    mov rax, rbx
+    call write_number_ascii_to_file
 
-; open output file
-mov eax,5
-mov ebx,out_file
-mov ecx,0x241
-mov edx,0o666
-int 0x80
-cmp eax,0
-jl write_fail
-mov [outfd],eax
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel msg_mid]
+    mov rdx, msg_mid_len
+    syscall
 
-; write prefix
-mov eax,4
-mov ebx,[outfd]
-mov ecx,data_prefix
-mov edx,data_prefix_len
-int 0x80
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [buf+r12]
+    mov rdx, r13
+    syscall
 
-; write extracted string
-mov eax,4
-mov ebx,[outfd]
-mov ecx,[strptr]
-mov edx,[strlen]
-int 0x80
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel msg_end]
+    mov rdx, msg_end_len
+    syscall
 
-; write suffix
-mov eax,4
-mov ebx,[outfd]
-mov ecx,data_suffix
-mov edx,data_suffix_len
-int 0x80
+    mov [msg_len + rbx*8], r13
+    inc rbx
+    pop rsi
 
-; close output
-mov eax,6
-mov ebx,[outfd]
-int 0x80
+.skip_message:
+.next_byte:
+    cmp rsi, [strlen]
+    jge done_scan
+    inc rsi
+    jmp scan_loop
 
-; exit success
-mov eax,1
-xor ebx,ebx
-int 0x80
+done_scan:
+    mov [msg_count], rbx
 
-open_fail:
-mov eax,4
-mov ebx,1
-mov ecx,msg_open
-mov edx,msg_open_len
-int 0x80
-jmp exit
+    ; --- Write text section ---
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel section_text]
+    mov rdx, section_text_len
+    syscall
 
-write_fail:
-mov eax,4
-mov ebx,1
-mov ecx,msg_write
-mov edx,msg_write_len
-int 0x80
+    xor r15, r15
+gen_code_loop:
+    cmp r15, [msg_count]
+    jae finish_file
 
-exit:
-mov eax,1
-xor ebx,ebx
-int 0x80
+    ; print mov rax, 1
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel mov_rax_1]
+    mov rdx, mov_rax_1_len
+    syscall
+
+    ; print mov rdi, 1
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel mov_rdi_1]
+    mov rdx, mov_rdi_1_len
+    syscall
+
+    ; print mov rsi, msgN
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel mov_rsi_msg]
+    mov rdx, mov_rsi_msg_len
+    syscall
+
+    mov rax, r15
+    call write_number_ascii_to_file
+
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel newline]
+    mov rdx, 1
+    syscall
+
+    ; mov rdx, <length>
+    mov r13, [msg_len + r15*8]
+    inc r13
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel mov_rdx_prefix]
+    mov rdx, mov_rdx_prefix_len
+    syscall
+
+    mov rax, r13
+    call write_number_ascii_to_file
+
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel newline]
+    mov rdx, 1
+    syscall
+
+    ; syscall
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel syscall_inst]
+    mov rdx, syscall_inst_len
+    syscall
+
+    inc r15
+    jmp gen_code_loop
+
+finish_file:
+    mov rax, 1
+    mov rdi, [outfd]
+    lea rsi, [rel asm_exit]
+    mov rdx, asm_exit_len
+    syscall
+
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+; --- Helper: write number to output file as ASCII ---
+write_number_ascii_to_file:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+
+    mov rbx, 10
+    lea rsi, [numbuf+15]
+    mov rcx, 0
+
+    test rax, rax
+    jnz .convert
+    mov byte [rsi], '0'
+    mov rcx, 1
+    jmp .done_convert
+
+.convert:
+    xor rdx, rdx
+    div rbx
+    add dl, '0'
+    mov [rsi], dl
+    inc rcx
+    test rax, rax
+    jz .done_convert
+    dec rsi
+    jmp .convert
+
+.done_convert:
+    lea rsi, [numbuf+16]
+    sub rsi, rcx
+    mov rdx, rcx
+    mov rax, 1
+    mov rdi, [outfd]
+    syscall
+
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
