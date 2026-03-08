@@ -1,268 +1,243 @@
-; bootcompiler_stage2.asm - Stage-2 bootstrap compiler (x86-64)
 section .data
-    in_file      db "program.imp",0
-    out_file     db "output/program.asm",0
-
-    msg_prefix     db 'msg'
-    msg_prefix_len equ $-msg_prefix
-    msg_mid        db ': db "'
-    msg_mid_len    equ $-msg_mid
-    msg_end        db '",10',10
-    msg_end_len    equ $-msg_end
-
-    section_text   db 10,'section .text',10,'global _start',10,'_start:',10
-    section_text_len equ $-section_text
-
-    mov_rdx_prefix db '    mov rdx, '
-    mov_rdx_prefix_len equ $-mov_rdx_prefix
-
-    mov_rax_1     db '    mov rax, 1',10
-    mov_rax_1_len equ $-mov_rax_1
-
-    mov_rdi_1     db '    mov rdi, 1',10
-    mov_rdi_1_len equ $-mov_rdi_1
-
-    mov_rsi_msg   db '    mov rsi, msg'
-    mov_rsi_msg_len equ $-mov_rsi_msg
-
-    syscall_inst  db '    syscall',10
-    syscall_inst_len equ $-syscall_inst
-
-    asm_exit       db '    mov rax, 60',10,'    xor rdi, rdi',10,'    syscall',10
-    asm_exit_len   equ $-asm_exit
-
-    newline db 10
-
-
+    ; File paths
+    input_file    db "program.imp", 0
+    output_file   db "output/program.asm", 0
+    
+    ; Opcodes and Templates
+    asm_head      db "section .text", 10, "global _start", 10, "_start:", 10, "    mov rax, 1", 10, 0
+    asm_exit      db "    mov rax, 60", 10, "    xor rdi, rdi", 10, "    syscall", 10, 0
+    if_cmp        db "    cmp rax, 0", 10, "    je .L", 0
+    if_end        db ".L", 0
+    colon_nl      db ":", 10, 0
+    print_code    db "    mov rax, 0x0A41", 10, "    push rax", 10, "    mov rax, 1", 10, "    mov rdi, 1", 10, "    mov rsi, rsp", 10, "    mov rdx, 2", 10, "    syscall", 10, "    add rsp, 8", 10, "    mov rax, 1", 10, 0
+    mov_rax_imm   db "    mov rax, ", 0
+    mov_rax_var   db "    mov rax, [vars + ", 0
+    mov_var_rax   db "    mov [vars + ", 0
+    close_bracket_load  db "]", 10, 0
+    close_bracket_store db "], rax", 10, 0
+    vars_section  db 10, "section .bss", 10, "    vars resq 26", 10, 0
+    newline       db 10, 0
+    
+    label_count   dq 0    
+    nested_ptr    dq 0
+    out_fd        dq 0      ; Store the output file descriptor here
 
 section .bss
-    infd         resq 1
-    outfd        resq 1
-    buf          resb 4096
-    strlen       resq 1
-    msg_count    resq 1
-    numbuf       resb 16
-    msg_len      resq 128       ; store length of each message
+    input_buf     resb 4096 ; Increased buffer for file reading
+    num_str       resb 20
+    label_stack   resq 100
 
 section .text
-global _start
+    global _start
 
 _start:
-    ; --- Open and read source ---
-    mov rax, 2
-    mov rdi, in_file
-    xor rsi, rsi
+    ; 1. Open input file (program.imp)
+    mov rax, 2          ; sys_open
+    mov rdi, input_file
+    mov rsi, 0          ; O_RDONLY
     syscall
-    mov [infd], rax
+    push rax            ; Save input FD
 
-    mov rax, 0
-    mov rdi, [infd]
-    mov rsi, buf
-    mov rdx, 4096
+    ; 2. Create/Open output file (output/program.asm)
+    mov rax, 85         ; sys_creat
+    mov rdi, output_file
+    mov rsi, 0o644      ; Permissions: rw-r--r--
     syscall
-    mov [strlen], rax
+    mov [out_fd], rax   ; Save output FD
 
-    ; --- Open output ---
-    mov rax, 2
-    mov rdi, out_file
-    mov rsi, 0101o | 01000o
-    mov rdx, 0644o
+    ; 3. Read from program.imp
+    pop rdi             ; Get input FD
+    mov rax, 0          ; sys_read
+    mov rsi, input_buf
+    mov rdx, 4095
     syscall
-    mov [outfd], rax
+    mov byte [input_buf + rax], 0 ; Null terminate
 
-    ; --- Scan source for strings ---
-    xor rsi, rsi
-    xor rbx, rbx
+    ; 4. Start Compiling
+    mov rsi, asm_head
+    call write_to_file
 
-scan_loop:
-    cmp rsi, [strlen]
-    jge done_scan
-    mov al, [buf+rsi]
-    cmp al, '"'
-    jne .next_byte
+    mov rbx, input_buf
+.loop:
+    mov al, [rbx]
+    test al, al
+    jz .finish_up
+    cmp al, 10
+    je .next_char
+    cmp al, ' '
+    jbe .next_char
 
-    ; found opening quote
-    inc rsi
-    mov r12, rsi
-    xor r13, r13
+    cmp al, 'L'
+    je .handle_let
+    cmp al, 'V'
+    je .handle_var
+    cmp al, 'I'
+    je .handle_if
+    cmp al, 'P'
+    je .handle_print
+    cmp al, 'E'
+    je .handle_end
 
-.measure:
-    cmp rsi, [strlen]
-    jge .string_end
-    mov al, [buf+rsi]
-    cmp al, '"'
-    je .string_end
-    inc r13
-    inc rsi
-    jmp .measure
-
-.string_end:
-    cmp r13, 0
-    je .skip_message
-
-.write_data:
-    push rsi
-    ; write msgN: db "..."
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel msg_prefix]
-    mov rdx, msg_prefix_len
-    syscall
-
-    mov rax, rbx
-    call write_number_ascii_to_file
-
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel msg_mid]
-    mov rdx, msg_mid_len
-    syscall
-
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [buf+r12]
-    mov rdx, r13
-    syscall
-
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel msg_end]
-    mov rdx, msg_end_len
-    syscall
-
-    mov [msg_len + rbx*8], r13
+.next_char:
     inc rbx
-    pop rsi
+    jmp .loop
 
-.skip_message:
-.next_byte:
-    cmp rsi, [strlen]
-    jge done_scan
-    inc rsi
-    jmp scan_loop
+.handle_let:
+    inc rbx
+.skip_l_space:
+    cmp byte [rbx], ' '
+    jne .got_var
+    inc rbx
+    jmp .skip_l_space
+.got_var:
+    movzx rdi, byte [rbx]
+    sub rdi, 'a'
+    imul rdi, 8
+    inc rbx
+.skip_val_space:
+    cmp byte [rbx], ' '
+    jne .got_val
+    inc rbx
+    jmp .skip_val_space
+.got_val:
+    movzx rsi, byte [rbx]
+    sub rsi, '0'
+    push rdi 
+    push rsi 
+    mov rsi, mov_rax_imm
+    call write_to_file
+    pop rax  
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax  
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+    inc rbx
+    jmp .loop
 
-done_scan:
-    mov [msg_count], rbx
+.handle_var:
+    inc rbx
+.skip_v_space:
+    cmp byte [rbx], ' '
+    jne .got_v_name
+    inc rbx
+    jmp .skip_v_space
+.got_v_name:
+    movzx rdi, byte [rbx]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    inc rbx
+    jmp .loop
 
-    ; --- Write text section ---
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel section_text]
-    mov rdx, section_text_len
+.handle_if:
+    inc qword [label_count]
+    mov rax, [label_count]
+    mov rdx, [nested_ptr]
+    mov [label_stack + rdx*8], rax
+    inc qword [nested_ptr]
+    mov rsi, if_cmp
+    call write_to_file
+    mov rax, [label_count]
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    inc rbx
+    jmp .loop
+
+.handle_print:
+    mov rsi, print_code
+    call write_to_file
+    inc rbx
+    jmp .loop
+
+.handle_end:
+    dec qword [nested_ptr]
+    mov rdx, [nested_ptr]
+    mov rax, [label_stack + rdx*8]
+    mov rsi, if_end
+    call write_to_file
+    call write_int_to_file
+    mov rsi, colon_nl
+    call write_to_file
+    inc rbx
+    jmp .loop
+
+.finish_up:
+    mov rsi, asm_exit
+    call write_to_file
+    mov rsi, vars_section
+    call write_to_file
+
+    ; Close output file
+    mov rax, 3          ; sys_close
+    mov rdi, [out_fd]
     syscall
 
-    xor r15, r15
-gen_code_loop:
-    cmp r15, [msg_count]
-    jae finish_file
-
-    ; print mov rax, 1
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel mov_rax_1]
-    mov rdx, mov_rax_1_len
-    syscall
-
-    ; print mov rdi, 1
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel mov_rdi_1]
-    mov rdx, mov_rdi_1_len
-    syscall
-
-    ; print mov rsi, msgN
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel mov_rsi_msg]
-    mov rdx, mov_rsi_msg_len
-    syscall
-
-    mov rax, r15
-    call write_number_ascii_to_file
-
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel newline]
-    mov rdx, 1
-    syscall
-
-    ; mov rdx, <length>
-    mov r13, [msg_len + r15*8]
-    inc r13
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel mov_rdx_prefix]
-    mov rdx, mov_rdx_prefix_len
-    syscall
-
-    mov rax, r13
-    call write_number_ascii_to_file
-
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel newline]
-    mov rdx, 1
-    syscall
-
-    ; syscall
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel syscall_inst]
-    mov rdx, syscall_inst_len
-    syscall
-
-    inc r15
-    jmp gen_code_loop
-
-finish_file:
-    mov rax, 1
-    mov rdi, [outfd]
-    lea rsi, [rel asm_exit]
-    mov rdx, asm_exit_len
-    syscall
-
-    mov rax, 60
+    mov rax, 60         ; Exit compiler
     xor rdi, rdi
     syscall
 
-; --- Helper: write number to output file as ASCII ---
-write_number_ascii_to_file:
+; --- FILE UTILITIES ---
+
+write_to_file:
+    push rax
+    push rdi
+    push rdx
+    push rsi
+    push rcx
+    mov rcx, rsi
+    mov rdx, 0
+.count_len:
+    cmp byte [rcx + rdx], 0
+    je .do_write
+    inc rdx
+    jmp .count_len
+.do_write:
+    mov rax, 1          ; sys_write
+    mov rdi, [out_fd]   ; Targeting the file descriptor
+    syscall
+    pop rcx
+    pop rsi
+    pop rdx
+    pop rdi
+    pop rax
+    ret
+
+write_int_to_file:
+    push rax
     push rbx
     push rcx
     push rdx
+    push rdi
     push rsi
-
-    mov rbx, 10
-    lea rsi, [numbuf+15]
-    mov rcx, 0
-
-    test rax, rax
-    jnz .convert
-    mov byte [rsi], '0'
-    mov rcx, 1
-    jmp .done_convert
-
-.convert:
+    mov rdi, 10
+    mov rcx, num_str
+    add rcx, 19
+    mov byte [rcx], 0
+.conv:
     xor rdx, rdx
-    div rbx
+    div rdi
     add dl, '0'
-    mov [rsi], dl
-    inc rcx
+    dec rcx
+    mov [rcx], dl
     test rax, rax
-    jz .done_convert
-    dec rsi
-    jmp .convert
-
-.done_convert:
-    lea rsi, [numbuf+16]
-    sub rsi, rcx
-    mov rdx, rcx
-    mov rax, 1
-    mov rdi, [outfd]
-    syscall
-
+    jnz .conv
+    mov rsi, rcx
+    call write_to_file
     pop rsi
+    pop rdi
     pop rdx
     pop rcx
     pop rbx
+    pop rax
     ret
