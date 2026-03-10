@@ -62,6 +62,11 @@ section .data
     cmp_rax_rbx   db "    cmp rax, rbx", 10, 0
     mov_rbx_var   db "    mov rbx, [vars + ", 0
 
+    kw_mul         db "MUL", 0
+    mul_rax_imm    db "    mov rbx, ", 0   ; We load the literal into rbx
+    mul_op         db "    mul rbx", 10, 0 ; Multiply rax by rbx
+    mul_rax_var    db "    mul qword [vars + ", 0
+
     kw_while      db "WHILE", 0
     jmp_label     db "    jmp .WSTART", 0
     wstart_prefix db ".WSTART", 0
@@ -76,6 +81,18 @@ section .data
     je_label      db "    jne .L", 0    ; Jump if NOT equal (to skip the IF block)
     jle_label     db "    jle .L", 0    ; Jump if Less or Equal (to skip if we wanted >)
     jge_label     db "    jge .L", 0    ; Jump if Greater or Equal (to skip if we wanted <)
+
+    kw_poke       db "POKE", 0
+    kw_peek       db "PEEK", 0
+    
+    ; Output ASM templates
+    mov_r10_imm   db "    mov r10, ", 0
+    mov_r11_imm   db "    mov r11, ", 0
+    poke_template db "    mov [heap + r10*8], r11", 10, 0
+    peek_template db "    mov rax, [heap + r10*8]", 10, 0
+    heap_section  db 10, "section .bss", 10, "    heap resq 1000", 10, 0 ; 8KB heap
+    mov_r10_var   db "    mov r10, [vars + ", 0
+    mov_r11_var   db "    mov r11, [vars + ", 0
 
 section .bss
     input_buf     resb 4096 
@@ -151,10 +168,176 @@ _start:
     call compare_token
     je .do_while
 
+    mov rsi, kw_mul
+    call compare_token
+    je .do_mul
+
+    mov rsi, kw_poke
+    call compare_token
+    je .do_poke
+
+    mov rsi, kw_peek
+    call compare_token
+    je .do_peek
+
+
     mov rsi, kw_sub     
     call compare_token
     je .do_sub
 
+    jmp .main_loop
+
+
+.do_poke:
+    ; --- 1. Get Index (Target register R10) ---
+    call next_token
+    cmp byte [token_type], 1 ; Variable?
+    je .idx_var
+.idx_num:
+    mov rsi, mov_r10_imm
+    call write_to_file
+    call string_to_int
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    jmp .get_val
+.idx_var:
+    mov rsi, mov_r10_var
+    call write_to_file
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+.get_val:
+    ; --- 2. Get Value (Target register R11) ---
+    call next_token
+    cmp byte [token_type], 1 ; Variable?
+    je .val_var
+.val_num:
+    mov rsi, mov_r11_imm
+    call write_to_file
+    call string_to_int
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    jmp .do_poke_exec
+.val_var:
+    mov rsi, mov_r11_var
+    call write_to_file
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+.do_poke_exec:
+    mov rsi, poke_template ; "mov [heap + r10*8], r11"
+    call write_to_file
+    jmp .main_loop
+
+.do_peek:
+    ; --- 1. Get Destination Variable ---
+    call next_token
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    push rdi             ; Save destination var offset
+
+    ; --- 2. Get Index (Load into R10) ---
+    call next_token
+    cmp byte [token_type], 1
+    je .peek_idx_var
+.peek_idx_num:
+    mov rsi, mov_r10_imm
+    call write_to_file
+    call string_to_int
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    jmp .peek_exec
+.peek_idx_var:
+    mov rsi, mov_r10_var
+    call write_to_file
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+.peek_exec:
+    ; Load from heap into RAX
+    mov rsi, peek_template ; "mov rax, [heap + r10*8]"
+    call write_to_file
+    
+    ; Store RAX into destination variable
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax                ; Get var offset
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+    jmp .main_loop
+
+.do_mul:
+    call next_token      ; Get destination var (e.g., 'a')
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    push rdi             ; Save destination offset
+
+    ; 1. Load destination into RAX
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, [rsp]
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+    ; 2. Get source
+    call next_token
+    cmp byte [token_type], 2
+    je .mul_literal
+
+.mul_var:
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rdx, rdi
+    mov rsi, mul_rax_var ; "mul qword [vars + "
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    jmp .save_mul
+
+.mul_literal:
+    call string_to_int
+    mov rdx, rax
+    mov rsi, mul_rax_imm ; "mov rbx, "
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    mov rsi, mul_op      ; "mul rbx"
+    call write_to_file
+
+.save_mul:
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
     jmp .main_loop
 
 .do_let:
@@ -568,19 +751,27 @@ _start:
     jmp .main_loop
 
 .finish_up:
+    ; 1. Write the Exit syscall
     mov rsi, asm_exit
     call write_to_file
     
+    ; 2. Write the Print Routine (so the program can use PRINT)
     mov rsi, print_routine
     call write_to_file
 
+    ; 3. Write the BSS section for variables
     mov rsi, vars_section
     call write_to_file
 
-    ; Close output file and exit compiler
+    ; 4. Write the BSS section for the heap (Arrays)
+    mov rsi, heap_section
+    call write_to_file
+
+    ; 5. Close output file and exit compiler
     mov rax, 3
     mov rdi, [out_fd]
     syscall
+    
     mov rax, 60
     xor rdi, rdi
     syscall
