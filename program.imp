@@ -1,5 +1,7 @@
-LET a 10
-LET b 20
-IF a < b
-    PRINT a
+LET a 0
+WHILE a < 5
+    IF a > 2
+        PRINT a
+    END
+    ADD a 1
 END

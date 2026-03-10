@@ -62,6 +62,11 @@ section .data
     cmp_rax_rbx   db "    cmp rax, rbx", 10, 0
     mov_rbx_var   db "    mov rbx, [vars + ", 0
 
+    kw_while      db "WHILE", 0
+    jmp_label     db "    jmp .WSTART", 0
+    wstart_prefix db ".WSTART", 0
+    wend_prefix   db ".L", 0
+
     ; Comparison Operators
     op_eq         db "==", 0
     op_gt         db ">", 0
@@ -78,6 +83,7 @@ section .bss
     label_stack   resq 100
     token_buf     resb 64
     token_type    resb 1    ; 1 = Alpha, 2 = Number
+    type_stack    resb 100   ; 0 = IF, 1 = WHILE
 
 section .text
     global _start
@@ -140,6 +146,10 @@ _start:
     mov rsi, kw_add     
     call compare_token
     je .do_add
+
+    mov rsi, kw_while
+    call compare_token
+    je .do_while
 
     mov rsi, kw_sub     
     call compare_token
@@ -227,10 +237,36 @@ _start:
     dec qword [nested_ptr]
     mov rdx, [nested_ptr]
     mov rax, [label_stack + rdx*8]
-    mov rsi, if_end
+    movzx rcx, byte [type_stack + rdx] ; Check if this was an IF or WHILE
+
+    cmp rcx, 1
+    jne .is_if_end
+
+.is_while_end:
+    push rax
+    mov rsi, jmp_label 
+    call write_to_file
+    pop rax
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+    mov rsi, wend_prefix
     call write_to_file
     call write_int_to_file
     mov rsi, colon_nl
+    call write_to_file
+    jmp .main_loop
+
+.is_if_end:
+    mov rsi, if_end ; Templates: "L" or ".L"
+    call write_to_file
+    
+    mov rdx, [nested_ptr] ; nested_ptr was already decremented by .do_end
+    mov rax, [label_stack + rdx*8]
+    call write_int_to_file
+    
+    mov rsi, colon_nl ; ":"
     call write_to_file
     jmp .main_loop
 
@@ -287,11 +323,113 @@ _start:
     call write_to_file
     jmp .main_loop
 
+.do_while:
+    inc qword [label_count]
+    mov rax, [label_count]
+    mov rdx, [nested_ptr]
+    mov [label_stack + rdx*8], rax
+    
+    ; MARK AS WHILE
+    mov byte [type_stack + rdx], 1 
+    inc qword [nested_ptr]
+
+    ; --- 1. Place the Start Label ---
+    mov rsi, wstart_prefix
+    call write_to_file
+    mov rax, [label_count]
+    call write_int_to_file
+    mov rsi, colon_nl
+    call write_to_file
+
+    ; --- 2. Parse LHS ---
+    call next_token
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+    ; --- 3. Parse Operator ---
+    call next_token
+    mov rsi, op_eq
+    call compare_token
+    je .w_set_jne
+    mov rsi, op_gt
+    call compare_token
+    je .set_jle ; Use your existing IF setter
+    mov rsi, op_lt
+    call compare_token
+    je .set_jge ; Use your existing IF setter
+    
+    ; ONLY jump to main loop if NO operator was found (Error)
+    jmp .main_loop
+
+.w_set_jne: 
+    mov r12, je_label 
+    jmp .w_rhs
+.w_set_jle: 
+    mov r12, jle_label 
+    jmp .w_rhs
+.w_set_jge: 
+    mov r12, jge_label
+    ; Falls through to .w_rhs
+
+.w_rhs:
+    call next_token
+    call string_to_int 
+    mov rdx, rax
+    mov rsi, mov_rbx_imm
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+    ; --- 4. Generate Comparison and Jump-to-Exit ---
+    mov rsi, cmp_rax_rbx
+    call write_to_file
+
+    mov rsi, r12 ; This is the jge/jne etc.
+    call write_to_file
+    
+    ; Get current loop ID for the WEND target
+    mov rdx, [nested_ptr]
+    dec rdx
+    mov rax, [label_stack + rdx*8]
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+    jmp .main_loop ; NOW we return to the main loop
+
+.w_generate:
+    mov rsi, cmp_rax_rbx
+    call write_to_file
+
+    ; Jump to the END if condition fails
+    mov rsi, r12
+    call write_to_file
+    ; Target is the WEND label
+    mov rdx, [nested_ptr]
+    dec rdx
+    mov rax, [label_stack + rdx*8]
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+    jmp .main_loop
+
 .do_if:
     inc qword [label_count]
     mov rax, [label_count]
     mov rdx, [nested_ptr]
     mov [label_stack + rdx*8], rax
+    
+    mov byte [type_stack + rdx], 0 ; Mark this level as an IF
     inc qword [nested_ptr]
 
     ; --- 1. Parse LHS ---
@@ -309,8 +447,6 @@ _start:
     ; --- 2. Parse Operator ---
     call next_token
     
-    ; We check operators and store the INVERSE jump in R12
-    ; If the condition is NOT met, we jump to the END label
     mov rsi, op_eq
     call compare_token
     je .set_jne
@@ -323,11 +459,11 @@ _start:
     call compare_token
     je .set_jge
 
-    ; Default/Error case: if no operator matches, skip it (or handle error)
+    ; Error case: unknown operator
     jmp .main_loop 
 
 .set_jne:
-    mov r12, je_label    ; Actually jne in your data
+    mov r12, je_label
     jmp .parse_rhs
 .set_jle:
     mov r12, jle_label
@@ -336,12 +472,11 @@ _start:
     mov r12, jge_label
 
 .parse_rhs:
-    ; --- 3. Parse RHS ---
-    call next_token
-    cmp byte [token_type], 1    ; Variable?
-    je .rhs_var
 
-.rhs_num:
+    call next_token
+    cmp byte [token_type], 1
+    je .rhs_var_if
+.rhs_num_if:
     call string_to_int
     mov rdx, rax
     mov rsi, mov_rbx_imm 
@@ -350,9 +485,8 @@ _start:
     call write_int_to_file
     mov rsi, newline
     call write_to_file
-    jmp .generate_cmp
-
-.rhs_var:
+    jmp .generate_cmp_if
+.rhs_var_if:
     movzx rdi, byte [token_buf]
     sub rdi, 'a'
     imul rdi, 8
@@ -363,15 +497,14 @@ _start:
     mov rsi, close_bracket_load
     call write_to_file
 
-.generate_cmp:
-    ; --- 4. Generate Compare and Jump ---
+.generate_cmp_if:
     mov rsi, cmp_rax_rbx
     call write_to_file
 
-    mov rsi, r12                ; Use the jump template we saved in R12
+    mov rsi, r12 ; The jump (jne L / jle L / jge L)
     call write_to_file
     
-    ; Get the CURRENT label count for this IF
+    ; Get the label number for the current nesting level
     mov rdx, [nested_ptr]
     dec rdx
     mov rax, [label_stack + rdx*8]
@@ -379,7 +512,6 @@ _start:
     
     mov rsi, newline
     call write_to_file
-
     jmp .main_loop
 
 .do_add:
