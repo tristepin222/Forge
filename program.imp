@@ -1,1 +1,10 @@
-La1 Va I P E
+LET a 15
+LET b 0
+IF
+    PRINT a
+END
+VAR a
+LET c 100
+PRINT c
+PRINT 62
+PRINT 
