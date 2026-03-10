@@ -1,10 +1,8 @@
-LET a 15
-LET b 0
-IF
-    PRINT a
-END
-VAR a
-LET c 100
+LET a 10
+LET b 5
+ADD a b   
+ADD a 100  
+PRINT a
+LET c 20
+SUB c 5
 PRINT c
-PRINT 62
-PRINT 

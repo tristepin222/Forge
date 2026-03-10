@@ -47,10 +47,17 @@ section .data
     kw_if         db "IF", 0
     kw_print      db "PRINT", 0
     kw_end        db "END", 0
+    kw_add        db "ADD", 0
+    kw_sub        db "SUB", 0
 
     label_count   dq 0    
     nested_ptr    dq 0
     out_fd        dq 0
+
+    add_rax_imm   db "    add rax, ", 0
+    add_rax_var   db "    add rax, [vars + ", 0
+    sub_rax_imm     db "    sub rax, ", 0
+    sub_rax_var     db "    sub rax, [vars + ", 0
 
 section .bss
     input_buf     resb 4096 
@@ -116,6 +123,14 @@ _start:
     mov rsi, kw_end
     call compare_token
     je .do_end
+
+    mov rsi, kw_add     
+    call compare_token
+    je .do_add
+
+    mov rsi, kw_sub     
+    call compare_token
+    je .do_sub
 
     jmp .main_loop
 
@@ -220,8 +235,113 @@ _start:
     call write_to_file
     jmp .main_loop
 
-.finish_up:
+.do_sub:
+    call next_token      ; Get the destination variable (e.g., 'a')
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    push rdi             ; Save destination offset
 
+    ; Step 1: Load destination into RAX
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, [rsp]       ; Get offset from stack
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+    ; Step 2: Get the source (the value to subtract)
+    call next_token
+    cmp byte [token_type], 2 ; Is it a literal number?
+    je .sub_literal
+
+.sub_variable:
+    movzx rsi, byte [token_buf]
+    sub rsi, 'a'
+    imul rsi, 8
+    mov rdx, rsi         ; Save source offset
+    mov rsi, sub_rax_var
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    jmp .save_sub_result
+
+.sub_literal:
+    call string_to_int
+    mov rdx, rax         ; Save the number
+    mov rsi, sub_rax_imm
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+.save_sub_result:
+    ; Step 3: Store RAX back into destination
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax              ; Get destination offset back
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+    jmp .main_loop
+
+.do_add:
+    call next_token     ; Get the destination variable (e.g., 'a')
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    push rdi            ; Save destination offset
+
+    ; Step 1: Load destination into RAX
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, [rsp]      ; Get offset back from stack top
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+
+    ; Step 2: Get the source (the value to add)
+    call next_token
+    cmp byte [token_type], 2 ; Is it a number?
+    je .add_literal
+
+.add_variable:
+    movzx rsi, byte [token_buf]
+    sub rsi, 'a'
+    imul rsi, 8
+    mov rdx, rsi        ; Save source offset
+    mov rsi, add_rax_var
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    jmp .save_result
+
+.add_literal:
+    call string_to_int
+    mov rdx, rax        ; Save the number
+    mov rsi, add_rax_imm
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+.save_result:
+    ; Step 3: Store RAX back into destination
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax             ; Get destination offset
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+    jmp .main_loop
+
+.finish_up:
     mov rsi, asm_exit
     call write_to_file
     
@@ -229,14 +349,13 @@ _start:
     call write_to_file
 
     mov rsi, vars_section
+    call write_to_file
 
-    mov rsi, asm_exit
-    call write_to_file
-    mov rsi, vars_section
-    call write_to_file
+    ; Close output file
     mov rax, 3
     mov rdi, [out_fd]
     syscall
+
     mov rax, 60
     xor rdi, rdi
     syscall
