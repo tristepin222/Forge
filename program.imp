@@ -1,10 +1,7 @@
-LET i 0
-LET v 100
-WHILE i < 5
-    POKE i v     ; Stores 100 in heap[i]
-    ADD v 10     ; Increment value
-    ADD i 1      ; Increment index
+LET c 0
+WHILE c < 126
+    READ c
+    IF c > 32    ; ASCII 32 is 'Space'. Anything 32 or lower is a "control character"
+        PRINT c
+    END
 END
-
-PEEK a 2         ; Reads heap[2] (which should be 120)
-PRINT a          ; Should print 120

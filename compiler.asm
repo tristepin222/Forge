@@ -94,6 +94,21 @@ section .data
     mov_r10_var   db "    mov r10, [vars + ", 0
     mov_r11_var   db "    mov r11, [vars + ", 0
 
+    kw_read        db "READ", 0
+    
+    ; We will use a small 1-byte buffer in the .bss for reading
+    read_template  db 10, "    ; sys_read", 10
+                   db "    mov rax, 0", 10        ; syscall number
+                   db "    mov rdi, 0", 10        ; stdin (for now, we'll use 0)
+                   db "    lea rsi, [read_char]", 10
+                   db "    mov rdx, 1", 10        ; 1 byte
+                   db "    syscall", 10, 0
+
+    read_char_bss  db 10, "section .bss", 10, "    read_char resb 1", 10, 0
+    
+    ; Load the read character into RAX
+    load_read_rax  db "    movzx rax, byte [read_char]", 10, 0
+
 section .bss
     input_buf     resb 4096 
     num_str       resb 20
@@ -185,8 +200,37 @@ _start:
     call compare_token
     je .do_sub
 
+    mov rsi, kw_read     
+    call compare_token
+    je .do_read
+
+
     jmp .main_loop
 
+.do_read:
+    call next_token      ; Get the variable to store the char in (e.g., 'a')
+    movzx rdi, byte [token_buf]
+    sub rdi, 'a'
+    imul rdi, 8
+    push rdi             ; Save variable offset
+
+    ; 1. Generate the read syscall
+    mov rsi, read_template
+    call write_to_file
+
+    ; 2. Move result into RAX
+    mov rsi, load_read_rax
+    call write_to_file
+
+    ; 3. Store RAX into the variable
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax              ; Get variable offset
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+
+    jmp .main_loop
 
 .do_poke:
     ; --- 1. Get Index (Target register R10) ---
@@ -765,6 +809,9 @@ _start:
 
     ; 4. Write the BSS section for the heap (Arrays)
     mov rsi, heap_section
+    call write_to_file
+
+    mov rsi, read_char_bss       ; For READ
     call write_to_file
 
     ; 5. Close output file and exit compiler
