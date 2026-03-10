@@ -1,8 +1,5 @@
 LET a 10
-LET b 5
-ADD a b   
-ADD a 100  
-PRINT a
-LET c 20
-SUB c 5
-PRINT c
+LET b 20
+IF a < b
+    PRINT a
+END
