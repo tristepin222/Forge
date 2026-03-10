@@ -1,55 +1,73 @@
 # Forge
-Imperium compiler bootstrap
 
-### install nasm
+Imperium Compiler Bootstrap
 
-just be sure that apt is up to date
+Forge is a minimal, self-contained bootstrap compiler written in x86-64 Assembly. It is designed to be the "Stage 0" tool used to build the "Stage 1" compiler in its own high-level language.
 
-```
+### Prerequisites
+
+Be sure your package manager is up to date:
+
+```bash
 sudo apt update
-```
-
-then type
-
-```
 sudo apt install nasm build-essential
 ```
 
-this will install nasm, nasm is only useful to build on x86-64 architecture processors, it cannot build for arm and thumb
+*Note: Forge targets the x86-64 Linux ABI and is not compatible with ARM/Apple Silicon without emulation.*
 
-### building the compiler
-any linux distro will do, for windows install wsl, and then you can run these commands
+### Building the Compiler
 
-```
+To build the Forge compiler itself:
+
+```bash
 nasm -f elf64 compiler.asm -o compiler.o
 ld -o compiler compiler.o
-./compiler
 ```
 
-this will create a bunch of files, but the most important is program.asm
+### The Compilation Pipeline
 
-### building the program
+Running the compiler processes `program.imp` and generates a standalone Linux executable.
 
-when program.asm is created, it should have assembly in it, so again, you'll have to run these commands
+1. **Generate Assembly:** `./compiler` (Reads `program.imp`, outputs `output/program.asm`)
+2. **Assemble:** `nasm -f elf64 output/program.asm -o output/program.o`
+3. **Link:** `ld -o output/program output/program.o`
+4. **Run:** `./output/program`
 
-```
-nasm -f elf64 program.asm -o program.o
-ld -o program program.o
-./program
-```
+**Automatic Build:**
+If you're using the provided script:
 
-
-### building pipeline
-
-if you're too lazy to run all the commands above, just run
-```
+```bash
+chmod +x build.sh
 ./build.sh
 ```
 
-you may need to 
-```
-chmod +x build.sh 
-```
-first tho
+This will compile your `program.imp`, link it, and execute it in one go.
 
-and it should beautifully output hello, world and test
+---
+
+### Language Reference (Imperium Syntax)
+
+Forge supports the following primitives required for bootstrapping:
+
+| Command | Description | Example |
+| --- | --- | --- |
+| `LET [var] [val]` | Assign a literal or variable | `LET a 10` |
+| `ADD / SUB / MUL` | Arithmetic operations | `MUL a 5` |
+| `PRINT [val]` | Print integer to stdout + newline | `PRINT a` |
+| `IF [cond] ... END` | Conditional blocks (`==`, `>`, `<`) | `IF a > 0` |
+| `WHILE [cond] ... END` | Loop blocks | `WHILE a < 10` |
+| `POKE [idx] [val]` | Write 64-bit value to Heap memory | `POKE 0 65` |
+| `PEEK [var] [idx]` | Read 64-bit value from Heap memory | `PEEK a 0` |
+| `READ [var]` | Read 1 byte from stdin (ASCII value) | `READ c` |
+
+---
+
+### Bootstrapping Progress
+
+* [x] Integer Arithmetic
+* [x] Control Flow (Nested IF/WHILE)
+* [x] Global Heap (Arrays)
+* [x] Byte-stream Input (READ)
+* [ ] Self-hosted Compiler (Stage 1)
+
+---
