@@ -1,6 +1,16 @@
 LET c 0
 LET d 1
 LET e 0
+
+WRITE_CHAR 109 ; 'm'
+WRITE_STR "mov rax, 60"
+
+LET size 100
+ALLOC s 100   ; 's' now holds the memory address of the start of the table
+POKE s 12      ; Store something at the first index of our new table
+
+PRINT s
+
 WHILE c < 126
     READ c
     IF c > 32    ; ASCII 32 is 'Space'. Anything 32 or lower is a "control character"

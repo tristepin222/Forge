@@ -15,8 +15,9 @@ section .data
     mov_var_rax   db "    mov [vars + ", 0
     close_bracket_load  db "]", 10, 0
     close_bracket_store db "], rax", 10, 0
-    vars_section  db 10, "section .bss", 10, "    vars resq 26", 10, 0
+    vars_section  db 10, "    vars resq 26", 10, 0
     newline       db 10, 0
+    bss_header      db 10, "section .bss", 10, 0
     print_routine:
         db 10, "print_rax:", 10
         db "    push rbp", 10           ; Save base pointer
@@ -49,6 +50,7 @@ section .data
     kw_end        db "END", 0
     kw_add        db "ADD", 0
     kw_sub        db "SUB", 0
+    kw_write_string db "WRITE_STR", 0
 
     label_count   dq 0    
     nested_ptr    dq 0
@@ -77,6 +79,16 @@ section .data
     op_gt         db ">", 0
     op_lt         db "<", 0
 
+
+    kw_write_char  db "WRITE_CHAR", 0
+
+    write_template:
+    db "    mov rax, 1", 10
+    db "    mov rdi, 1", 10
+    db "    lea rsi, [read_char]", 10
+    db "    mov rdx, 1", 10
+    db "    syscall", 10, 0
+
     ; Jump Templates
     je_label      db "    jne .L", 0    ; Jump if NOT equal (to skip the IF block)
     jle_label     db "    jle .L", 0    ; Jump if Less or Equal (to skip if we wanted >)
@@ -88,9 +100,9 @@ section .data
     ; Output ASM templates
     mov_r10_imm   db "    mov r10, ", 0
     mov_r11_imm   db "    mov r11, ", 0
-    poke_template db "    mov [heap + r10*8], r11", 10, 0
-    peek_template db "    mov rax, [heap + r10*8]", 10, 0
-    heap_section  db 10, "section .bss", 10, "    heap resq 1000", 10, 0 ; 8KB heap
+    poke_template db "    mov [r10], r11", 10, 0
+    peek_template db "    mov rax, [r10]", 10, 0
+    heap_section  db "    heap resq 1000", 10, 0 ; 8KB heap
     mov_r10_var   db "    mov r10, [vars + ", 0
     mov_r11_var   db "    mov r11, [vars + ", 0
 
@@ -104,10 +116,22 @@ section .data
                    db "    mov rdx, 1", 10        ; 1 byte
                    db "    syscall", 10, 0
 
-    read_char_bss  db 10, "section .bss", 10, "    read_char resb 1", 10, 0
+    move_char db "    mov [read_char], al", 10, 0
+    move_byte db "    mov byte [read_char], ", 0
+
+    read_char_bss  db "    read_char resb 1", 10, 0
     
     ; Load the read character into RAX
     load_read_rax  db "    movzx rax, byte [read_char]", 10, 0
+
+    kw_alloc       db "ALLOC", 0
+    alloc_load_ptr db "    mov rax, [alloc_ptr]", 10, 0
+    alloc_add_ptr  db "    add qword [alloc_ptr], ", 0
+    alloc_ptr_name db "    alloc_ptr resq 1", 10, 0
+    shl_prefix db "    shl rbx, 3", 10, 0
+    alloc_rbx_add_ptr db"    add [alloc_ptr], rbx", 10, 0
+    init_alloc_ptr db "    mov qword [alloc_ptr], heap", 10, 0
+
 
 section .bss
     input_buf     resb 4096 
@@ -145,6 +169,9 @@ _start:
 
     ; 4. Start Compiling
     mov rsi, asm_head
+    call write_to_file
+
+    mov rsi, init_alloc_ptr 
     call write_to_file
 
     mov rbx, input_buf
@@ -195,6 +222,9 @@ _start:
     call compare_token
     je .do_peek
 
+    mov rsi, kw_write_char
+    call compare_token
+    je .do_write_char
 
     mov rsi, kw_sub     
     call compare_token
@@ -204,6 +234,135 @@ _start:
     call compare_token
     je .do_read
 
+    mov rsi, kw_alloc
+    call compare_token
+    je .do_alloc
+
+    mov rsi, kw_write_string
+    call compare_token
+    je .do_write_str
+
+
+    jmp .main_loop
+
+.do_write_str:
+    call next_token      ; Get the string (e.g., "mov")
+    mov rsi, token_buf
+.str_loop:
+    movzx rax, byte [rsi]
+    test rax, rax
+    jz .main_loop        ; Done with string
+    
+    push rsi             ; Save pointer
+    ; --- Emit WRITE_CHAR logic for this char ---
+    push rax             ; Save char (e.g., 'm')
+    mov rsi, move_byte
+    call write_to_file
+    pop rax              ; Restore char
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    mov rsi, write_template
+    call write_to_file
+    
+    pop rsi              ; Restore pointer
+    inc rsi
+    jmp .str_loop
+
+.do_write_char:
+    call next_token
+    cmp al, 2               ; Is it a literal number?
+    je .write_literal_path
+
+.write_variable_path:
+    call get_var_offset
+    push rax                ; SHIELD the offset
+    mov rsi, mov_rax_var
+    call write_to_file
+    pop rax                 ; RESTORE the offset
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    mov rsi, move_char
+    call write_to_file
+    jmp .write_finish
+
+.write_literal_path:
+    call string_to_int      ; RAX = 109
+    push rax                ; SHIELD the 109 from the next syscall
+    
+    mov rsi, move_byte       ; "    mov byte [read_char], "
+    call write_to_file      ; This syscall returns '26' in RAX!
+    
+    pop rax                 ; RESTORE the 109
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+.write_finish:
+    mov rsi, write_template
+    call write_to_file
+    jmp .main_loop
+
+
+.do_alloc:
+    ; --- 1. Get the destination variable (where the address will be stored) ---
+    call next_token
+    call get_var_offset
+    push rax                ; Save the offset (e.g., offset for 'p')
+
+    ; --- 2. Emit: Load the current free address into RAX ---
+    ; In the generated code: mov rax, [alloc_ptr]
+    mov rsi, alloc_load_ptr
+    call write_to_file
+
+    ; --- 3. Emit: Store that address into the destination variable ---
+    ; In the generated code: mov [vars + offset], rax
+    mov rsi, mov_var_rax
+    call write_to_file
+    pop rax                 ; Get offset back
+    push rax                ; Keep it for a moment
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+
+    ; --- 4. Get the size to allocate ---
+    call next_token
+    ; Handle either a literal number or a variable for size
+    cmp byte [token_type], 2
+    je .alloc_lit
+
+.alloc_var:
+    call get_var_offset
+    ; In generated code: mov rbx, [vars + offset]
+    mov rsi, mov_rbx_var
+    call write_to_file
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    
+    ; Emit: shl rbx, 3 (to convert count to bytes)
+    mov rsi,  shl_prefix
+    call write_to_file
+    
+    ; Emit: add [alloc_ptr], rbx
+    mov rsi, alloc_rbx_add_ptr 
+    call write_to_file
+    jmp .main_loop
+
+.alloc_lit:
+    call string_to_int
+    shl rax, 3              ; Multiply size by 8 bytes
+    mov rdx, rax            ; Save the byte count
+
+    ; --- 5. Emit: Update the heap pointer ---
+    ; In generated code: add qword [alloc_ptr], <bytes>
+    mov rsi, alloc_add_ptr
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
 
     jmp .main_loop
 
@@ -248,8 +407,7 @@ _start:
     mov rsi, mov_r10_var
     call write_to_file
     call get_var_offset
-    mov rdi, rax
-    mov rax, rdi
+
     call write_int_to_file
     mov rsi, close_bracket_load
     call write_to_file
@@ -734,15 +892,21 @@ _start:
     mov rsi, print_routine
     call write_to_file
 
-    ; 3. Write the BSS section for variables
-    mov rsi, vars_section
+    mov rsi, bss_header
     call write_to_file
 
     ; 4. Write the BSS section for the heap (Arrays)
     mov rsi, heap_section
     call write_to_file
 
+    mov rsi, vars_section
+    call write_to_file
+
+
     mov rsi, read_char_bss       ; For READ
+    call write_to_file
+
+    mov rsi, alloc_ptr_name
     call write_to_file
 
     ; 5. Close output file and exit compiler
@@ -772,15 +936,40 @@ next_token:
 .read:
     mov rdi, token_buf
     xor rcx, rcx
-    
-    ; Determine type by first char
     mov al, [rbx]
-    mov byte [token_type], 1 ; Alpha
+
+    ; 1. Check for String Literal FIRST
+    cmp al, '"'
+    je .read_string
+
+    ; 2. Determine type (Number vs Alpha)
+    mov byte [token_type], 1 ; Default: Alpha
     cmp al, '0'
-    jl .loop
+    jl .loop                 ; Not a digit, go to normal loop
     cmp al, '9'
-    jg .loop
-    mov byte [token_type], 2 ; Number
+    jg .loop                 ; Not a digit, go to normal loop
+    
+    mov byte [token_type], 2 ; It is a Number
+    jmp .loop                ; Jump to normal loop! (Don't fall into strings)
+
+.read_string:
+    mov byte [token_type], 3 ; Optional: Define a 3rd type for strings
+    inc rbx             ; Skip the opening quote
+.string_loop:
+    mov al, [rbx]
+    test al, al
+    jz .done
+    cmp al, '"'         ; Closing quote?
+    je .string_done
+    
+    mov [rdi], al
+    inc rdi
+    inc rbx
+    jmp .string_loop
+
+.string_done:
+    inc rbx             ; Skip the closing quote
+    jmp .done
 
 .loop:
     mov al, [rbx]
@@ -820,16 +1009,23 @@ compare_token:
     ret
 
 string_to_int:
-    ; Converts token_buf to integer in RAX
     xor rax, rax
     mov rsi, token_buf
 .s_loop:
     movzx rcx, byte [rsi]
     test rcx, rcx
     jz .s_done
+    
+    ; --- SAFETY GUARD ---
+    cmp rcx, '0'        ; If char < '0', it's not a digit
+    jl .next_char
+    cmp rcx, '9'        ; If char > '9', it's not a digit
+    jg .next_char
+    
     sub rcx, '0'
     imul rax, 10
     add rax, rcx
+.next_char:
     inc rsi
     jmp .s_loop
 .s_done:
