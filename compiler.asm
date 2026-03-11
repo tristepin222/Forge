@@ -5,7 +5,7 @@ section .data
     
     ; Opcodes and Templates
     asm_head      db "section .text", 10, "global _start", 10, "_start:", 10, "    mov rax, 1", 10, 0
-    asm_exit      db 10,"    mov rax, 60", 10, "    xor rdi, rdi", 10, "    syscall", 10, 0
+    asm_exit      db "    mov rax, 60", 10, "    xor rdi, rdi", 10, "    syscall", 10, 0
     if_cmp        db "    cmp rax, 0", 10, "    je .L", 0
     if_end        db ".L", 0
     colon_nl      db ":", 10, 0
@@ -149,7 +149,6 @@ section .data
 
     move_char db "    mov [read_char], al", 10, 0
     move_byte db "    mov byte [read_char], ", 0
-    kw_emit_char db "EMIT_CHAR", 0
 
     read_char_bss  db "    read_char resb 1", 10, 0
     
@@ -218,11 +217,6 @@ _start:
     call compare_token
     je .do_let
 
-    mov rsi, kw_write_int
-    call compare_token
-    je .do_write_int
-
-
     mov rsi, kw_var
     call compare_token
     je .do_var
@@ -251,6 +245,7 @@ _start:
     call compare_token
     je .do_mul
 
+    
     mov rsi, kw_poke
     call compare_token
     je .do_poke
@@ -279,82 +274,65 @@ _start:
     call compare_token
     je .do_write_str
 
-    mov rsi, kw_emit_char
-    call compare_token
-    je .do_emit_char
 
     jmp .main_loop
-
-
-.do_emit_char:
-    call next_token
-    call string_to_int      ; Get the char code (e.g., 10)
-    push rax
-    mov rsi, rsp            ; Point RSI to the character on the stack
-    mov rdx, 1              ; Length = 1
-    mov rax, 1              ; sys_write
-    mov rdi, [out_fd]
-    syscall
-    pop rax
-    jmp .main_loop
-
-.do_write_int:
-    call next_token
-    ; We assume Stage 1 has already calculated the value and put it in RAX
-    ; Or, if this is a literal (Type 2), we convert it now.
-    cmp byte [token_type], 2
-    jne .write_now         ; It's a name, assume RAX is ready
-    call string_to_int     ; It's a literal "56", put 56 in RAX
-
-.write_now:
-    call write_int_to_file
-    jmp .main_loop
-
 
 .do_write_str:
-    call next_token      ; Get the string (e.g., "mov rax, 60")
+    call next_token      ; Get the string (e.g., "mov")
     mov rsi, token_buf
-    call write_to_file   ;
-    jmp .main_loop
+.str_loop:
+    movzx rax, byte [rsi]
+    test rax, rax
+    jz .main_loop        ; Done with string
+    
+    push rsi             ; Save pointer
+    ; --- Emit WRITE_CHAR logic for this char ---
+    push rax             ; Save char (e.g., 'm')
+    mov rsi, move_byte
+    call write_to_file
+    pop rax              ; Restore char
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    mov rsi, write_template
+    call write_to_file
+    
+    pop rsi              ; Restore pointer
+    inc rsi
+    jmp .str_loop
 
 .do_write_char:
     call next_token
-    cmp al, 2                ; Is it a literal number?
+    cmp al, 2               ; Is it a literal number?
     je .write_literal_path
 
 .write_variable_path:
     call get_var_offset
-    mov rdi, rax             ; Save offset
-    mov rsi, mov_rax_var     ; "    mov rax, [vars + "
+    push rax                ; SHIELD the offset
+    mov rsi, mov_rax_var
     call write_to_file
-    mov rax, rdi
+    pop rax                 ; RESTORE the offset
     call write_int_to_file
-    mov rsi, close_bracket_load ; "]" + 10 (Newline)
+    mov rsi, close_bracket_load
     call write_to_file
-    mov rsi, move_char       ; "    mov [read_char], al" + 10
+    mov rsi, move_char
     call write_to_file
     jmp .write_finish
 
 .write_literal_path:
-    call string_to_int      
-    mov rdx, rax             ; Save the char code (e.g., 65)
+    call string_to_int      ; RAX = 109
+    push rax                ; SHIELD the 109 from the next syscall
+    
     mov rsi, move_byte       ; "    mov byte [read_char], "
+    call write_to_file      ; This syscall returns '26' in RAX!
+    
+    pop rax                 ; RESTORE the 109
+    call write_int_to_file
+    mov rsi, newline
     call write_to_file
-    mov rax, rdx
-    call write_int_to_file   ; Write "65"
-    ; --- FIX: Don't use 'mov rsi, newline' here, it's redundant ---
-    ; Just write the literal 10 (newline) to end the instruction
-    mov rax, 10
-    push rax
-    mov rsi, rsp
-    mov rdx, 1
-    mov rax, 1
-    mov rdi, [out_fd]
-    syscall
-    pop rax
 
 .write_finish:
-    mov rsi, write_template  ; The actual syscall block (rax, rdi, rsi, rdx, syscall)
+    mov rsi, write_template
     call write_to_file
     jmp .main_loop
 
@@ -975,9 +953,6 @@ _start:
     mov rsi, print_routine
     call write_to_file
 
-    mov rsi, print_int_raw_routine ; <--- ADD THIS LINE
-    call write_to_file
-
     mov rsi, bss_header
     call write_to_file
 
@@ -1174,32 +1149,20 @@ write_int_to_file:
     push rdx
     push rdi
     push rsi
-    
     mov rdi, 10
     mov rcx, num_str
     add rcx, 19
-    mov byte [rcx], 0    ; Null terminator at the very end
-    
-    ; If RAX is 0, handle it specifically
-    test rax, rax
-    jnz .conv_loop
-    dec rcx
-    mov byte [rcx], '0'
-    jmp .do_write
-
-.conv_loop:
+    mov byte [rcx], 0
+.conv:
     xor rdx, rdx
     div rdi
     add dl, '0'
     dec rcx
     mov [rcx], dl
     test rax, rax
-    jnz .conv_loop
-
-.do_write:
+    jnz .conv
     mov rsi, rcx
     call write_to_file
-    
     pop rsi
     pop rdi
     pop rdx

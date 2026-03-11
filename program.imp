@@ -1,1 +1,91 @@
-WRITE_INT 10
+; --- Stage 1 Compiler Bootstrap ---
+; Variables for Symbol Table Management
+VAR table_ptr
+VAR next_slot
+VAR current_off
+VAR char
+VAR search_ptr
+VAR entry_name
+VAR found_off
+VAR temp
+
+; Initialize Table in Heap
+ALLOC table_ptr 1000
+LET next_slot table_ptr
+LET current_off 0
+
+; Main Compiler Loop
+WHILE 1 == 1
+    READ char
+    
+    ; Skip spaces (32) and newlines (10)
+    IF char <= 32
+        ; Just continue loop
+    END
+
+    ; --- Handle 'V' (VAR) ---
+    IF char == 86
+        READ char ; Skip 'A'
+        READ char ; Skip 'R'
+        READ char ; Skip space
+        READ char ; The actual variable name (e.g., 'x')
+        
+        ; Store in Symbol Table
+        POKE next_slot char
+        ADD next_slot 8
+        POKE next_slot current_off
+        ADD next_slot 8
+        
+        ; Prepare for next variable
+        ADD current_off 8
+        
+        ; Logic: We don't emit ASM for VAR because Stage 0 
+        ; already has a fixed 'vars' block in .bss
+    END
+
+    ; --- Handle 'E' (EXIT) ---
+    IF char == 69
+        READ char ; 'X'
+        READ char ; 'I'
+        READ char ; 'T'
+        
+        WRITE_STR "    mov rax, 60"
+        WRITE_CHAR 10
+        WRITE_STR "    xor rdi, rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    syscall"
+        WRITE_CHAR 10
+    END
+
+    ; --- Handle 'P' (PRINT) ---
+    IF char == 80
+        READ char ; 'R'
+        READ char ; 'I'
+        READ char ; 'N'
+        READ char ; 'T'
+        READ char ; Skip space
+        READ char ; Get the variable name to print
+        
+        ; Variable Lookup Logic
+        LET search_ptr table_ptr
+        LET found_off 0
+        
+        WHILE search_ptr < next_slot
+            PEEK entry_name search_ptr
+            IF entry_name == char
+                ADD search_ptr 8
+                PEEK found_off search_ptr
+                LET search_ptr next_slot ; Break loop
+            END
+            ADD search_ptr 16
+        END
+        
+        ; Emit Assembly for printing that specific variable
+        WRITE_STR "    mov rax, [vars + "
+        PRINT found_off ; We use PRINT here to write the number to the ASM
+        WRITE_STR "]"
+        WRITE_CHAR 10
+        WRITE_STR "    call print_rax"
+        WRITE_CHAR 10
+    END
+END
