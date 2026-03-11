@@ -5,7 +5,7 @@ section .data
     
     ; Opcodes and Templates
     asm_head      db "section .text", 10, "global _start", 10, "_start:", 10, "    mov rax, 1", 10, 0
-    asm_exit      db "    mov rax, 60", 10, "    xor rdi, rdi", 10, "    syscall", 10, 0
+    asm_exit      db 10,"    mov rax, 60", 10, "    xor rdi, rdi", 10, "    syscall", 10, 0
     if_cmp        db "    cmp rax, 0", 10, "    je .L", 0
     if_end        db ".L", 0
     colon_nl      db ":", 10, 0
@@ -40,6 +40,37 @@ section .data
         db "    sub rdx, rsi", 10       ; length
         db "    syscall", 10
         db "    leave", 10              ; restore stack
+        db "    ret", 10, 0
+
+    ; Add these to your section .data
+    kw_write_int      db "WRITE_INT", 0
+    write_int_call    db "    call print_int_raw", 10, 0
+
+    ; Update your print_routine template to include the RAW version
+    ; Add this new routine right after your existing print_routine
+    print_int_raw_routine:
+        db 10, "print_int_raw:", 10
+        db "    push rbp", 10
+        db "    mov rbp, rsp", 10
+        db "    sub rsp, 32", 10
+        db "    mov rdi, 10", 10
+        db "    lea rsi, [rbp-1]", 10
+        db "    mov byte [rsi], 0", 10  ; <--- NO NEWLINE (10) HERE
+        db ".loop_raw:", 10
+        db "    xor rdx, rdx", 10
+        db "    div rdi", 10
+        db "    add dl, '0'", 10
+        db "    dec rsi", 10
+        db "    mov [rsi], dl", 10
+        db "    test rax, rax", 10
+        db "    jnz .loop_raw", 10
+        db "    mov rax, 1", 10
+        db "    mov rdi, 1", 10
+        db "    mov rdx, rbp", 10
+        db "    sub rdx, rsi", 10
+        db "    dec rdx", 10           ; Adjust length because no newline
+        db "    syscall", 10
+        db "    leave", 10
         db "    ret", 10, 0
     
     ; Keywords for Lexer
@@ -90,7 +121,7 @@ section .data
     db "    syscall", 10, 0
 
     ; Jump Templates
-    je_label      db "    jne .L", 0    ; Jump if NOT equal (to skip the IF block)
+    jne_label      db "    jne .L", 0    ; Jump if NOT equal (to skip the IF block)
     jle_label     db "    jle .L", 0    ; Jump if Less or Equal (to skip if we wanted >)
     jge_label     db "    jge .L", 0    ; Jump if Greater or Equal (to skip if we wanted <)
 
@@ -118,6 +149,7 @@ section .data
 
     move_char db "    mov [read_char], al", 10, 0
     move_byte db "    mov byte [read_char], ", 0
+    kw_emit_char db "EMIT_CHAR", 0
 
     read_char_bss  db "    read_char resb 1", 10, 0
     
@@ -186,6 +218,11 @@ _start:
     call compare_token
     je .do_let
 
+    mov rsi, kw_write_int
+    call compare_token
+    je .do_write_int
+
+
     mov rsi, kw_var
     call compare_token
     je .do_var
@@ -242,65 +279,82 @@ _start:
     call compare_token
     je .do_write_str
 
+    mov rsi, kw_emit_char
+    call compare_token
+    je .do_emit_char
 
     jmp .main_loop
 
-.do_write_str:
-    call next_token      ; Get the string (e.g., "mov")
-    mov rsi, token_buf
-.str_loop:
-    movzx rax, byte [rsi]
-    test rax, rax
-    jz .main_loop        ; Done with string
-    
-    push rsi             ; Save pointer
-    ; --- Emit WRITE_CHAR logic for this char ---
-    push rax             ; Save char (e.g., 'm')
-    mov rsi, move_byte
-    call write_to_file
-    pop rax              ; Restore char
+
+.do_emit_char:
+    call next_token
+    call string_to_int      ; Get the char code (e.g., 10)
+    push rax
+    mov rsi, rsp            ; Point RSI to the character on the stack
+    mov rdx, 1              ; Length = 1
+    mov rax, 1              ; sys_write
+    mov rdi, [out_fd]
+    syscall
+    pop rax
+    jmp .main_loop
+
+.do_write_int:
+    call next_token
+    ; We assume Stage 1 has already calculated the value and put it in RAX
+    ; Or, if this is a literal (Type 2), we convert it now.
+    cmp byte [token_type], 2
+    jne .write_now         ; It's a name, assume RAX is ready
+    call string_to_int     ; It's a literal "56", put 56 in RAX
+
+.write_now:
     call write_int_to_file
-    mov rsi, newline
-    call write_to_file
-    mov rsi, write_template
-    call write_to_file
-    
-    pop rsi              ; Restore pointer
-    inc rsi
-    jmp .str_loop
+    jmp .main_loop
+
+
+.do_write_str:
+    call next_token      ; Get the string (e.g., "mov rax, 60")
+    mov rsi, token_buf
+    call write_to_file   ;
+    jmp .main_loop
 
 .do_write_char:
     call next_token
-    cmp al, 2               ; Is it a literal number?
+    cmp al, 2                ; Is it a literal number?
     je .write_literal_path
 
 .write_variable_path:
     call get_var_offset
-    push rax                ; SHIELD the offset
-    mov rsi, mov_rax_var
+    mov rdi, rax             ; Save offset
+    mov rsi, mov_rax_var     ; "    mov rax, [vars + "
     call write_to_file
-    pop rax                 ; RESTORE the offset
+    mov rax, rdi
     call write_int_to_file
-    mov rsi, close_bracket_load
+    mov rsi, close_bracket_load ; "]" + 10 (Newline)
     call write_to_file
-    mov rsi, move_char
+    mov rsi, move_char       ; "    mov [read_char], al" + 10
     call write_to_file
     jmp .write_finish
 
 .write_literal_path:
-    call string_to_int      ; RAX = 109
-    push rax                ; SHIELD the 109 from the next syscall
-    
+    call string_to_int      
+    mov rdx, rax             ; Save the char code (e.g., 65)
     mov rsi, move_byte       ; "    mov byte [read_char], "
-    call write_to_file      ; This syscall returns '26' in RAX!
-    
-    pop rax                 ; RESTORE the 109
-    call write_int_to_file
-    mov rsi, newline
     call write_to_file
+    mov rax, rdx
+    call write_int_to_file   ; Write "65"
+    ; --- FIX: Don't use 'mov rsi, newline' here, it's redundant ---
+    ; Just write the literal 10 (newline) to end the instruction
+    mov rax, 10
+    push rax
+    mov rsi, rsp
+    mov rdx, 1
+    mov rax, 1
+    mov rdi, [out_fd]
+    syscall
+    pop rax
 
 .write_finish:
-    mov rsi, write_template
+    mov rsi, write_template  ; The actual syscall block (rax, rdi, rsi, rdx, syscall)
     call write_to_file
     jmp .main_loop
 
@@ -708,6 +762,7 @@ _start:
 
     mov byte [type_stack + rdx], 1 ; mark as WHILE
     inc qword [nested_ptr]         ; push new nesting level
+    
     ; --- 1. Place the Start Label ---
     mov rsi, wstart_prefix
     call write_to_file
@@ -716,17 +771,33 @@ _start:
     mov rsi, colon_nl
     call write_to_file
 
-    ; --- 2. Parse LHS ---
+    ; --- 2. Fixed LHS Parsing ---
     call next_token
+    cmp byte [token_type], 2    ; IS IT A NUMBER?
+    je .while_lhs_num
+
+.while_lhs_var:
     call get_var_offset
     mov rdi, rax
-    mov rsi, mov_rax_var
+    mov rsi, mov_rax_var        ; "mov rax, [vars + "
     call write_to_file
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
     call write_to_file
+    jmp .while_parse_op
 
+.while_lhs_num:
+    call string_to_int
+    mov rdx, rax
+    mov rsi, mov_rax_imm        ; "mov rax, "
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+
+.while_parse_op:
     ; --- 3. Parse Operator ---
     call next_token
     mov rsi, op_eq
@@ -734,36 +805,49 @@ _start:
     je .set_jne
     mov rsi, op_gt
     call compare_token
-    je .set_jle ; Use your existing IF setter
+    je .set_jle 
     mov rsi, op_lt
     call compare_token
-    je .set_jge ; Use your existing IF setter
+    je .set_jge 
     
-    ; ONLY jump to main loop if NO operator was found (Error)
     jmp .main_loop
 
-
 .do_if:
-    inc qword [label_count]       ; unique label number
+    inc qword [label_count]       
     mov rax, [label_count]
-
     mov rdx, [nested_ptr]
     mov [label_stack + rdx*8], rax
-
     mov byte [type_stack + rdx], 0 ; mark as IF
-    inc qword [nested_ptr]          ; push new nesting level
+    inc qword [nested_ptr]         
 
-    ; --- 1. Parse LHS ---
+    ; --- 1. LHS Parsing (Fixed) ---
     call next_token
+    cmp byte [token_type], 2    ; Is it a number?
+    je .lhs_num_literal
+
+.lhs_variable:
     call get_var_offset
     mov rdi, rax
-    mov rsi, mov_rax_var
+    mov rsi, mov_rax_var        ; "mov rax, [vars + "
     call write_to_file
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
     call write_to_file
+    jmp .parse_operator_if      ; Go to operator
 
+.lhs_num_literal:
+    call string_to_int
+    mov rdx, rax
+    mov rsi, mov_rax_imm        ; "mov rax, "
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
+    ; Fall through to operator...
+
+.parse_operator_if:
     ; --- 2. Parse Operator ---
     call next_token
     mov rsi, op_eq
@@ -775,10 +859,10 @@ _start:
     mov rsi, op_lt
     call compare_token
     je .set_jge
-    jmp .main_loop  ; unknown operator, skip
+    jmp .main_loop
 
 .set_jne:
-    mov r12, je_label
+    mov r12, jne_label          ; Make sure this points to "    jne .L"
     jmp .parse_rhs
 .set_jle:
     mov r12, jle_label
@@ -787,38 +871,37 @@ _start:
     mov r12, jge_label
 
 .parse_rhs:
-
     call next_token
-    cmp byte [token_type], 1
-    je .rhs_var_if
-.rhs_num_if:
-    call string_to_int
-    mov rdx, rax
-    mov rsi, mov_rbx_imm 
-    call write_to_file
-    mov rax, rdx
-    call write_int_to_file
-    mov rsi, newline
-    call write_to_file
-    jmp .generate_cmp_if
-.rhs_var_if:
+    cmp byte [token_type], 2
+    je .rhs_num_literal
+
+.rhs_variable:
     call get_var_offset
     mov rdi, rax
-    mov rsi, mov_rbx_var
+    mov rsi, mov_rbx_var        ; "mov rbx, [vars + "
     call write_to_file
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
     call write_to_file
+    jmp .generate_cmp_if
+
+.rhs_num_literal:
+    call string_to_int
+    mov rdx, rax
+    mov rsi, mov_rbx_imm        ; "mov rbx, "
+    call write_to_file
+    mov rax, rdx
+    call write_int_to_file
+    mov rsi, newline
+    call write_to_file
 
 .generate_cmp_if:
-    mov rsi, cmp_rax_rbx
+    mov rsi, cmp_rax_rbx        ; "    cmp rax, rbx"
     call write_to_file
-
-    mov rsi, r12 ; The jump (jne L / jle L / jge L)
+    mov rsi, r12                ; The jump (jne .L)
     call write_to_file
     
-    ; Get the label number for the current nesting level
     mov rdx, [nested_ptr]
     dec rdx
     mov rax, [label_stack + rdx*8]
@@ -890,6 +973,9 @@ _start:
     
     ; 2. Write the Print Routine (so the program can use PRINT)
     mov rsi, print_routine
+    call write_to_file
+
+    mov rsi, print_int_raw_routine ; <--- ADD THIS LINE
     call write_to_file
 
     mov rsi, bss_header
@@ -1088,20 +1174,32 @@ write_int_to_file:
     push rdx
     push rdi
     push rsi
+    
     mov rdi, 10
     mov rcx, num_str
     add rcx, 19
-    mov byte [rcx], 0
-.conv:
+    mov byte [rcx], 0    ; Null terminator at the very end
+    
+    ; If RAX is 0, handle it specifically
+    test rax, rax
+    jnz .conv_loop
+    dec rcx
+    mov byte [rcx], '0'
+    jmp .do_write
+
+.conv_loop:
     xor rdx, rdx
     div rdi
     add dl, '0'
     dec rcx
     mov [rcx], dl
     test rax, rax
-    jnz .conv
+    jnz .conv_loop
+
+.do_write:
     mov rsi, rcx
     call write_to_file
+    
     pop rsi
     pop rdi
     pop rdx
