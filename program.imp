@@ -1,7 +1,13 @@
 LET c 0
+LET d 1
+LET e 0
 WHILE c < 126
     READ c
     IF c > 32    ; ASCII 32 is 'Space'. Anything 32 or lower is a "control character"
         PRINT c
+        MUL d 2
+        ADD e 1
+        PRINT e
+        PRINT d
     END
 END

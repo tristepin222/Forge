@@ -209,9 +209,8 @@ _start:
 
 .do_read:
     call next_token      ; Get the variable to store the char in (e.g., 'a')
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     push rdi             ; Save variable offset
 
     ; 1. Generate the read syscall
@@ -248,9 +247,8 @@ _start:
 .idx_var:
     mov rsi, mov_r10_var
     call write_to_file
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
@@ -272,9 +270,8 @@ _start:
 .val_var:
     mov rsi, mov_r11_var
     call write_to_file
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
@@ -288,9 +285,8 @@ _start:
 .do_peek:
     ; --- 1. Get Destination Variable ---
     call next_token
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     push rdi             ; Save destination var offset
 
     ; --- 2. Get Index (Load into R10) ---
@@ -308,9 +304,8 @@ _start:
 .peek_idx_var:
     mov rsi, mov_r10_var
     call write_to_file
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rax, rdi
     call write_int_to_file
     mov rsi, close_bracket_load
@@ -332,9 +327,8 @@ _start:
 
 .do_mul:
     call next_token      ; Get destination var (e.g., 'a')
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     push rdi             ; Save destination offset
 
     ; 1. Load destination into RAX
@@ -351,9 +345,8 @@ _start:
     je .mul_literal
 
 .mul_var:
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rdx, rdi
     mov rsi, mul_rax_var ; "mul qword [vars + "
     call write_to_file
@@ -386,9 +379,8 @@ _start:
 
 .do_let:
     call next_token     ; Get variable name
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     push rdi            ; Save var offset
 
     call next_token     ; Get value
@@ -412,9 +404,8 @@ _start:
 
 .do_var:
     call next_token
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rsi, mov_rax_var
     call write_to_file
     mov rax, rdi
@@ -429,9 +420,8 @@ _start:
     ; Case A: It's a Variable (Type 1)
     cmp byte [token_type], 1
     jne .check_num
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     
     ; Generate: mov rax, [vars + offset]
     mov rsi, mov_rax_var
@@ -461,17 +451,17 @@ _start:
     jmp .main_loop
 
 .do_end:
-    dec qword [nested_ptr]
-    mov rdx, [nested_ptr]
+    mov rdx, [nested_ptr]   ; get current stack pointer
+    dec rdx                 ; point to top element
     mov rax, [label_stack + rdx*8]
-    movzx rcx, byte [type_stack + rdx] ; Check if this was an IF or WHILE
+    movzx rcx, byte [type_stack + rdx]
 
     cmp rcx, 1
     jne .is_if_end
 
 .is_while_end:
     push rax
-    mov rsi, jmp_label 
+    mov rsi, jmp_label
     call write_to_file
     pop rax
     call write_int_to_file
@@ -480,28 +470,29 @@ _start:
 
     mov rsi, wend_prefix
     call write_to_file
+    mov rax, [label_stack + rdx*8]
     call write_int_to_file
     mov rsi, colon_nl
     call write_to_file
+
+    dec qword [nested_ptr]
     jmp .main_loop
 
 .is_if_end:
-    mov rsi, if_end ; Templates: "L" or ".L"
+    mov rsi, if_end
     call write_to_file
-    
-    mov rdx, [nested_ptr] ; nested_ptr was already decremented by .do_end
     mov rax, [label_stack + rdx*8]
     call write_int_to_file
-    
-    mov rsi, colon_nl ; ":"
+    mov rsi, colon_nl
     call write_to_file
+
+    dec qword [nested_ptr]
     jmp .main_loop
 
 .do_sub:
     call next_token      ; Get the destination variable (e.g., 'a')
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     push rdi             ; Save destination offset
 
     ; Step 1: Load destination into RAX
@@ -520,7 +511,7 @@ _start:
 .sub_variable:
     movzx rsi, byte [token_buf]
     sub rsi, 'a'
-    imul rsi, 8
+    shl rdi, 3
     mov rdx, rsi         ; Save source offset
     mov rsi, sub_rax_var
     call write_to_file
@@ -553,13 +544,12 @@ _start:
 .do_while:
     inc qword [label_count]
     mov rax, [label_count]
+
     mov rdx, [nested_ptr]
     mov [label_stack + rdx*8], rax
-    
-    ; MARK AS WHILE
-    mov byte [type_stack + rdx], 1 
-    inc qword [nested_ptr]
 
+    mov byte [type_stack + rdx], 1 ; mark as WHILE
+    inc qword [nested_ptr]         ; push new nesting level
     ; --- 1. Place the Start Label ---
     mov rsi, wstart_prefix
     call write_to_file
@@ -570,9 +560,8 @@ _start:
 
     ; --- 2. Parse LHS ---
     call next_token
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rsi, mov_rax_var
     call write_to_file
     mov rax, rdi
@@ -584,7 +573,7 @@ _start:
     call next_token
     mov rsi, op_eq
     call compare_token
-    je .w_set_jne
+    je .set_jne
     mov rsi, op_gt
     call compare_token
     je .set_jle ; Use your existing IF setter
@@ -595,75 +584,21 @@ _start:
     ; ONLY jump to main loop if NO operator was found (Error)
     jmp .main_loop
 
-.w_set_jne: 
-    mov r12, je_label 
-    jmp .w_rhs
-.w_set_jle: 
-    mov r12, jle_label 
-    jmp .w_rhs
-.w_set_jge: 
-    mov r12, jge_label
-    ; Falls through to .w_rhs
-
-.w_rhs:
-    call next_token
-    call string_to_int 
-    mov rdx, rax
-    mov rsi, mov_rbx_imm
-    call write_to_file
-    mov rax, rdx
-    call write_int_to_file
-    mov rsi, newline
-    call write_to_file
-
-    ; --- 4. Generate Comparison and Jump-to-Exit ---
-    mov rsi, cmp_rax_rbx
-    call write_to_file
-
-    mov rsi, r12 ; This is the jge/jne etc.
-    call write_to_file
-    
-    ; Get current loop ID for the WEND target
-    mov rdx, [nested_ptr]
-    dec rdx
-    mov rax, [label_stack + rdx*8]
-    call write_int_to_file
-    mov rsi, newline
-    call write_to_file
-
-    jmp .main_loop ; NOW we return to the main loop
-
-.w_generate:
-    mov rsi, cmp_rax_rbx
-    call write_to_file
-
-    ; Jump to the END if condition fails
-    mov rsi, r12
-    call write_to_file
-    ; Target is the WEND label
-    mov rdx, [nested_ptr]
-    dec rdx
-    mov rax, [label_stack + rdx*8]
-    call write_int_to_file
-    mov rsi, newline
-    call write_to_file
-
-    jmp .main_loop
 
 .do_if:
-    inc qword [label_count]
+    inc qword [label_count]       ; unique label number
     mov rax, [label_count]
+
     mov rdx, [nested_ptr]
     mov [label_stack + rdx*8], rax
-    
-    mov byte [type_stack + rdx], 0 ; Mark this level as an IF
-    inc qword [nested_ptr]
+
+    mov byte [type_stack + rdx], 0 ; mark as IF
+    inc qword [nested_ptr]          ; push new nesting level
 
     ; --- 1. Parse LHS ---
     call next_token
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rsi, mov_rax_var
     call write_to_file
     mov rax, rdi
@@ -673,21 +608,16 @@ _start:
 
     ; --- 2. Parse Operator ---
     call next_token
-    
     mov rsi, op_eq
     call compare_token
     je .set_jne
-
     mov rsi, op_gt
     call compare_token
     je .set_jle
-
     mov rsi, op_lt
     call compare_token
     je .set_jge
-
-    ; Error case: unknown operator
-    jmp .main_loop 
+    jmp .main_loop  ; unknown operator, skip
 
 .set_jne:
     mov r12, je_label
@@ -714,9 +644,8 @@ _start:
     call write_to_file
     jmp .generate_cmp_if
 .rhs_var_if:
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
+    call get_var_offset
+    mov rdi, rax
     mov rsi, mov_rbx_var
     call write_to_file
     mov rax, rdi
@@ -742,58 +671,60 @@ _start:
     jmp .main_loop
 
 .do_add:
-    call next_token     ; Get the destination variable (e.g., 'a')
-    movzx rdi, byte [token_buf]
-    sub rdi, 'a'
-    imul rdi, 8
-    push rdi            ; Save destination offset
-
-    ; Step 1: Load destination into RAX
-    mov rsi, mov_rax_var
-    call write_to_file
-    mov rax, [rsp]      ; Get offset back from stack top
-    call write_int_to_file
-    mov rsi, close_bracket_load
-    call write_to_file
-
-    ; Step 2: Get the source (the value to add)
     call next_token
-    cmp byte [token_type], 2 ; Is it a number?
+    call get_var_offset
+    mov rdi, rax
+    push rdi
+    call load_var
+
+    call next_token
+    cmp byte [token_type], 2
     je .add_literal
 
 .add_variable:
-    movzx rsi, byte [token_buf]
-    sub rsi, 'a'
-    imul rsi, 8
-    mov rdx, rsi        ; Save source offset
-    mov rsi, add_rax_var
+    ; get source variable offset
+    call get_var_offset
+    mov rdx, rax                ; rdx = source offset
+
+    mov rsi, add_rax_var        ; "    add rax, [vars + "
     call write_to_file
+
     mov rax, rdx
     call write_int_to_file
-    mov rsi, close_bracket_load
+
+    mov rsi, close_bracket_load ; "]\n"
     call write_to_file
     jmp .save_result
 
+
 .add_literal:
-    call string_to_int
-    mov rdx, rax        ; Save the number
-    mov rsi, add_rax_imm
+    call string_to_int          ; rax = literal
+
+    mov rdx, rax                ; save literal
+
+    mov rsi, add_rax_imm        ; "    add rax, "
     call write_to_file
+
     mov rax, rdx
     call write_int_to_file
+
     mov rsi, newline
     call write_to_file
 
+
 .save_result:
-    ; Step 3: Store RAX back into destination
+    ; store RAX back into destination variable
     mov rsi, mov_var_rax
     call write_to_file
-    pop rax             ; Get destination offset
+
+    pop rax                     ; destination offset
     call write_int_to_file
+
     mov rsi, close_bracket_store
     call write_to_file
-    jmp .main_loop
 
+    jmp .main_loop
+    
 .finish_up:
     ; 1. Write the Exit syscall
     mov rsi, asm_exit
@@ -904,30 +835,54 @@ string_to_int:
 .s_done:
     ret
 
+get_var_offset:
+    movzx rax, byte [token_buf]
+    sub rax, 'a'
+    shl rax, 3
+    ret
+
+; Load variable into RAX
+load_var:
+    mov rsi, mov_rax_var
+    call write_to_file
+    mov rax, rdi
+    call write_int_to_file
+    mov rsi, close_bracket_load
+    call write_to_file
+    ret
+
+; Store RAX back into variable
+store_var:
+    mov rsi, mov_var_rax
+    call write_to_file
+    mov rdi, rdi   ; Offset in RDI
+    call write_int_to_file
+    mov rsi, close_bracket_store
+    call write_to_file
+    ret
+
 ; --- FILE UTILITIES ---
 
 write_to_file:
-    push rax
     push rdi
-    push rdx
-    push rsi
     push rcx
-    mov rcx, rsi
-    mov rdx, 0
-.count_len:
-    cmp byte [rcx + rdx], 0
-    je .do_write
-    inc rdx
-    jmp .count_len
-.do_write:
+    push rdx
+
+    mov rdi, rsi
+    mov rcx, -1
+    xor al, al
+    repne scasb
+    not rcx
+    dec rcx
+    mov rdx, rcx
+
     mov rax, 1
     mov rdi, [out_fd]
     syscall
-    pop rcx
-    pop rsi
+
     pop rdx
+    pop rcx
     pop rdi
-    pop rax
     ret
 
 write_int_to_file:
