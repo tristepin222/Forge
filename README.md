@@ -2,7 +2,7 @@
 
 Imperium Compiler Bootstrap
 
-Forge is a minimal, self-contained bootstrap compiler written in x86-64 Assembly. It is designed to be the "Stage 0" tool used to build the "Stage 1" compiler in its own high-level language.
+Forge is a minimal, self-contained bootstrap compiler written in x86-64 NASM for Linux. It is intended to be the Stage 0 compiler used to build a later compiler in its own high-level language.
 
 ### Prerequisites
 
@@ -13,7 +13,7 @@ sudo apt update
 sudo apt install nasm build-essential
 ```
 
-*Note: Forge targets the x86-64 Linux ABI and is not compatible with ARM/Apple Silicon without emulation.*
+*Note: Forge targets the x86-64 Linux ABI (`elf64` / `syscall`).*
 
 ### Building the Compiler
 
@@ -43,6 +43,17 @@ chmod +x build.sh
 
 This will compile your `program.imp`, link it, and execute it in one go.
 
+### Regression Tests
+
+There is also a small Stage 0 regression corpus under `tests/stage0`.
+
+```bash
+chmod +x test_stage0.sh
+./test_stage0.sh
+```
+
+The runner rebuilds the compiler, swaps each test program into `program.imp`, compiles it, runs the generated binary, and compares stdout against the expected `.out` file.
+
 ---
 
 ### Language Reference (Imperium Syntax)
@@ -56,9 +67,13 @@ Forge supports the following primitives required for bootstrapping:
 | `PRINT [val]` | Print integer to stdout + newline | `PRINT a` |
 | `IF [cond] ... END` | Conditional blocks (`==`, `>`, `<`) | `IF a > 0` |
 | `WHILE [cond] ... END` | Loop blocks | `WHILE a < 10` |
-| `POKE [idx] [val]` | Write 64-bit value to Heap memory | `POKE 0 65` |
-| `PEEK [var] [idx]` | Read 64-bit value from Heap memory | `PEEK a 0` |
+| `POKE [addr] [val]` | Write 64-bit value to heap memory | `POKE ptr 65` |
+| `PEEK [var] [addr]` | Read 64-bit value from heap memory | `PEEK a ptr` |
 | `READ [var]` | Read 1 byte from stdin (ASCII value) | `READ c` |
+| `WRITE_STR "..."` | Emit a raw string one byte at a time | `WRITE_STR "mov eax, 1"` |
+| `WRITE_CHAR [val]` | Emit one byte to stdout | `WRITE_CHAR 10` |
+| `WRITE_INT [val]` | Print integer without newline | `WRITE_INT a` |
+| `EXIT` | Exit the generated program | `EXIT` |
 
 ---
 

@@ -1,0 +1,12 @@
+VAR x
+LET x 5
+IF x == 5
+    PRINT 11
+END
+IF x > 2
+    PRINT 22
+END
+IF x < 0
+    PRINT 33
+END
+EXIT

@@ -1,0 +1,4 @@
+VAR c
+READ c
+PRINT c
+EXIT

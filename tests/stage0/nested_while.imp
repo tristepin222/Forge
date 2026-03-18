@@ -1,0 +1,13 @@
+VAR outer
+VAR inner
+LET outer 0
+WHILE outer < 2
+    LET inner 0
+    WHILE inner < 2
+        PRINT inner
+        ADD inner 1
+    END
+    ADD outer 1
+END
+PRINT outer
+EXIT

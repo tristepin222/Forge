@@ -1,0 +1,7 @@
+VAR ptr
+VAR value
+ALLOC ptr 2
+POKE ptr 65
+PEEK value ptr
+PRINT value
+EXIT
