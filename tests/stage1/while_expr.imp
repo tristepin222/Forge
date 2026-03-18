@@ -1,0 +1,7 @@
+VAR x
+LET x 1
+WHILE x * 2 <= 16
+    PRINT x
+    MUL x 2
+END
+EXIT

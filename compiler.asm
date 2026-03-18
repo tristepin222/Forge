@@ -27,7 +27,7 @@ default rel
 %define COND_GE 6
 
 %define MAX_INPUT    262144
-%define MAX_OUTPUT   262144
+%define MAX_OUTPUT   1048576
 %define MAX_TOKEN    128
 %define MAX_VARS     128
 %define MAX_NAME     32

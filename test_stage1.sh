@@ -11,6 +11,8 @@ TEST_NAMES=(
   add
   arith_vars
   basic_print
+  expr_precedence
+  expr_vars
   heap
   if_eq
   if_false
@@ -19,11 +21,13 @@ TEST_NAMES=(
   literal_print
   long_names
   mul
+  print_expr
   read
   var_copy
   negative_let
   sub
   write_char
+  write_int_expr
   write_int
   write_str
   while_count

@@ -1,0 +1,8 @@
+VAR a
+VAR b
+LET a 5
+LET b 3
+IF a + 1 < b * 3
+    PRINT 7
+END
+EXIT

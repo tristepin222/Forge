@@ -1,0 +1,4 @@
+VAR x
+LET x 2 + 3 * 4
+PRINT x
+EXIT

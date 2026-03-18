@@ -1,0 +1,5 @@
+VAR a
+LET a 5
+WRITE_INT a + 7
+WRITE_CHAR 10
+EXIT

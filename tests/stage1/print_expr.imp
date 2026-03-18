@@ -1,0 +1,6 @@
+VAR a
+VAR b
+LET a 5
+LET b 3
+PRINT a + b * 2
+EXIT
