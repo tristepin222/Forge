@@ -1,0 +1,6 @@
+VAR x
+LET x 4
+IF x >= 4
+    PRINT 9
+END
+EXIT

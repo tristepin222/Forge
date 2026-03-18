@@ -1,0 +1,4 @@
+VAR x
+LET x -12
+PRINT x
+EXIT

@@ -1,0 +1,7 @@
+VAR alpha
+VAR beta
+LET alpha 10
+LET beta alpha
+ADD beta 5
+PRINT beta
+EXIT

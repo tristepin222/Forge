@@ -1,0 +1,6 @@
+VAR x
+LET x 3
+IF x < 5
+    PRINT 7
+END
+EXIT

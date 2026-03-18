@@ -1,0 +1,9 @@
+VAR a
+VAR b
+LET a 5
+LET b 3
+ADD a b
+MUL a b
+SUB a 4
+PRINT a
+EXIT

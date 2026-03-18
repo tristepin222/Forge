@@ -1,0 +1,7 @@
+VAR p
+VAR x
+ALLOC p 2
+POKE p 65
+PEEK x p
+PRINT x
+EXIT

@@ -1,0 +1,7 @@
+VAR x
+LET x 0
+WHILE x < 3
+    PRINT x
+    ADD x 1
+END
+EXIT

@@ -1,0 +1,4 @@
+VAR x
+LET x 10
+PRINT x
+EXIT

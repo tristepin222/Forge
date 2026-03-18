@@ -1,0 +1,7 @@
+VAR x
+LET x 5
+WHILE x < 3
+    PRINT 9
+END
+PRINT 1
+EXIT
