@@ -102,6 +102,13 @@ chmod +x bootstrap_stage1.sh
 ./bootstrap_stage1.sh
 ```
 
+To compare first-generation vs second-generation Stage 1 outputs across the same corpus:
+
+```bash
+chmod +x compare_stage1_generations.sh
+./compare_stage1_generations.sh
+```
+
 ---
 
 ### Language Reference (Imperium Syntax)
