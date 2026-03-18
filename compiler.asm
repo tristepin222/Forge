@@ -26,7 +26,7 @@ default rel
 %define COND_GT 5
 %define COND_GE 6
 
-%define MAX_INPUT    65536
+%define MAX_INPUT    262144
 %define MAX_OUTPUT   262144
 %define MAX_TOKEN    128
 %define MAX_VARS     128
@@ -390,8 +390,7 @@ finish_compiler:
     syscall
 
 block_error:
-    lea rsi, [err_block]
-    call fatal
+    call fatal_block
 
 handle_var:
     call expect_ident
@@ -586,8 +585,7 @@ handle_end:
     je .end_if
     cmp ecx, BLOCK_WHILE
     je .end_while
-    lea rsi, [err_block]
-    call fatal
+    call fatal_block
 .end_if:
     lea rsi, [str_if_prefix]
     call emit_cstr
@@ -1260,8 +1258,7 @@ push_block:
     ret
 .fail:
     pop rbx
-    lea rsi, [err_block]
-    call fatal
+    call fatal_block
 
 push_block_full:
     push rbx
@@ -1279,8 +1276,7 @@ push_block_full:
     ret
 .fail:
     pop rbx
-    lea rsi, [err_block]
-    call fatal
+    call fatal_block
 
 pop_block:
     mov eax, [block_sp]
@@ -1296,8 +1292,7 @@ pop_block:
     mov edx, [r10 + rax*4]
     ret
 .fail:
-    lea rsi, [err_block]
-    call fatal
+    call fatal_block
 
 token_to_int:
     push rbx
@@ -1440,6 +1435,27 @@ fatal:
 
 fatal_parse:
     lea rsi, [err_parse]
+    call write_stderr_cstr
+    lea rsi, [msg_parse_line]
+    call write_stderr_cstr
+    call current_line_number
+    call write_stderr_uint
+    lea rsi, [msg_parse_type]
+    call write_stderr_cstr
+    mov eax, [token_type]
+    call write_stderr_uint
+    lea rsi, [msg_parse_token]
+    call write_stderr_cstr
+    lea rsi, [token_buf]
+    call write_stderr_cstr
+    lea rsi, [msg_newline]
+    call write_stderr_cstr
+    mov rax, SYS_EXIT
+    mov rdi, 1
+    syscall
+
+fatal_block:
+    lea rsi, [err_block]
     call write_stderr_cstr
     lea rsi, [msg_parse_line]
     call write_stderr_cstr

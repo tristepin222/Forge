@@ -54,6 +54,54 @@ chmod +x test_stage0.sh
 
 The runner rebuilds the compiler, swaps each test program into `program.imp`, compiles it, runs the generated binary, and compares stdout against the expected `.out` file.
 
+### Building Stage 1
+
+To compile the current `stage1.imp` source with the Stage 0 compiler:
+
+```bash
+chmod +x build_stage1.sh
+./build_stage1.sh
+```
+
+This script:
+- builds the Stage 0 compiler
+- swaps `stage1.imp` into `program.imp`
+- assembles the generated `output/stage1.asm`
+- links the resulting `output/stage1` compiler
+
+### Running `stage1_test.imp`
+
+If you have a small Stage 1 input program in `stage1_test.imp`, you can build Stage 1, compile that test, and run the resulting binary with:
+
+```bash
+chmod +x run_stage1_test.sh
+./run_stage1_test.sh
+```
+
+### Stage 1 Subset Tests
+
+To run the current Stage 1 regression subset:
+
+```bash
+chmod +x test_stage1.sh
+./test_stage1.sh
+```
+
+This suite runs the current Stage 1 regression corpus. By default it builds `output/stage1` first, but you can also point it at an existing compiler binary:
+
+```bash
+BUILD_STAGE1=0 STAGE1_BIN=output/stage1_gen2 ./test_stage1.sh
+```
+
+### Stage 1 Bootstrap Validation
+
+To build Stage 1 with Stage 0, rebuild it with itself, and rerun the Stage 1 regression suite against the second-generation compiler:
+
+```bash
+chmod +x bootstrap_stage1.sh
+./bootstrap_stage1.sh
+```
+
 ---
 
 ### Language Reference (Imperium Syntax)
