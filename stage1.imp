@@ -12,6 +12,7 @@ VAR token_line
 VAR parser_state
 VAR expr_line
 VAR expr_pending_op
+VAR expr_mul_pending
 VAR expr_target
 VAR target_off
 VAR next_var_offset
@@ -36,6 +37,7 @@ VAR post_load_state
 VAR post_lookup_state
 VAR post_cond_state
 VAR post_rhs_state
+VAR post_expr_state
 
 # Working variables
 VAR temp
@@ -79,6 +81,7 @@ LET token_line 1
 LET parser_state 0
 LET expr_line 0
 LET expr_pending_op 0
+LET expr_mul_pending 0
 LET expr_target 0
 LET next_var_offset 0
 LET next_label 0
@@ -95,6 +98,7 @@ LET post_load_state 0
 LET post_lookup_state 0
 LET post_cond_state 0
 LET post_rhs_state 0
+LET post_expr_state 0
 LET sym_ptr symbol_tbl
 LET block_ptr block_tbl
 
@@ -984,7 +988,7 @@ WHILE 1 == 1
 
                         IF lookup_mode == 1
                             LET target_off found_off
-                            LET parser_state 3
+                            LET parser_state 29
                         END
                         IF lookup_mode == 2
                             LET post_lookup_state 27
@@ -1045,79 +1049,6 @@ WHILE 1 == 1
         END
 
         IF emit_handled == 0
-            IF parser_state == 3
-                IF token_line == expr_line
-                    IF tok_type == 4
-                        PEEK temp token_buf
-                    END
-
-                    IF emit_handled == 0
-                        IF tok_type == 1
-                            IF tok_len == 4
-                                PEEK temp token_buf
-                                IF temp == 67
-                                    LET parse_ptr token_buf
-                                    ADD parse_ptr 8
-                                    PEEK temp2 parse_ptr
-                                    IF temp2 == 65
-                                        LET parser_state 36
-                                        LET emit_handled 1
-                                    END
-                                END
-                            END
-                        END
-                    END
-
-                    IF emit_handled == 0
-                        IF tok_type == 2
-                        LET parse_ptr token_buf
-                        LET remaining tok_len
-                        LET result 0
-                        LET sign_flag 0
-
-                        IF remaining > 0
-                            PEEK temp parse_ptr
-                            IF temp == 45
-                                LET sign_flag 1
-                                ADD parse_ptr 8
-                                SUB remaining 1
-                            END
-                        END
-
-                        WHILE remaining > 0
-                            PEEK temp parse_ptr
-                            MUL result 10
-                            SUB temp 48
-                            ADD result temp
-                            ADD parse_ptr 8
-                            SUB remaining 1
-                        END
-
-                        IF sign_flag == 1
-                            MUL result -1
-                        END
-
-                        WRITE_STR "    mov rax, "
-                        WRITE_INT result
-                        WRITE_CHAR 10
-                        LET parser_state 27
-                        LET emit_handled 1
-                        END
-                    END
-
-                    IF emit_handled == 0
-                        IF tok_type == 1
-                            IF tok_len > 0
-                                LET lookup_mode 2
-                                LET parser_state 30
-                            END
-                        END
-                    END
-                END
-            END
-        END
-
-        IF emit_handled == 0
             IF parser_state == 27
                 IF token_line == expr_line
                     IF tok_type == 4
@@ -1130,99 +1061,107 @@ WHILE 1 == 1
 
                     IF emit_handled == 0
                         IF tok_type == 4
-                            IF expr_pending_op == 1
-                                WRITE_STR "    pop rbx"
-                                WRITE_CHAR 10
-                                WRITE_STR "    add rax, rbx"
-                                WRITE_CHAR 10
-                                LET expr_pending_op 0
-                            END
-                            IF expr_pending_op == 2
-                                WRITE_STR "    mov rcx, rax"
-                                WRITE_CHAR 10
-                                WRITE_STR "    pop rax"
-                                WRITE_CHAR 10
-                                WRITE_STR "    sub rax, rcx"
-                                WRITE_CHAR 10
-                                LET expr_pending_op 0
-                            END
-
-                            PEEK temp token_buf
-                            IF temp == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_op 1
-                                LET parser_state 3
-                                LET emit_handled 1
-                            END
-                            IF temp == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_op 2
-                                LET parser_state 3
-                                LET emit_handled 1
-                            END
+                            LET post_expr_state 51
+                            LET parser_state 49
+                            LET emit_handled 1
                         END
                     END
                 END
 
                 IF emit_handled == 0
-                    IF expr_pending_op == 1
-                        WRITE_STR "    pop rbx"
-                        WRITE_CHAR 10
-                        WRITE_STR "    add rax, rbx"
-                        WRITE_CHAR 10
-                        LET expr_pending_op 0
-                    END
-                    IF expr_pending_op == 2
-                        WRITE_STR "    mov rcx, rax"
-                        WRITE_CHAR 10
-                        WRITE_STR "    pop rax"
-                        WRITE_CHAR 10
-                        WRITE_STR "    sub rax, rcx"
-                        WRITE_CHAR 10
-                        LET expr_pending_op 0
-                    END
-
-                    IF expr_target == 1
-                        LET post_store_state 0
-                        LET parser_state 37
-                    END
-                    IF expr_target == 2
-                        WRITE_STR "    call print_rax"
-                        WRITE_CHAR 10
-                        LET parser_state 0
-                    END
-                    IF expr_target == 3
-                        WRITE_STR "    call print_int_raw"
-                        WRITE_CHAR 10
-                        LET parser_state 0
-                    END
-                    IF expr_target == 4
-                        WRITE_STR "    call write_char"
-                        WRITE_CHAR 10
-                        LET parser_state 0
-                    END
-                    IF expr_target == 5
-                        WRITE_STR "    leave"
-                        WRITE_CHAR 10
-                        WRITE_STR "    ret"
-                        WRITE_CHAR 10
-                        LET parser_state 0
-                    END
-
-                    LET expr_target 0
-
-                    IF token_line == expr_line
-                        LET emit_handled 1
-                    END
-                    IF token_line < expr_line
-                        LET emit_handled 1
-                    END
-                    IF token_line > expr_line
-                        LET emit_handled 0
-                    END
+                    LET post_expr_state 50
+                    LET parser_state 49
                 END
+            END
+        END
+
+        IF parser_state == 49
+            IF expr_mul_pending == 1
+                WRITE_STR "    pop rbx"
+                WRITE_CHAR 10
+                WRITE_STR "    imul rax, rbx"
+                WRITE_CHAR 10
+                LET expr_mul_pending 0
+            END
+            IF expr_pending_op == 1
+                WRITE_STR "    pop rbx"
+                WRITE_CHAR 10
+                WRITE_STR "    add rax, rbx"
+                WRITE_CHAR 10
+                LET expr_pending_op 0
+            END
+            IF expr_pending_op == 2
+                WRITE_STR "    mov rcx, rax"
+                WRITE_CHAR 10
+                WRITE_STR "    pop rax"
+                WRITE_CHAR 10
+                WRITE_STR "    sub rax, rcx"
+                WRITE_CHAR 10
+                LET expr_pending_op 0
+            END
+            LET parser_state post_expr_state
+        END
+
+        IF parser_state == 50
+            IF expr_target == 1
+                LET post_store_state 0
+                LET parser_state 37
+            END
+            IF expr_target == 2
+                WRITE_STR "    call print_rax"
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+            IF expr_target == 3
+                WRITE_STR "    call print_int_raw"
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+            IF expr_target == 4
+                WRITE_STR "    call write_char"
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+            IF expr_target == 5
+                WRITE_STR "    leave"
+                WRITE_CHAR 10
+                WRITE_STR "    ret"
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+
+            LET expr_target 0
+            LET expr_mul_pending 0
+
+            IF token_line == expr_line
+                LET emit_handled 1
+            END
+            IF token_line < expr_line
+                LET emit_handled 1
+            END
+            IF token_line > expr_line
+                LET emit_handled 0
+            END
+        END
+
+        IF parser_state == 51
+            PEEK temp token_buf
+            IF temp == 43
+                WRITE_STR "    push rax"
+                WRITE_CHAR 10
+                LET expr_pending_op 1
+                LET parser_state 29
+                LET emit_handled 1
+            END
+            IF temp == 45
+                WRITE_STR "    push rax"
+                WRITE_CHAR 10
+                LET expr_pending_op 2
+                LET parser_state 29
+                LET emit_handled 1
+            END
+            IF emit_handled == 0
+                LET parser_state 50
             END
         END
 
@@ -1249,52 +1188,9 @@ WHILE 1 == 1
                 IF token_line == expr_line
                     WRITE_STR "    push rax"
                     WRITE_CHAR 10
-
-                    IF tok_type == 2
-                        LET parse_ptr token_buf
-                        LET remaining tok_len
-                        LET result 0
-                        LET sign_flag 0
-
-                        IF remaining > 0
-                            PEEK temp parse_ptr
-                            IF temp == 45
-                                LET sign_flag 1
-                                ADD parse_ptr 8
-                                SUB remaining 1
-                            END
-                        END
-
-                        WHILE remaining > 0
-                            PEEK temp parse_ptr
-                            MUL result 10
-                            SUB temp 48
-                            ADD result temp
-                            ADD parse_ptr 8
-                            SUB remaining 1
-                        END
-
-                        IF sign_flag == 1
-                            MUL result -1
-                        END
-
-                        WRITE_STR "    mov rax, "
-                        WRITE_INT result
-                        WRITE_CHAR 10
-                        WRITE_STR "    pop rbx"
-                        WRITE_CHAR 10
-                        WRITE_STR "    imul rax, rbx"
-                        WRITE_CHAR 10
-                        LET parser_state 27
-                        LET emit_handled 1
-                    END
-
-                    IF tok_type == 1
-                        IF tok_len > 0
-                            LET lookup_mode 3
-                            LET parser_state 30
-                        END
-                    END
+                    LET expr_mul_pending 1
+                    LET parser_state 29
+                    LET emit_handled 0
                 END
             END
         END
@@ -1320,6 +1216,7 @@ WHILE 1 == 1
                 IF emit_handled == 0
                     LET expr_line token_line
                     LET expr_pending_op 0
+                    LET expr_mul_pending 0
                     LET expr_target 2
                     LET parser_state 29
                 END
@@ -1347,6 +1244,7 @@ WHILE 1 == 1
                 IF emit_handled == 0
                     LET expr_line token_line
                     LET expr_pending_op 0
+                    LET expr_mul_pending 0
                     LET expr_target 3
                     LET parser_state 29
                 END
@@ -1357,6 +1255,7 @@ WHILE 1 == 1
             IF parser_state == 6
                 LET expr_line token_line
                 LET expr_pending_op 0
+                LET expr_mul_pending 0
                 LET expr_target 4
                 LET parser_state 29
             END
@@ -1366,6 +1265,7 @@ WHILE 1 == 1
             IF parser_state == 35
                 LET expr_line token_line
                 LET expr_pending_op 0
+                LET expr_mul_pending 0
                 LET expr_target 5
                 LET parser_state 29
             END
@@ -1373,46 +1273,65 @@ WHILE 1 == 1
 
         IF emit_handled == 0
             IF parser_state == 29
-                IF tok_type == 2
-                    LET parse_ptr token_buf
-                    LET remaining tok_len
-                    LET result 0
-                    LET sign_flag 0
-
-                    IF remaining > 0
-                        PEEK temp parse_ptr
-                        IF temp == 45
-                            LET sign_flag 1
-                            ADD parse_ptr 8
-                            SUB remaining 1
+                IF token_line == expr_line
+                    IF tok_type == 1
+                        IF tok_len == 4
+                            PEEK temp token_buf
+                            IF temp == 67
+                                LET parse_ptr token_buf
+                                ADD parse_ptr 8
+                                PEEK temp2 parse_ptr
+                                IF temp2 == 65
+                                    LET parser_state 36
+                                    LET emit_handled 1
+                                END
+                            END
                         END
                     END
 
-                    WHILE remaining > 0
-                        PEEK temp parse_ptr
-                        MUL result 10
-                        SUB temp 48
-                        ADD result temp
-                        ADD parse_ptr 8
-                        SUB remaining 1
+                    IF emit_handled == 0
+                        IF tok_type == 2
+                            LET parse_ptr token_buf
+                            LET remaining tok_len
+                            LET result 0
+                            LET sign_flag 0
+
+                            IF remaining > 0
+                                PEEK temp parse_ptr
+                                IF temp == 45
+                                    LET sign_flag 1
+                                    ADD parse_ptr 8
+                                    SUB remaining 1
+                                END
+                            END
+
+                            WHILE remaining > 0
+                                PEEK temp parse_ptr
+                                MUL result 10
+                                SUB temp 48
+                                ADD result temp
+                                ADD parse_ptr 8
+                                SUB remaining 1
+                            END
+
+                            IF sign_flag == 1
+                                MUL result -1
+                            END
+
+                            WRITE_STR "    mov rax, "
+                            WRITE_INT result
+                            WRITE_CHAR 10
+                            LET parser_state 27
+                            LET emit_handled 1
+                        END
                     END
 
-                    IF sign_flag == 1
-                        MUL result -1
-                    END
-
-                    WRITE_STR "    mov rax, "
-                    WRITE_INT result
-                    WRITE_CHAR 10
-                    LET parser_state 27
-                    LET emit_handled 1
-                END
-
-                IF emit_handled == 0
-                    IF tok_type == 1
-                        IF tok_len > 0
-                            LET lookup_mode 2
-                            LET parser_state 30
+                    IF emit_handled == 0
+                        IF tok_type == 1
+                            IF tok_len > 0
+                                LET lookup_mode 2
+                                LET parser_state 30
+                            END
                         END
                     END
                 END
@@ -1438,45 +1357,15 @@ WHILE 1 == 1
 
                         IF lookup_mode == 1
                             LET target_off found_off
-                            LET parser_state 3
+                            LET parser_state 29
                         END
                         IF lookup_mode == 2
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp2 found_off
-                                MUL temp2 -1
-                                WRITE_INT temp2
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            LET parser_state 27
+                            LET post_lookup_state 27
+                            LET parser_state 39
                         END
                         IF lookup_mode == 3
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp2 found_off
-                                MUL temp2 -1
-                                WRITE_INT temp2
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            WRITE_STR "    pop rbx"
-                            WRITE_CHAR 10
-                            WRITE_STR "    imul rax, rbx"
-                            WRITE_CHAR 10
-                            LET parser_state 27
+                            LET post_lookup_state 40
+                            LET parser_state 39
                         END
                         IF lookup_mode == 4
                             LET temp4 arg_index
