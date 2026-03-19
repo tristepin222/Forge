@@ -1,0 +1,15 @@
+VAR result
+
+PROC twice value
+RETURN value * 2
+END
+
+PROC compose value
+VAR mid
+LET mid CALL twice value
+RETURN mid + 3
+END
+
+LET result CALL compose 6
+PRINT result
+EXIT

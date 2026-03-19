@@ -1,0 +1,13 @@
+VAR result
+
+PROC store value
+VAR ptr
+ALLOC ptr 1
+POKE ptr value
+PEEK result ptr
+END
+
+CALL store 65
+WRITE_CHAR result
+WRITE_CHAR 10
+EXIT

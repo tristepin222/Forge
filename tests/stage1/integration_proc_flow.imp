@@ -1,0 +1,17 @@
+VAR result
+
+PROC compute base
+VAR acc
+LET acc 0
+WHILE acc < base
+    ADD acc 1
+END
+IF acc == base
+    RETURN acc * 3
+END
+RETURN 0
+END
+
+LET result CALL compute 4
+PRINT result
+EXIT

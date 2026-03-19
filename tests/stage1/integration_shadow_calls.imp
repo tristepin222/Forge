@@ -1,0 +1,20 @@
+VAR x
+LET x 1
+
+PROC outer value
+VAR x
+LET x value + 1
+PRINT x
+CALL inner x
+PRINT x
+END
+
+PROC inner value
+VAR x
+LET x value + 2
+PRINT x
+END
+
+CALL outer 4
+PRINT x
+EXIT

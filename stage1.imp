@@ -2357,19 +2357,17 @@ WHILE 1 == 1
                     IF tok_type == 1
                         IF tok_len > 0
                             LET token_char tok_hash
-                            LET sym_scan symbol_tbl
+                            LET sym_scan sym_ptr
                             LET found_flag 0
                             LET found_off 0
-                            WHILE sym_scan < sym_ptr
+                            WHILE sym_scan > symbol_tbl
+                                SUB sym_scan 16
                                 PEEK entry_char sym_scan
                                 IF entry_char == token_char
                                     ADD sym_scan 8
                                     PEEK found_off sym_scan
                                     LET found_flag 1
-                                    LET sym_scan sym_ptr
-                                END
-                                IF found_flag == 0
-                                    ADD sym_scan 16
+                                    LET sym_scan symbol_tbl
                                 END
                             END
 
@@ -2387,10 +2385,20 @@ WHILE 1 == 1
                         WRITE_CHAR 10
                     END
                     IF lhs_kind == 2
-                        WRITE_STR "    mov rax, [vars + "
-                        WRITE_INT lhs_value
-                        WRITE_STR "]"
-                        WRITE_CHAR 10
+                        IF lhs_value < 0
+                            WRITE_STR "    mov rax, [rbp - "
+                            LET temp2 lhs_value
+                            MUL temp2 -1
+                            WRITE_INT temp2
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
+                        IF lhs_value >= 0
+                            WRITE_STR "    mov rax, [vars + "
+                            WRITE_INT lhs_value
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
                     END
 
                     IF cond_rhs_kind == 1
@@ -2399,10 +2407,20 @@ WHILE 1 == 1
                         WRITE_CHAR 10
                     END
                     IF cond_rhs_kind == 2
-                        WRITE_STR "    mov rbx, [vars + "
-                        WRITE_INT cond_rhs_value
-                        WRITE_STR "]"
-                        WRITE_CHAR 10
+                        IF cond_rhs_value < 0
+                            WRITE_STR "    mov rbx, [rbp - "
+                            LET temp2 cond_rhs_value
+                            MUL temp2 -1
+                            WRITE_INT temp2
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
+                        IF cond_rhs_value >= 0
+                            WRITE_STR "    mov rbx, [vars + "
+                            WRITE_INT cond_rhs_value
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
                     END
 
                     WRITE_STR "    cmp rax, rbx"
