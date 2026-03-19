@@ -31,6 +31,11 @@ VAR call_mode
 VAR in_proc
 VAR proc_saved_sym_ptr
 VAR proc_local_size
+VAR post_store_state
+VAR post_load_state
+VAR post_lookup_state
+VAR post_cond_state
+VAR post_rhs_state
 
 # Working variables
 VAR temp
@@ -85,6 +90,11 @@ LET call_mode 0
 LET in_proc 0
 LET proc_saved_sym_ptr 0
 LET proc_local_size 0
+LET post_store_state 0
+LET post_load_state 0
+LET post_lookup_state 0
+LET post_cond_state 0
+LET post_rhs_state 0
 LET sym_ptr symbol_tbl
 LET block_ptr block_tbl
 
@@ -588,47 +598,7 @@ WHILE 1 == 1
                         LET emit_handled 1
                     END
                     IF temp == 69
-                        IF block_ptr > block_tbl
-                            SUB block_ptr 24
-                            PEEK temp2 block_ptr
-                            ADD block_ptr 8
-                            PEEK temp3 block_ptr
-                            ADD block_ptr 8
-                            PEEK temp4 block_ptr
-
-                            IF temp2 == 1
-                                WRITE_STR ".IF_END_"
-                                WRITE_INT temp3
-                                WRITE_STR ":"
-                                WRITE_CHAR 10
-                            END
-
-                            IF temp2 == 2
-                                WRITE_STR "    jmp .WHILE_START_"
-                                WRITE_INT temp3
-                                WRITE_CHAR 10
-                                WRITE_STR ".WHILE_END_"
-                                WRITE_INT temp4
-                                WRITE_STR ":"
-                                WRITE_CHAR 10
-                            END
-
-                            IF temp2 == 3
-                                LET sym_ptr proc_saved_sym_ptr
-                                LET in_proc 0
-                                LET proc_local_size 0
-                                WRITE_STR "    leave"
-                                WRITE_CHAR 10
-                                WRITE_STR "    ret"
-                                WRITE_CHAR 10
-                                WRITE_STR ".PROC_END_"
-                                WRITE_INT temp3
-                                WRITE_STR ":"
-                                WRITE_CHAR 10
-                            END
-
-                            SUB block_ptr 16
-                        END
+                        LET parser_state 48
                         LET emit_handled 1
                     END
                 END
@@ -871,32 +841,22 @@ WHILE 1 == 1
                         WRITE_STR "    call .PROC_"
                         WRITE_INT proc_hash
                         WRITE_CHAR 10
+                        LET parser_state 0
                         IF call_mode == 1
-                            IF target_off < 0
-                                WRITE_STR "    mov [rbp - "
-                                LET temp2 target_off
-                                MUL temp2 -1
-                                WRITE_INT temp2
-                                WRITE_STR "], rax"
-                                WRITE_CHAR 10
-                            END
-                            IF target_off >= 0
-                                WRITE_STR "    mov [vars + "
-                                WRITE_INT target_off
-                                WRITE_STR "], rax"
-                                WRITE_CHAR 10
-                            END
+                            LET post_store_state 0
+                            LET parser_state 37
                         END
                         IF call_mode == 2
                             WRITE_STR "    call print_rax"
                             WRITE_CHAR 10
+                            LET parser_state 0
                         END
                         IF call_mode == 3
                             WRITE_STR "    call print_int_raw"
                             WRITE_CHAR 10
+                            LET parser_state 0
                         END
                         LET call_mode 0
-                        LET parser_state 0
                     END
                 END
             END
@@ -1011,7 +971,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1019,7 +978,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -1029,67 +987,19 @@ WHILE 1 == 1
                             LET parser_state 3
                         END
                         IF lookup_mode == 2
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp2 found_off
-                                MUL temp2 -1
-                                WRITE_INT temp2
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            LET parser_state 27
+                            LET post_lookup_state 27
+                            LET parser_state 39
                         END
                         IF lookup_mode == 3
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp2 found_off
-                                MUL temp2 -1
-                                WRITE_INT temp2
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            WRITE_STR "    pop rbx"
-                            WRITE_CHAR 10
-                            WRITE_STR "    imul rax, rbx"
-                            WRITE_CHAR 10
-                            LET parser_state 27
+                            LET post_lookup_state 40
+                            LET parser_state 39
                         END
                         IF lookup_mode == 4
-                            LET temp2 arg_index
-                            MUL temp2 8
-                            ADD temp2 1024
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp3 found_off
-                                MUL temp3 -1
-                                WRITE_INT temp3
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            WRITE_STR "    mov [vars + "
-                            WRITE_INT temp2
-                            WRITE_STR "], rax"
-                            WRITE_CHAR 10
-                            ADD arg_index 1
-                            LET parser_state 33
+                            LET temp4 arg_index
+                            MUL temp4 8
+                            ADD temp4 1024
+                            LET post_lookup_state 41
+                            LET parser_state 39
                         END
 
                         LET lookup_mode 0
@@ -1097,6 +1007,41 @@ WHILE 1 == 1
                     END
                 END
             END
+        END
+
+        IF parser_state == 39
+            IF found_off < 0
+                WRITE_STR "    mov rax, [rbp - "
+                LET temp2 found_off
+                MUL temp2 -1
+                WRITE_INT temp2
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            IF found_off >= 0
+                WRITE_STR "    mov rax, [vars + "
+                WRITE_INT found_off
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            LET parser_state post_lookup_state
+        END
+
+        IF parser_state == 40
+            WRITE_STR "    pop rbx"
+            WRITE_CHAR 10
+            WRITE_STR "    imul rax, rbx"
+            WRITE_CHAR 10
+            LET parser_state 27
+        END
+
+        IF parser_state == 41
+            WRITE_STR "    mov [vars + "
+            WRITE_INT temp4
+            WRITE_STR "], rax"
+            WRITE_CHAR 10
+            ADD arg_index 1
+            LET parser_state 33
         END
 
         IF emit_handled == 0
@@ -1222,7 +1167,6 @@ WHILE 1 == 1
                 END
 
                 IF emit_handled == 0
-                    LET temp expr_target
                     IF expr_pending_op == 1
                         WRITE_STR "    pop rbx"
                         WRITE_CHAR 10
@@ -1241,21 +1185,8 @@ WHILE 1 == 1
                     END
 
                     IF expr_target == 1
-                        IF target_off < 0
-                            WRITE_STR "    mov [rbp - "
-                            LET temp2 target_off
-                            MUL temp2 -1
-                            WRITE_INT temp2
-                            WRITE_STR "], rax"
-                            WRITE_CHAR 10
-                        END
-                        IF target_off >= 0
-                            WRITE_STR "    mov [vars + "
-                            WRITE_INT target_off
-                            WRITE_STR "], rax"
-                            WRITE_CHAR 10
-                        END
-                        LET parser_state 0
+                        LET post_store_state 0
+                        LET parser_state 37
                     END
                     IF expr_target == 2
                         WRITE_STR "    call print_rax"
@@ -1293,6 +1224,24 @@ WHILE 1 == 1
                     END
                 END
             END
+        END
+
+        IF parser_state == 37
+            IF target_off < 0
+                WRITE_STR "    mov [rbp - "
+                LET temp2 target_off
+                MUL temp2 -1
+                WRITE_INT temp2
+                WRITE_STR "], rax"
+                WRITE_CHAR 10
+            END
+            IF target_off >= 0
+                WRITE_STR "    mov [vars + "
+                WRITE_INT target_off
+                WRITE_STR "], rax"
+                WRITE_CHAR 10
+            END
+            LET parser_state post_store_state
         END
 
         IF emit_handled == 0
@@ -1476,7 +1425,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1484,7 +1432,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -1532,29 +1479,11 @@ WHILE 1 == 1
                             LET parser_state 27
                         END
                         IF lookup_mode == 4
-                            LET temp2 arg_index
-                            MUL temp2 8
-                            ADD temp2 1024
-                            IF found_off < 0
-                                WRITE_STR "    mov rax, [rbp - "
-                                LET temp3 found_off
-                                MUL temp3 -1
-                                WRITE_INT temp3
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            IF found_off >= 0
-                                WRITE_STR "    mov rax, [vars + "
-                                WRITE_INT found_off
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
-                            END
-                            WRITE_STR "    mov [vars + "
-                            WRITE_INT temp2
-                            WRITE_STR "], rax"
-                            WRITE_CHAR 10
-                            ADD arg_index 1
-                            LET parser_state 33
+                            LET temp4 arg_index
+                            MUL temp4 8
+                            ADD temp4 1024
+                            LET post_lookup_state 41
+                            LET parser_state 39
                         END
 
                         LET lookup_mode 0
@@ -1592,7 +1521,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1600,13 +1528,13 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
                         LET target_off found_off
                     END
-                    LET parser_state 11
+                    LET post_load_state 11
+                    LET parser_state 38
                     LET emit_handled 1
                 END
             END
@@ -1618,7 +1546,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1626,13 +1553,13 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
                         LET target_off found_off
                     END
-                    LET parser_state 12
+                    LET post_load_state 12
+                    LET parser_state 38
                     LET emit_handled 1
                 END
             END
@@ -1644,7 +1571,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1652,35 +1578,38 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
                         LET target_off found_off
                     END
-                    LET parser_state 13
+                    LET post_load_state 13
+                    LET parser_state 38
                     LET emit_handled 1
                 END
             END
         END
 
+        IF parser_state == 38
+            IF target_off < 0
+                WRITE_STR "    mov rax, [rbp - "
+                LET temp2 target_off
+                MUL temp2 -1
+                WRITE_INT temp2
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            IF target_off >= 0
+                WRITE_STR "    mov rax, [vars + "
+                WRITE_INT target_off
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            LET parser_state post_load_state
+        END
+
         IF emit_handled == 0
             IF parser_state == 11
-                IF target_off < 0
-                    WRITE_STR "    mov rax, [rbp - "
-                    LET temp2 target_off
-                    MUL temp2 -1
-                    WRITE_INT temp2
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-                IF target_off >= 0
-                    WRITE_STR "    mov rax, [vars + "
-                    WRITE_INT target_off
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-
                 IF tok_type == 2
                     LET parse_ptr token_buf
                     LET remaining tok_len
@@ -1718,7 +1647,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1726,7 +1654,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -1768,21 +1695,6 @@ WHILE 1 == 1
 
         IF emit_handled == 0
             IF parser_state == 12
-                IF target_off < 0
-                    WRITE_STR "    mov rax, [rbp - "
-                    LET temp2 target_off
-                    MUL temp2 -1
-                    WRITE_INT temp2
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-                IF target_off >= 0
-                    WRITE_STR "    mov rax, [vars + "
-                    WRITE_INT target_off
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-
                 IF tok_type == 2
                     LET parse_ptr token_buf
                     LET remaining tok_len
@@ -1820,7 +1732,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1828,7 +1739,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -1870,21 +1780,6 @@ WHILE 1 == 1
 
         IF emit_handled == 0
             IF parser_state == 13
-                IF target_off < 0
-                    WRITE_STR "    mov rax, [rbp - "
-                    LET temp2 target_off
-                    MUL temp2 -1
-                    WRITE_INT temp2
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-                IF target_off >= 0
-                    WRITE_STR "    mov rax, [vars + "
-                    WRITE_INT target_off
-                    WRITE_STR "]"
-                    WRITE_CHAR 10
-                END
-
                 IF tok_type == 2
                     LET parse_ptr token_buf
                     LET remaining tok_len
@@ -1924,7 +1819,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -1932,7 +1826,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2015,7 +1908,6 @@ WHILE 1 == 1
                         IF tok_len > 0
                             LET token_char tok_hash
                             LET sym_scan sym_ptr
-                            LET found_flag 0
                             LET found_off 0
                             WHILE sym_scan > symbol_tbl
                                 SUB sym_scan 16
@@ -2023,7 +1915,6 @@ WHILE 1 == 1
                                 IF entry_char == token_char
                                     ADD sym_scan 8
                                     PEEK found_off sym_scan
-                                    LET found_flag 1
                                     LET sym_scan symbol_tbl
                                 END
                             END
@@ -2112,7 +2003,6 @@ WHILE 1 == 1
                         IF tok_len > 0
                             LET token_char tok_hash
                             LET sym_scan sym_ptr
-                            LET found_flag 0
                             LET found_off 0
                             WHILE sym_scan > symbol_tbl
                                 SUB sym_scan 16
@@ -2120,7 +2010,6 @@ WHILE 1 == 1
                                 IF entry_char == token_char
                                     ADD sym_scan 8
                                     PEEK found_off sym_scan
-                                    LET found_flag 1
                                     LET sym_scan symbol_tbl
                                 END
                             END
@@ -2139,73 +2028,63 @@ WHILE 1 == 1
                         WRITE_CHAR 10
                     END
                     IF lhs_kind == 2
-                        IF lhs_value < 0
-                            WRITE_STR "    mov rax, [rbp - "
-                            LET temp2 lhs_value
-                            MUL temp2 -1
-                            WRITE_INT temp2
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
-                        IF lhs_value >= 0
-                            WRITE_STR "    mov rax, [vars + "
-                            WRITE_INT lhs_value
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
+                        LET post_cond_state 44
+                        LET parser_state 42
                     END
 
-                    IF cond_rhs_kind == 1
-                        WRITE_STR "    mov rbx, "
-                        WRITE_INT cond_rhs_value
-                        WRITE_CHAR 10
-                    END
-                    IF cond_rhs_kind == 2
-                        IF cond_rhs_value < 0
-                            WRITE_STR "    mov rbx, [rbp - "
-                            LET temp2 cond_rhs_value
-                            MUL temp2 -1
-                            WRITE_INT temp2
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
-                        IF cond_rhs_value >= 0
-                            WRITE_STR "    mov rbx, [vars + "
+                    IF lhs_kind == 1
+                        IF cond_rhs_kind == 1
+                            WRITE_STR "    mov rbx, "
                             WRITE_INT cond_rhs_value
-                            WRITE_STR "]"
                             WRITE_CHAR 10
                         END
-                    END
+                        IF cond_rhs_kind == 2
+                            IF cond_rhs_value < 0
+                                WRITE_STR "    mov rbx, [rbp - "
+                                LET temp2 cond_rhs_value
+                                MUL temp2 -1
+                                WRITE_INT temp2
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                            IF cond_rhs_value >= 0
+                                WRITE_STR "    mov rbx, [vars + "
+                                WRITE_INT cond_rhs_value
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                        END
 
-                    WRITE_STR "    cmp rax, rbx"
-                    WRITE_CHAR 10
+                        WRITE_STR "    cmp rax, rbx"
+                        WRITE_CHAR 10
 
-                    ADD next_label 1
-                    POKE block_ptr 1
-                    ADD block_ptr 8
-                    POKE block_ptr next_label
-                    ADD block_ptr 8
-                    POKE block_ptr 0
-                    ADD block_ptr 8
+                        ADD next_label 1
+                        POKE block_ptr 1
+                        ADD block_ptr 8
+                        POKE block_ptr next_label
+                        ADD block_ptr 8
+                        POKE block_ptr 0
+                        ADD block_ptr 8
 
-                    IF cond_op == 1
-                        WRITE_STR "    jne .IF_END_"
+                        IF cond_op == 1
+                            WRITE_STR "    jne .IF_END_"
+                        END
+                        IF cond_op == 2
+                            WRITE_STR "    jge .IF_END_"
+                        END
+                        IF cond_op == 3
+                            WRITE_STR "    jg .IF_END_"
+                        END
+                        IF cond_op == 4
+                            WRITE_STR "    jl .IF_END_"
+                        END
+                        IF cond_op == 5
+                            WRITE_STR "    jle .IF_END_"
+                        END
+                        WRITE_INT next_label
+                        WRITE_CHAR 10
+                        LET parser_state 0
                     END
-                    IF cond_op == 2
-                        WRITE_STR "    jge .IF_END_"
-                    END
-                    IF cond_op == 3
-                        WRITE_STR "    jg .IF_END_"
-                    END
-                    IF cond_op == 4
-                        WRITE_STR "    jl .IF_END_"
-                    END
-                    IF cond_op == 5
-                        WRITE_STR "    jle .IF_END_"
-                    END
-                    WRITE_INT next_label
-                    WRITE_CHAR 10
-                    LET parser_state 0
                 END
             END
         END
@@ -2261,7 +2140,6 @@ WHILE 1 == 1
                         IF tok_len > 0
                             LET token_char tok_hash
                             LET sym_scan sym_ptr
-                            LET found_flag 0
                             LET found_off 0
                             WHILE sym_scan > symbol_tbl
                                 SUB sym_scan 16
@@ -2269,7 +2147,6 @@ WHILE 1 == 1
                                 IF entry_char == token_char
                                     ADD sym_scan 8
                                     PEEK found_off sym_scan
-                                    LET found_flag 1
                                     LET sym_scan symbol_tbl
                                 END
                             END
@@ -2358,7 +2235,6 @@ WHILE 1 == 1
                         IF tok_len > 0
                             LET token_char tok_hash
                             LET sym_scan sym_ptr
-                            LET found_flag 0
                             LET found_off 0
                             WHILE sym_scan > symbol_tbl
                                 SUB sym_scan 16
@@ -2366,7 +2242,6 @@ WHILE 1 == 1
                                 IF entry_char == token_char
                                     ADD sym_scan 8
                                     PEEK found_off sym_scan
-                                    LET found_flag 1
                                     LET sym_scan symbol_tbl
                                 END
                             END
@@ -2385,74 +2260,250 @@ WHILE 1 == 1
                         WRITE_CHAR 10
                     END
                     IF lhs_kind == 2
-                        IF lhs_value < 0
-                            WRITE_STR "    mov rax, [rbp - "
-                            LET temp2 lhs_value
-                            MUL temp2 -1
-                            WRITE_INT temp2
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
-                        IF lhs_value >= 0
-                            WRITE_STR "    mov rax, [vars + "
-                            WRITE_INT lhs_value
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
+                        LET post_cond_state 43
+                        LET parser_state 42
                     END
 
-                    IF cond_rhs_kind == 1
-                        WRITE_STR "    mov rbx, "
-                        WRITE_INT cond_rhs_value
-                        WRITE_CHAR 10
-                    END
-                    IF cond_rhs_kind == 2
-                        IF cond_rhs_value < 0
-                            WRITE_STR "    mov rbx, [rbp - "
-                            LET temp2 cond_rhs_value
-                            MUL temp2 -1
-                            WRITE_INT temp2
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
-                        END
-                        IF cond_rhs_value >= 0
-                            WRITE_STR "    mov rbx, [vars + "
+                    IF lhs_kind == 1
+                        IF cond_rhs_kind == 1
+                            WRITE_STR "    mov rbx, "
                             WRITE_INT cond_rhs_value
-                            WRITE_STR "]"
                             WRITE_CHAR 10
                         END
-                    END
+                        IF cond_rhs_kind == 2
+                            IF cond_rhs_value < 0
+                                WRITE_STR "    mov rbx, [rbp - "
+                                LET temp2 cond_rhs_value
+                                MUL temp2 -1
+                                WRITE_INT temp2
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                            IF cond_rhs_value >= 0
+                                WRITE_STR "    mov rbx, [vars + "
+                                WRITE_INT cond_rhs_value
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                        END
 
-                    WRITE_STR "    cmp rax, rbx"
-                    WRITE_CHAR 10
+                        WRITE_STR "    cmp rax, rbx"
+                        WRITE_CHAR 10
 
-                    POKE block_ptr 2
-                    ADD block_ptr 8
-                    POKE block_ptr loop_start_label
-                    ADD block_ptr 8
-                    POKE block_ptr loop_end_label
-                    ADD block_ptr 8
+                        POKE block_ptr 2
+                        ADD block_ptr 8
+                        POKE block_ptr loop_start_label
+                        ADD block_ptr 8
+                        POKE block_ptr loop_end_label
+                        ADD block_ptr 8
 
-                    IF cond_op == 1
-                        WRITE_STR "    jne .WHILE_END_"
+                        IF cond_op == 1
+                            WRITE_STR "    jne .WHILE_END_"
+                        END
+                        IF cond_op == 2
+                            WRITE_STR "    jge .WHILE_END_"
+                        END
+                        IF cond_op == 3
+                            WRITE_STR "    jg .WHILE_END_"
+                        END
+                        IF cond_op == 4
+                            WRITE_STR "    jl .WHILE_END_"
+                        END
+                        IF cond_op == 5
+                            WRITE_STR "    jle .WHILE_END_"
+                        END
+                        WRITE_INT loop_end_label
+                        WRITE_CHAR 10
+                        LET parser_state 0
                     END
-                    IF cond_op == 2
-                        WRITE_STR "    jge .WHILE_END_"
-                    END
-                    IF cond_op == 3
-                        WRITE_STR "    jg .WHILE_END_"
-                    END
-                    IF cond_op == 4
-                        WRITE_STR "    jl .WHILE_END_"
-                    END
-                    IF cond_op == 5
-                        WRITE_STR "    jle .WHILE_END_"
-                    END
-                    WRITE_INT loop_end_label
-                    WRITE_CHAR 10
-                    LET parser_state 0
                 END
             END
+        END
+
+        IF parser_state == 42
+            IF lhs_value < 0
+                WRITE_STR "    mov rax, [rbp - "
+                LET temp2 lhs_value
+                MUL temp2 -1
+                WRITE_INT temp2
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            IF lhs_value >= 0
+                WRITE_STR "    mov rax, [vars + "
+                WRITE_INT lhs_value
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            LET parser_state post_cond_state
+        END
+
+        IF parser_state == 43
+            IF cond_rhs_kind == 1
+                WRITE_STR "    mov rbx, "
+                WRITE_INT cond_rhs_value
+                WRITE_CHAR 10
+            END
+            IF cond_rhs_kind == 2
+                LET post_rhs_state 47
+                LET parser_state 45
+            END
+
+            IF cond_rhs_kind == 1
+                WRITE_STR "    cmp rax, rbx"
+                WRITE_CHAR 10
+
+                POKE block_ptr 2
+                ADD block_ptr 8
+                POKE block_ptr loop_start_label
+                ADD block_ptr 8
+                POKE block_ptr loop_end_label
+                ADD block_ptr 8
+
+                IF cond_op == 1
+                    WRITE_STR "    jne .WHILE_END_"
+                END
+                IF cond_op == 2
+                    WRITE_STR "    jge .WHILE_END_"
+                END
+                IF cond_op == 3
+                    WRITE_STR "    jg .WHILE_END_"
+                END
+                IF cond_op == 4
+                    WRITE_STR "    jl .WHILE_END_"
+                END
+                IF cond_op == 5
+                    WRITE_STR "    jle .WHILE_END_"
+                END
+                WRITE_INT loop_end_label
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+        END
+
+        IF parser_state == 44
+            IF cond_rhs_kind == 1
+                WRITE_STR "    mov rbx, "
+                WRITE_INT cond_rhs_value
+                WRITE_CHAR 10
+            END
+            IF cond_rhs_kind == 2
+                LET post_rhs_state 46
+                LET parser_state 45
+            END
+
+            IF cond_rhs_kind == 1
+                WRITE_STR "    cmp rax, rbx"
+                WRITE_CHAR 10
+
+                ADD next_label 1
+                POKE block_ptr 1
+                ADD block_ptr 8
+                POKE block_ptr next_label
+                ADD block_ptr 8
+                POKE block_ptr 0
+                ADD block_ptr 8
+
+                IF cond_op == 1
+                    WRITE_STR "    jne .IF_END_"
+                END
+                IF cond_op == 2
+                    WRITE_STR "    jge .IF_END_"
+                END
+                IF cond_op == 3
+                    WRITE_STR "    jg .IF_END_"
+                END
+                IF cond_op == 4
+                    WRITE_STR "    jl .IF_END_"
+                END
+                IF cond_op == 5
+                    WRITE_STR "    jle .IF_END_"
+                END
+                WRITE_INT next_label
+                WRITE_CHAR 10
+                LET parser_state 0
+            END
+        END
+
+        IF parser_state == 45
+            IF cond_rhs_value < 0
+                WRITE_STR "    mov rbx, [rbp - "
+                LET temp2 cond_rhs_value
+                MUL temp2 -1
+                WRITE_INT temp2
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            IF cond_rhs_value >= 0
+                WRITE_STR "    mov rbx, [vars + "
+                WRITE_INT cond_rhs_value
+                WRITE_STR "]"
+                WRITE_CHAR 10
+            END
+            LET parser_state post_rhs_state
+        END
+
+        IF parser_state == 46
+            WRITE_STR "    cmp rax, rbx"
+            WRITE_CHAR 10
+
+            ADD next_label 1
+            POKE block_ptr 1
+            ADD block_ptr 8
+            POKE block_ptr next_label
+            ADD block_ptr 8
+            POKE block_ptr 0
+            ADD block_ptr 8
+
+            IF cond_op == 1
+                WRITE_STR "    jne .IF_END_"
+            END
+            IF cond_op == 2
+                WRITE_STR "    jge .IF_END_"
+            END
+            IF cond_op == 3
+                WRITE_STR "    jg .IF_END_"
+            END
+            IF cond_op == 4
+                WRITE_STR "    jl .IF_END_"
+            END
+            IF cond_op == 5
+                WRITE_STR "    jle .IF_END_"
+            END
+            WRITE_INT next_label
+            WRITE_CHAR 10
+            LET parser_state 0
+        END
+
+        IF parser_state == 47
+            WRITE_STR "    cmp rax, rbx"
+            WRITE_CHAR 10
+
+            POKE block_ptr 2
+            ADD block_ptr 8
+            POKE block_ptr loop_start_label
+            ADD block_ptr 8
+            POKE block_ptr loop_end_label
+            ADD block_ptr 8
+
+            IF cond_op == 1
+                WRITE_STR "    jne .WHILE_END_"
+            END
+            IF cond_op == 2
+                WRITE_STR "    jge .WHILE_END_"
+            END
+            IF cond_op == 3
+                WRITE_STR "    jg .WHILE_END_"
+            END
+            IF cond_op == 4
+                WRITE_STR "    jl .WHILE_END_"
+            END
+            IF cond_op == 5
+                WRITE_STR "    jle .WHILE_END_"
+            END
+            WRITE_INT loop_end_label
+            WRITE_CHAR 10
+            LET parser_state 0
         END
 
         IF emit_handled == 0
@@ -2461,7 +2512,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2469,7 +2519,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2512,7 +2561,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2520,7 +2568,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2591,7 +2638,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2599,7 +2645,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2652,7 +2697,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2660,7 +2704,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2678,7 +2721,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2686,7 +2728,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2767,7 +2808,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2775,7 +2815,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2793,7 +2832,6 @@ WHILE 1 == 1
                     IF tok_len > 0
                         LET token_char tok_hash
                         LET sym_scan sym_ptr
-                        LET found_flag 0
                         LET found_off 0
                         WHILE sym_scan > symbol_tbl
                             SUB sym_scan 16
@@ -2801,7 +2839,6 @@ WHILE 1 == 1
                             IF entry_char == token_char
                                 ADD sym_scan 8
                                 PEEK found_off sym_scan
-                                LET found_flag 1
                                 LET sym_scan symbol_tbl
                             END
                         END
@@ -2876,6 +2913,59 @@ WHILE 1 == 1
             END
         END
 
+        IF parser_state == 48
+            IF block_ptr > block_tbl
+                SUB block_ptr 24
+                PEEK temp2 block_ptr
+                ADD block_ptr 8
+                PEEK temp3 block_ptr
+                ADD block_ptr 8
+                PEEK temp4 block_ptr
+
+                IF temp2 == 1
+                    IF temp4 == 0
+                        WRITE_STR ".IF_END_"
+                        WRITE_INT temp3
+                        WRITE_STR ":"
+                        WRITE_CHAR 10
+                    END
+                    IF temp4 > 0
+                        WRITE_STR ".IF_AFTER_"
+                        WRITE_INT temp4
+                        WRITE_STR ":"
+                        WRITE_CHAR 10
+                    END
+                END
+
+                IF temp2 == 2
+                    WRITE_STR "    jmp .WHILE_START_"
+                    WRITE_INT temp3
+                    WRITE_CHAR 10
+                    WRITE_STR ".WHILE_END_"
+                    WRITE_INT temp4
+                    WRITE_STR ":"
+                    WRITE_CHAR 10
+                END
+
+                IF temp2 == 3
+                    LET sym_ptr proc_saved_sym_ptr
+                    LET in_proc 0
+                    LET proc_local_size 0
+                    WRITE_STR "    leave"
+                    WRITE_CHAR 10
+                    WRITE_STR "    ret"
+                    WRITE_CHAR 10
+                    WRITE_STR ".PROC_END_"
+                    WRITE_INT temp3
+                    WRITE_STR ":"
+                    WRITE_CHAR 10
+                END
+
+                SUB block_ptr 16
+            END
+            LET parser_state 0
+        END
+
         IF emit_handled == 0
             IF parser_state == 0
                 IF tok_type == 1
@@ -2910,55 +3000,7 @@ WHILE 1 == 1
                             LET emit_handled 1
                         END
                         IF temp == 69
-                            IF block_ptr > block_tbl
-                                SUB block_ptr 24
-                                PEEK temp2 block_ptr
-                                ADD block_ptr 8
-                                PEEK temp3 block_ptr
-                                ADD block_ptr 8
-                            PEEK temp4 block_ptr
-
-                            IF temp2 == 1
-                                IF temp4 == 0
-                                    WRITE_STR ".IF_END_"
-                                    WRITE_INT temp3
-                                    WRITE_STR ":"
-                                    WRITE_CHAR 10
-                                END
-                                IF temp4 > 0
-                                    WRITE_STR ".IF_AFTER_"
-                                    WRITE_INT temp4
-                                    WRITE_STR ":"
-                                    WRITE_CHAR 10
-                                END
-                            END
-
-                                IF temp2 == 2
-                                    WRITE_STR "    jmp .WHILE_START_"
-                                    WRITE_INT temp3
-                                    WRITE_CHAR 10
-                                    WRITE_STR ".WHILE_END_"
-                                    WRITE_INT temp4
-                                    WRITE_STR ":"
-                                    WRITE_CHAR 10
-                                END
-
-                                IF temp2 == 3
-                                    LET sym_ptr proc_saved_sym_ptr
-                                    LET in_proc 0
-                                    LET proc_local_size 0
-                                    WRITE_STR "    leave"
-                                    WRITE_CHAR 10
-                                    WRITE_STR "    ret"
-                                    WRITE_CHAR 10
-                                    WRITE_STR ".PROC_END_"
-                                    WRITE_INT temp3
-                                    WRITE_STR ":"
-                                    WRITE_CHAR 10
-                                END
-
-                                SUB block_ptr 16
-                            END
+                            LET parser_state 48
                             LET emit_handled 1
                         END
                     END
@@ -3092,6 +3134,59 @@ WHILE 1 == 1
                     END
                 END
             END
+        END
+
+        IF parser_state == 48
+            IF block_ptr > block_tbl
+                SUB block_ptr 24
+                PEEK temp2 block_ptr
+                ADD block_ptr 8
+                PEEK temp3 block_ptr
+                ADD block_ptr 8
+                PEEK temp4 block_ptr
+
+                IF temp2 == 1
+                    IF temp4 == 0
+                        WRITE_STR ".IF_END_"
+                        WRITE_INT temp3
+                        WRITE_STR ":"
+                        WRITE_CHAR 10
+                    END
+                    IF temp4 > 0
+                        WRITE_STR ".IF_AFTER_"
+                        WRITE_INT temp4
+                        WRITE_STR ":"
+                        WRITE_CHAR 10
+                    END
+                END
+
+                IF temp2 == 2
+                    WRITE_STR "    jmp .WHILE_START_"
+                    WRITE_INT temp3
+                    WRITE_CHAR 10
+                    WRITE_STR ".WHILE_END_"
+                    WRITE_INT temp4
+                    WRITE_STR ":"
+                    WRITE_CHAR 10
+                END
+
+                IF temp2 == 3
+                    LET sym_ptr proc_saved_sym_ptr
+                    LET in_proc 0
+                    LET proc_local_size 0
+                    WRITE_STR "    leave"
+                    WRITE_CHAR 10
+                    WRITE_STR "    ret"
+                    WRITE_CHAR 10
+                    WRITE_STR ".PROC_END_"
+                    WRITE_INT temp3
+                    WRITE_STR ":"
+                    WRITE_CHAR 10
+                END
+
+                SUB block_ptr 16
+            END
+            LET parser_state 0
         END
 
         IF emit_handled == 0

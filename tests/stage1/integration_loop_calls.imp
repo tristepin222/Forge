@@ -1,0 +1,15 @@
+VAR seed
+VAR total
+
+PROC bump value
+RETURN value + 1
+END
+
+LET seed 0
+LET total 0
+WHILE seed < 4
+LET seed CALL bump seed
+ADD total seed
+END
+PRINT total
+EXIT

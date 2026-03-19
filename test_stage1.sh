@@ -27,9 +27,12 @@ TEST_NAMES=(
   if_false
   if_ge
   if_lt
+  integration_else_proc
   integration_heap_proc
+  integration_loop_calls
   integration_nested_return
   integration_proc_flow
+  integration_return_output
   integration_shadow_calls
   local_args
   local_basic

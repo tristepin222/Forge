@@ -1,0 +1,8 @@
+PROC double value
+RETURN value * 2
+END
+
+PRINT CALL double 9
+WRITE_INT CALL double 4
+WRITE_CHAR 10
+EXIT

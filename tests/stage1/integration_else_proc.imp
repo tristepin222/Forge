@@ -1,0 +1,15 @@
+VAR result
+
+PROC choose value
+IF value < 5
+RETURN value + 10
+ELSE
+RETURN value + 20
+END
+END
+
+LET result CALL choose 2
+PRINT result
+LET result CALL choose 7
+PRINT result
+EXIT
