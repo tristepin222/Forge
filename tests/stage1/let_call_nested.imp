@@ -1,0 +1,8 @@
+VAR x
+LET x CALL outer 3
+PRINT x
+EXIT
+
+PROC outer value
+RETURN value * 2
+END

@@ -1,0 +1,9 @@
+VAR x
+LET x 1
+PRINT x
+EXIT
+
+PROC hidden
+LET x 9
+PRINT x
+END

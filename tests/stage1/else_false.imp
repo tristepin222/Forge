@@ -1,0 +1,8 @@
+VAR x
+LET x 1
+IF x > 3
+    PRINT 8
+ELSE
+    PRINT 6
+END
+EXIT

@@ -1,0 +1,11 @@
+VAR x
+
+PROC main value
+VAR tmp
+LET tmp value + 2
+LET x tmp
+END
+
+CALL main 5
+PRINT x
+EXIT

@@ -1,0 +1,12 @@
+VAR x
+LET x 2
+IF x == 2
+    IF x > 3
+        PRINT 8
+    ELSE
+        PRINT 4
+    END
+ELSE
+    PRINT 1
+END
+EXIT

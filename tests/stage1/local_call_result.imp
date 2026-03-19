@@ -1,0 +1,12 @@
+PROC main
+VAR x
+LET x CALL make 4
+PRINT x
+END
+
+PROC make value
+RETURN value * 2
+END
+
+CALL main
+EXIT

@@ -1,0 +1,7 @@
+WRITE_INT CALL make 9
+WRITE_CHAR 10
+EXIT
+
+PROC make value
+RETURN value * 2
+END

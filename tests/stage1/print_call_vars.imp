@@ -1,0 +1,8 @@
+VAR a
+LET a 4
+PRINT CALL make a
+EXIT
+
+PROC make value
+RETURN value + 5
+END

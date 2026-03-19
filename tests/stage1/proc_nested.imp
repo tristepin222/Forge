@@ -1,0 +1,13 @@
+VAR x
+LET x 0
+CALL outer
+PRINT x
+EXIT
+
+PROC outer
+CALL inner
+END
+
+PROC inner
+LET x 9
+END

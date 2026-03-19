@@ -1,0 +1,12 @@
+VAR x
+CALL outer 4
+PRINT x
+EXIT
+
+PROC outer start
+CALL inner start 3
+END
+
+PROC inner lhs rhs
+LET x lhs + rhs
+END

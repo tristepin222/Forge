@@ -1,0 +1,8 @@
+VAR x
+CALL set 7
+PRINT x
+EXIT
+
+PROC set value
+LET x value
+END

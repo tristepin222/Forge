@@ -1,0 +1,6 @@
+PRINT CALL make 7
+EXIT
+
+PROC make value
+RETURN value + 1
+END

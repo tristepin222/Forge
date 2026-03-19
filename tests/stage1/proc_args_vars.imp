@@ -1,0 +1,12 @@
+VAR x
+VAR a
+VAR b
+LET a 4
+LET b 9
+CALL sum a b
+PRINT x
+EXIT
+
+PROC sum left right
+LET x left + right
+END

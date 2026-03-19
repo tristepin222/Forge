@@ -1,0 +1,10 @@
+VAR x
+LET x 1
+CALL bump
+CALL bump
+PRINT x
+EXIT
+
+PROC bump
+ADD x 1
+END

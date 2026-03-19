@@ -1,0 +1,15 @@
+VAR x
+LET x 0
+CALL set_a
+PRINT x
+CALL set_b
+PRINT x
+EXIT
+
+PROC set_a
+LET x 4
+END
+
+PROC set_b
+LET x 8
+END

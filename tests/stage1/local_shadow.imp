@@ -1,0 +1,12 @@
+VAR x
+LET x 3
+
+PROC main
+VAR x
+LET x 9
+PRINT x
+END
+
+CALL main
+PRINT x
+EXIT

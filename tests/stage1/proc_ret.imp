@@ -1,0 +1,11 @@
+VAR x
+LET x 0
+CALL set
+PRINT x
+EXIT
+
+PROC set
+LET x 5
+RET
+LET x 9
+END

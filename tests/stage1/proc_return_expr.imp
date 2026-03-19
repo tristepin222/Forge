@@ -1,0 +1,10 @@
+VAR x
+CALL set 5
+PRINT x
+EXIT
+
+PROC set value
+LET x value
+RETURN value + 3 * 2
+LET x 0
+END
