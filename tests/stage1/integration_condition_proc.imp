@@ -1,0 +1,12 @@
+PROC choose a b
+    IF (a + 2) * 2 >= b + 3
+        RETURN a + b
+    ELSE
+        RETURN b - a
+    END
+END
+
+VAR x
+LET x CALL choose 4 9
+PRINT x
+EXIT

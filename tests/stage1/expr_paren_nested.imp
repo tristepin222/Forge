@@ -1,0 +1,4 @@
+VAR x
+LET x ((1 + 2) * (3 + 4))
+PRINT x
+EXIT

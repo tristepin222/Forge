@@ -3,4 +3,4 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-exec "$ROOT/scripts/test_stage0.sh" "$@"
+exec "$ROOT/scripts/compare_stage3_generations.sh" "$@"

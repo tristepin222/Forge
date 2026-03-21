@@ -4,6 +4,30 @@ Imperium Compiler Bootstrap
 
 Forge is a minimal, self-contained bootstrap compiler written in x86-64 NASM for Linux. It is intended to be the Stage 0 compiler used to build a later compiler in its own high-level language.
 
+### Repository Layout
+
+The canonical compiler sources and scripts are now split by stage:
+
+```text
+stages/
+  stage0/compiler.asm
+  stage2/compiler.imp
+  stage3/compiler.imp
+
+scripts/
+  test_stage0.sh
+  build_stage2.sh
+  test_stage2.sh
+  bootstrap_stage2.sh
+  compare_stage2_generations.sh
+  build_stage3.sh
+  test_stage3.sh
+  bootstrap_stage3.sh
+  compare_stage3_generations.sh
+```
+
+The root `build_*.sh` / `test_*.sh` files remain as compatibility wrappers.
+
 ### Prerequisites
 
 Be sure your package manager is up to date:
@@ -20,7 +44,7 @@ sudo apt install nasm build-essential
 To build the Forge compiler itself:
 
 ```bash
-nasm -f elf64 compiler.asm -o compiler.o
+nasm -f elf64 stages/stage0/compiler.asm -o compiler.o
 ld -o compiler compiler.o
 ```
 
@@ -54,9 +78,9 @@ chmod +x test_stage0.sh
 
 The runner rebuilds the compiler, swaps each test program into `program.imp`, compiles it, runs the generated binary, and compares stdout against the expected `.out` file.
 
-### Building Stage 1
+### Building Stage 2
 
-To compile the current `stage1.imp` source with the Stage 0 compiler:
+To compile the current trusted Stage 2 compiler source with the Stage 0 compiler:
 
 ```bash
 chmod +x build_stage1.sh
@@ -65,7 +89,7 @@ chmod +x build_stage1.sh
 
 This script:
 - builds the Stage 0 compiler
-- swaps `stage1.imp` into `program.imp`
+- swaps `stages/stage2/compiler.imp` into `program.imp`
 - assembles the generated `output/stage1.asm`
 - links the resulting `output/stage1` compiler
 
@@ -78,35 +102,61 @@ chmod +x run_stage1_test.sh
 ./run_stage1_test.sh
 ```
 
-### Stage 1 Subset Tests
+### Stage 2 Tests
 
-To run the current Stage 1 regression subset:
+To run the current Stage 2 regression subset:
 
 ```bash
 chmod +x test_stage1.sh
 ./test_stage1.sh
 ```
 
-This suite runs the current Stage 1 regression corpus. By default it builds `output/stage1` first, but you can also point it at an existing compiler binary:
+This suite runs the current Stage 2 regression corpus. By default it builds `output/stage1` first, but you can also point it at an existing compiler binary:
 
 ```bash
 BUILD_STAGE1=0 STAGE1_BIN=output/stage1_gen2 ./test_stage1.sh
 ```
 
-### Stage 1 Bootstrap Validation
+### Stage 2 Bootstrap Validation
 
-To build Stage 1 with Stage 0, rebuild it with itself, and rerun the Stage 1 regression suite against the second-generation compiler:
+To build the trusted Stage 2 compiler with Stage 0, rebuild it with itself, and rerun the Stage 2 regression suite against the second-generation compiler:
 
 ```bash
 chmod +x bootstrap_stage1.sh
 ./bootstrap_stage1.sh
 ```
 
-To compare first-generation vs second-generation Stage 1 outputs across the same corpus:
+To compare first-generation vs second-generation Stage 2 outputs across the same corpus:
 
 ```bash
 chmod +x compare_stage1_generations.sh
 ./compare_stage1_generations.sh
+```
+
+### Building Stage 3
+
+To build the Stage 3 front-end scaffold with the trusted Stage 2 compiler:
+
+```bash
+chmod +x build_stage3.sh
+./build_stage3.sh
+```
+
+This compiles `stages/stage3/compiler.imp` and produces `output/stage3`.
+
+To run the Stage 3 smoke suite:
+
+```bash
+chmod +x test_stage3.sh
+./test_stage3.sh
+```
+
+To bootstrap and compare Stage 3 generations:
+
+```bash
+chmod +x bootstrap_stage3.sh compare_stage3_generations.sh
+./bootstrap_stage3.sh
+./compare_stage3_generations.sh
 ```
 
 ---
@@ -138,6 +188,7 @@ Forge supports the following primitives required for bootstrapping:
 * [x] Control Flow (Nested IF/WHILE)
 * [x] Global Heap (Arrays)
 * [x] Byte-stream Input (READ)
-* [ ] Self-hosted Compiler (Stage 1)
+* [x] Self-hosted Compiler (Stage 2 trust base)
+* [ ] Imperium Syntax Front-end (Stage 3A)
 
 ---

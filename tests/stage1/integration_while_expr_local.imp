@@ -1,0 +1,13 @@
+PROC run limit
+    VAR acc
+    LET acc 0
+    WHILE (acc + 1) * 2 <= limit
+        ADD acc 1
+    END
+    RETURN acc
+END
+
+VAR x
+LET x CALL run 8
+PRINT x
+EXIT

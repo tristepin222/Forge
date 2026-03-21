@@ -1,0 +1,30 @@
+# Stage 3 compiler scaffold.
+# Current milestone:
+# - consume stdin so pipeline writers do not hit broken pipes
+# - emit a valid empty x86-64 Linux program
+# - keep Stage 3 work isolated from the trusted Stage 2 compiler
+
+VAR ch
+
+READ ch
+WHILE ch > 0
+    READ ch
+END
+
+WRITE_STR "BITS 64"
+WRITE_CHAR 10
+WRITE_STR "section .text"
+WRITE_CHAR 10
+WRITE_STR "global _start"
+WRITE_CHAR 10
+WRITE_CHAR 10
+WRITE_STR "_start:"
+WRITE_CHAR 10
+WRITE_STR "    mov rax, 60"
+WRITE_CHAR 10
+WRITE_STR "    xor rdi, rdi"
+WRITE_CHAR 10
+WRITE_STR "    syscall"
+WRITE_CHAR 10
+
+EXIT

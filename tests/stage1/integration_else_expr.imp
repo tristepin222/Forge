@@ -1,0 +1,10 @@
+VAR a
+VAR b
+LET a 2
+LET b 5
+IF (a + 1) * 2 < (b + 1)
+    PRINT 1
+ELSE
+    PRINT 9
+END
+EXIT
