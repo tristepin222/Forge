@@ -1,0 +1,15 @@
+module app.main
+
+struct User {
+    id: i32
+    name: i32
+}
+
+public enum State {
+    Idle
+    Done
+}
+
+function main() {
+    print(7)
+}

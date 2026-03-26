@@ -4,6 +4,11 @@ Imperium Compiler Bootstrap
 
 Forge is a minimal, self-contained bootstrap compiler written in x86-64 NASM for Linux. It is intended to be the Stage 0 compiler used to build a later compiler in its own high-level language.
 
+### Language Docs
+
+- Current implemented subset: [docs/stage3a.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\stage3a.md)
+- Long-term design reference: [docs/imperium-reference-v1.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\imperium-reference-v1.md)
+
 ### Repository Layout
 
 The canonical compiler sources and scripts are now split by stage:
@@ -144,14 +149,76 @@ chmod +x build_stage3.sh
 
 This compiles `stages/stage3/compiler.imp` and produces `output/stage3`.
 
-To run the Stage 3 smoke suite:
+The current Stage 3 milestone supports only the first real surface-syntax slice:
+- optional `module ...`
+- `function main() { ... }`
+- `value` / `variable` / `constant` declarations inside `main`
+- mutability enforcement: assignment is allowed only for `variable` / `var`
+- plain assignment `x = expr`
+- compound assignment `+=` / `-=`
+- `print(expr)`
+- `return expr`
+- `if lhs <op> rhs { ... } else { ... }` with `==`, `!=`, `<`, `<=`, `>`, `>=`
+- `while lhs <op> rhs { ... }` with `==`, `!=`, `<`, `<=`, `>`, `>=`
+- `loop { ... }` and `break`
+- `for name in start..end { ... }` with arithmetic-expression endpoints and exclusive end
+- `continue` in `while`, `loop`, and `for`
+- `match expr { literal => { ... } _ => { ... } }` with integer and boolean literal arms
+- `match` on enum variants, including one payload binding like `State::Done(x)`
+- arithmetic expressions with `+`, `-`, `*` in assignment, `print`, and `return`
+- arithmetic expressions on both sides of `if` / `while` conditions
+- multiple function definitions
+- expression-bodied functions with `=> expr`
+- optional typed parameters in function definitions
+- optional return-type syntax in function definitions
+- `public function ...`
+- `private function ...`
+- top-level `struct ... { ... }` with struct literals and field reads
+- top-level `enum ... { ... }` with unit variant constants
+- single-payload enum variants like `Done(i32)`
+- top-level `class ... { ... }` with stored field layouts, optional base-type syntax parsed and ignored for now, and methods inside the class body compiled as normal functions
+- top-level `interface ... { function ... }` blocks with stored method names
+- top-level `implement ... for Struct { function ... }` blocks with methods compiled as normal functions
+- aliases `pub`, `fn`, `let`, `var`
+- `import ...` parsed and ignored semantically for now
+- `from ... import ... as ...` parsed and ignored semantically for now
+- string literals in `print(...)`
+- string-literal assignment to variables
+- `true` / `false`
+- struct literals assigned to variables
+- enum constants like `State::Idle`
+- enum payload construction like `State::Done(5)`
+- struct field reads in expressions
+- struct field assignment with `=` / `+=` / `-=`
+- method-call syntax on struct values, lowered through a typed `self: StructName` first parameter
+- untyped `self` inside `implement ... for Struct` methods and class-body methods auto-binds to that type
+- class literals and method calls through the same struct-backed layout machinery
+- function call statements with zero or more arithmetic-expression arguments
+- forward references for function calls
+- function call expressions, including nested calls inside call arguments
+- grouped arithmetic expressions with parentheses
+
+Current Stage 3 parameter limitation:
+- return types are parsed and ignored semantically for now
+- imports are parsed and ignored semantically for now
+- `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`
+- `implement` currently checks that the named interface exists and stores interface method names, but method/signature checking is not enforced yet
+- string literals are currently supported only in `print(...)`
+- string escapes are not supported yet
+- string variables are currently compile-time string bindings intended for `print(name)`
+- booleans currently lower to `1` and `0`
+- enum payload support is currently limited to a single payload slot per variant
+
+To run the Stage 3 test suite:
 
 ```bash
 chmod +x test_stage3.sh
 ./test_stage3.sh
 ```
 
-To bootstrap and compare Stage 3 generations:
+At the current milestone, Stage 3 is **not self-hosting yet**. The bootstrap/compare scripts only become valid once you also have a Stage 3 compiler source written in Stage 3 syntax, for example `stages/stage3/compiler.ium`.
+
+After that exists, you can bootstrap and compare Stage 3 generations with:
 
 ```bash
 chmod +x bootstrap_stage3.sh compare_stage3_generations.sh

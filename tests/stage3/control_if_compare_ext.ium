@@ -1,0 +1,20 @@
+module app.main
+
+function main() {
+    value a: i32 = 2
+    value b: i32 = 3
+
+    if a <= b {
+        print(1)
+    } else {
+        print(9)
+    }
+
+    if b >= a {
+        print(2)
+    }
+
+    if a != b {
+        print(3)
+    }
+}

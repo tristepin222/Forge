@@ -1,0 +1,12 @@
+module app.main
+
+function main() {
+    value x: i32 = 3
+    value y: i32 = 2
+
+    if (x + 1) > (y * 2) {
+        print(1)
+    } else {
+        print(2)
+    }
+}

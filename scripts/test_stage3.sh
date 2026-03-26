@@ -15,7 +15,57 @@ if [[ "${1:-}" == "--verbose" ]]; then
 fi
 
 TEST_NAMES=(
-  smoke_main
+  basic_empty_main
+  basic_function_only
+  decl_assign
+  basic_print
+  basic_return
+  control_if_else
+  control_while
+  expr_arith
+  expr_compound_assign
+  expr_grouped
+  control_if_expr
+  control_if_grouped
+  control_if_compare_ext
+  control_while_expr
+  control_while_compare_ext
+  control_while_break
+  control_while_continue
+  control_loop_break
+  control_loop_continue
+  control_match_literal
+  control_match_default
+  control_for_range
+  control_for_expr_range
+  control_for_break_continue
+  func_zero_arg
+  func_call_expr
+  func_forward_ref
+  func_expr_body
+  func_params
+  func_methods
+  func_call_arg_expr
+  func_nested_call_args
+  syntax_return_type
+  syntax_public_import
+  syntax_aliases
+  syntax_private_from
+  syntax_struct_enum
+  syntax_class_interface
+  syntax_implement_methods
+  data_class_methods
+  string_print_literal
+  string_variable_print
+  bool_literals
+  data_enum_unit
+  data_enum_payload
+  control_match_enum
+  control_match_enum_payload
+  data_struct_fields
+  data_struct_field_assign
+  data_struct_field_compound
+  data_struct_reassign
 )
 
 log() {
@@ -57,7 +107,12 @@ PY
   fi
 
   log "    verify"
-  if ! diff -u "$TEST_DIR/$test_name.out" "$OUTPUT_DIR/$test_name.stage3.actual"; then
+  expected_file="$TEST_DIR/$test_name.out"
+  if [ ! -f "$expected_file" ]; then
+    expected_file=/dev/null
+  fi
+
+  if ! diff -u "$expected_file" "$OUTPUT_DIR/$test_name.stage3.actual"; then
     echo "FAILED: $test_name"
     exit 1
   fi

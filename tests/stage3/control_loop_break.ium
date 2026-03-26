@@ -1,0 +1,13 @@
+module app.main
+
+function main() {
+    variable x: i32 = 1
+
+    loop {
+        print(x)
+        if x >= 3 {
+            break
+        }
+        x = x + 1
+    }
+}

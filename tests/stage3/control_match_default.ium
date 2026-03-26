@@ -1,0 +1,14 @@
+module app.main
+
+function main() {
+    value ok: bool = false
+
+    match ok {
+        true => {
+            print(1)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

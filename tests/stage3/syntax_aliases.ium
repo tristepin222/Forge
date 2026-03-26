@@ -1,0 +1,11 @@
+module app.main
+
+pub fn helper() -> i32 {
+    return 2
+}
+
+fn main() {
+    let x: i32 = helper()
+    var y: i32 = x + 1
+    print(y)
+}

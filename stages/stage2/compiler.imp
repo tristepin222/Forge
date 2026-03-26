@@ -68,7 +68,7 @@ VAR expr_group_tbl
 
 # Bootstrap allocations
 ALLOC token_buf 128
-ALLOC symbol_tbl 512
+ALLOC symbol_tbl 4096
 ALLOC block_tbl 256
 ALLOC expr_group_tbl 128
 
@@ -3746,7 +3746,7 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "section .bss"
         WRITE_CHAR 10
-        WRITE_STR "vars    resq 256"
+        WRITE_STR "vars    resq 16384"
         WRITE_CHAR 10
         WRITE_STR "int_buf resb 32"
         WRITE_CHAR 10
@@ -3760,7 +3760,7 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "alloc_ptr resq 1"
         WRITE_CHAR 10
-        WRITE_STR "heap    resb 65536"
+        WRITE_STR "heap    resb 262144"
         WRITE_CHAR 10
 
         EXIT

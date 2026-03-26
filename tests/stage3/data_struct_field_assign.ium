@@ -1,0 +1,12 @@
+module app.main
+
+struct Point {
+    x: i32
+    y: i32
+}
+
+function main() {
+    variable p: Point = Point { x: 1, y: 2 }
+    p.x = p.y + 4
+    print(p.x)
+}

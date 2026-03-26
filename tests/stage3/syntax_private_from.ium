@@ -1,0 +1,11 @@
+module app.main
+
+from std.io import print as p
+
+private fn helper() -> i32 {
+    return 4
+}
+
+fn main() {
+    print(helper())
+}

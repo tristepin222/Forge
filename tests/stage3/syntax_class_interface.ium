@@ -1,0 +1,23 @@
+module app.main
+
+public class Account : Base {
+    balance: i32
+
+    function new(initial: i32) -> i32 {
+        return initial
+    }
+}
+
+interface Drawable {
+    function draw(self: i32) -> i32
+}
+
+implement Drawable for Account {
+    function draw(self: i32) -> i32 {
+        return self
+    }
+}
+
+function main() {
+    print(8)
+}

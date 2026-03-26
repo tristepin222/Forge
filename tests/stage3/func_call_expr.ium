@@ -1,0 +1,10 @@
+module app.main
+
+function helper() {
+    return 5
+}
+
+function main() {
+    value x: i32 = helper()
+    print(x + helper())
+}

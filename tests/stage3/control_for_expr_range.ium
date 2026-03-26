@@ -1,0 +1,10 @@
+module app.main
+
+function main() {
+    value start: i32 = 1
+    value stop: i32 = 3
+
+    for i in (start + 1)..(stop * 2) {
+        print(i)
+    }
+}

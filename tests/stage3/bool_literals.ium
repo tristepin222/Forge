@@ -1,0 +1,19 @@
+module app.main
+
+public function main() {
+    value yes: bool = true
+    variable no: bool = false
+
+    if yes == true {
+        print(1)
+    }
+
+    no = true
+
+    if no == true {
+        print(2)
+    }
+
+    print(true)
+    print(false)
+}

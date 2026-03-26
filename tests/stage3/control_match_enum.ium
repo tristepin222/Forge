@@ -1,0 +1,23 @@
+module app.main
+
+enum State {
+    Idle
+    Loading
+    Done(String)
+}
+
+function main() {
+    value s = State::Idle
+
+    match s {
+        State::Loading => {
+            print(0)
+        }
+        State::Idle => {
+            print(1)
+        }
+        _ => {
+            print(2)
+        }
+    }
+}

@@ -1,0 +1,10 @@
+module app.main
+
+function helper() {
+    print(5)
+}
+
+function main() {
+    helper()
+    print(7)
+}

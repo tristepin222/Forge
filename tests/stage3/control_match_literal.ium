@@ -1,0 +1,17 @@
+module app.main
+
+function main() {
+    variable x: i32 = 2
+
+    match x + 1 {
+        1 => {
+            print(10)
+        }
+        3 => {
+            print(30)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

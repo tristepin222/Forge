@@ -8,11 +8,21 @@ OUTPUT_DIR="$ROOT/output"
 TEST_DIR="$ROOT/tests/stage3"
 GEN1_BIN="$OUTPUT_DIR/stage3"
 GEN2_BIN="$OUTPUT_DIR/stage3_gen2"
+STAGE3_SELFHOST_SOURCE="${STAGE3_SELFHOST_SOURCE:-$ROOT/stages/stage3/compiler.ium}"
 TEST_NAMES=(
   smoke_main
+  smoke_function_only
 )
 
 mkdir -p "$OUTPUT_DIR"
+
+if [ ! -f "$STAGE3_SELFHOST_SOURCE" ]; then
+  echo "Stage 3 generation comparison is not available yet."
+  echo "No self-hosted Stage 3 source was found at:"
+  echo "  $STAGE3_SELFHOST_SOURCE"
+  echo "Create that source, or set STAGE3_SELFHOST_SOURCE to another .ium compiler source first."
+  exit 1
+fi
 
 if [ ! -x "$GEN1_BIN" ] || [ ! -x "$GEN2_BIN" ]; then
   echo "Bootstrapping Stage 3 generations first..."

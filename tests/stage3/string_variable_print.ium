@@ -1,0 +1,8 @@
+module app.main
+
+public function main() {
+    variable msg: str = "Ave"
+    print(msg)
+    msg = "Imperium"
+    print(msg)
+}

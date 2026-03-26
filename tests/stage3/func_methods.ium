@@ -1,0 +1,22 @@
+struct Point {
+    x: i32
+    y: i32
+}
+
+function sum(self: Point) -> i32 => self.x + self.y
+
+function add_x(self: Point, delta: i32) -> i32 => self.x + delta
+
+function doubled(self: Point) -> i32 => self.sum() * 2
+
+function show(self: Point) {
+    print(self.x)
+}
+
+function main() {
+    value p: Point = Point { x: 2, y: 3 }
+    p.show()
+    print(p.sum())
+    print(p.add_x(4))
+    print(p.doubled())
+}

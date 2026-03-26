@@ -1,0 +1,21 @@
+interface Drawable {
+    function draw(self)
+}
+
+struct Point {
+    x: i32
+}
+
+implement Drawable for Point {
+    function draw(self) {
+        print(self.x)
+    }
+
+    function plus(self, delta: i32) -> i32 => self.x + delta
+}
+
+function main() {
+    value p: Point = Point { x: 7 }
+    p.draw()
+    print(p.plus(5))
+}

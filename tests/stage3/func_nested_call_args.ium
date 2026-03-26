@@ -1,0 +1,13 @@
+module app.main
+
+function id(x: i32) -> i32 {
+    return x
+}
+
+function add(a: i32, b: i32) -> i32 {
+    return a + b
+}
+
+function main() {
+    print(add(id(1), id(2 + 1)))
+}

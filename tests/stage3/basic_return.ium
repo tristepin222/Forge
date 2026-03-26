@@ -1,0 +1,8 @@
+module app.main
+
+function main() {
+    value x: i32 = 1
+    print(x)
+    return x
+    print(2)
+}

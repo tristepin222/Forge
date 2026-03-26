@@ -1,0 +1,18 @@
+module app.main
+
+class Counter {
+    private variable amount: i32
+
+    public function get(self) -> i32 => self.amount
+
+    function plus(self, delta: i32) -> i32 {
+        return self.amount + delta
+    }
+}
+
+function main() {
+    value c: Counter = Counter { amount: 7 }
+    print(c.amount)
+    print(c.get())
+    print(c.plus(5))
+}

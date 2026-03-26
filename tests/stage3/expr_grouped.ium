@@ -1,0 +1,8 @@
+module app.main
+
+function main() {
+    value a: i32 = 2
+    value b: i32 = 3
+    print((a + b) * 4)
+    print(a * (b + 1))
+}

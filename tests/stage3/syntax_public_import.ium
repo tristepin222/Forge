@@ -1,0 +1,7 @@
+module app.main
+
+import std.io.{print}
+
+public function main() {
+    print(1)
+}

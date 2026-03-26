@@ -1,0 +1,12 @@
+module app.main
+
+struct Pair {
+    left: i32
+    right: i32
+}
+
+function main() {
+    variable p: Pair = Pair { left: 1, right: 2 }
+    p = Pair { left: p.right + 3, right: 9 }
+    print(p.left)
+}

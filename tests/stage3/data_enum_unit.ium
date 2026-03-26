@@ -1,0 +1,19 @@
+module app.main
+
+enum State {
+    Idle
+    Loading
+    Done(String)
+}
+
+function main() {
+    value s = State::Loading
+
+    if s == State::Loading {
+        print(1)
+    }
+
+    if s != State::Idle {
+        print(2)
+    }
+}
