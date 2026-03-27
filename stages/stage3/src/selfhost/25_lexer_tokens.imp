@@ -1,0 +1,50 @@
+function read_token(self: Lexer) -> i32 {
+    self.skip_whitespace()
+    self.reset_token()
+
+    variable ch: i32 = self.next_char()
+
+    if ch == 0 {
+        return self.token_kind
+    }
+
+    if is_alpha(ch) == true {
+        return self.scan_identifier(ch)
+    }
+
+    if is_digit(ch) == true {
+        return self.scan_number(ch)
+    }
+
+    if ch == 34 {
+        return self.scan_string()
+    }
+
+    self.token_kind = token_symbol()
+    self.token_value = ch
+    self.token_length = 1
+    return self.token_kind
+}
+
+function push_token(self: Lexer) {
+    self.pushed_kind = self.token_kind
+    self.pushed_value = self.token_value
+    self.pushed_hash = self.token_hash
+    self.pushed_line = self.token_line
+    self.pushed_length = self.token_length
+    self.has_pushed = true
+}
+
+function next_token(self: Lexer) -> i32 {
+    if self.has_pushed == true {
+        self.token_kind = self.pushed_kind
+        self.token_value = self.pushed_value
+        self.token_hash = self.pushed_hash
+        self.token_line = self.pushed_line
+        self.token_length = self.pushed_length
+        self.has_pushed = false
+        return self.token_kind
+    }
+
+    return self.read_token()
+}

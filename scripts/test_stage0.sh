@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="$ROOT/output"
 TEST_DIR="$ROOT/tests/stage0"
-PROGRAM_FILE="$ROOT/program.imp"
-BACKUP_FILE="$OUTPUT_DIR/program.imp.bak"
+PROGRAM_FILE="$ROOT/program.ium"
+BACKUP_FILE="$OUTPUT_DIR/program.ium.bak"
 STAGE0_SOURCE="$ROOT/stages/stage0/compiler.asm"
 TEST_NAMES=(
   arithmetic
@@ -44,7 +44,7 @@ ld "$OUTPUT_DIR/compiler.o" -o "$OUTPUT_DIR/compiler"
 
 for test_name in "${TEST_NAMES[@]}"; do
   echo "==> $test_name"
-  cp "$TEST_DIR/$test_name.imp" "$PROGRAM_FILE"
+  cp "$TEST_DIR/$test_name.ium" "$PROGRAM_FILE"
 
   "$OUTPUT_DIR/compiler"
   nasm -f elf64 "$OUTPUT_DIR/program.asm" -o "$OUTPUT_DIR/$test_name.o"

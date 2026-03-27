@@ -66,6 +66,9 @@ TEST_NAMES=(
   data_struct_field_assign
   data_struct_field_compound
   data_struct_reassign
+  integration_struct_enum_flow
+  integration_control_calls
+  integration_class_interface_flow
 )
 
 log() {
@@ -86,12 +89,13 @@ echo "Running Stage 3 tests..."
 for test_name in "${TEST_NAMES[@]}"; do
   log "==> $test_name"
   log "    compile"
-  python3 - <<PY | "$STAGE3_BIN" > "$OUTPUT_DIR/$test_name.stage3.asm"
+  python3 - <<PY > "$OUTPUT_DIR/$test_name.stage3.source"
 from pathlib import Path
 import sys
-data = Path(r"$TEST_DIR/$test_name.ium").read_bytes()
+data = Path(r"$TEST_DIR/$test_name.imp").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
+  "$STAGE3_BIN" < "$OUTPUT_DIR/$test_name.stage3.source" > "$OUTPUT_DIR/$test_name.stage3.asm"
 
   log "    assemble"
   nasm -f elf64 "$OUTPUT_DIR/$test_name.stage3.asm" -o "$OUTPUT_DIR/$test_name.stage3.o"
@@ -100,10 +104,21 @@ PY
   ld "$OUTPUT_DIR/$test_name.stage3.o" -o "$OUTPUT_DIR/$test_name.stage3"
 
   log "    run"
+  run_status=0
   if [ -f "$TEST_DIR/$test_name.in" ]; then
-    "$OUTPUT_DIR/$test_name.stage3" < "$TEST_DIR/$test_name.in" > "$OUTPUT_DIR/$test_name.stage3.actual"
+    "$OUTPUT_DIR/$test_name.stage3" < "$TEST_DIR/$test_name.in" > "$OUTPUT_DIR/$test_name.stage3.actual" || run_status=$?
   else
-    "$OUTPUT_DIR/$test_name.stage3" > "$OUTPUT_DIR/$test_name.stage3.actual"
+    "$OUTPUT_DIR/$test_name.stage3" > "$OUTPUT_DIR/$test_name.stage3.actual" || run_status=$?
+  fi
+
+  if [ "$run_status" -ge 128 ]; then
+    echo "FAILED: $test_name"
+    echo "Runtime crashed with exit status $run_status"
+    exit 1
+  fi
+
+  if [ "$VERBOSE" -eq 1 ] && [ "$run_status" -ne 0 ]; then
+    echo "    run exit status: $run_status"
   fi
 
   log "    verify"

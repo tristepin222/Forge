@@ -8,19 +8,40 @@ OUTPUT_DIR="$ROOT/output"
 TEST_DIR="$ROOT/tests/stage3"
 GEN1_BIN="$OUTPUT_DIR/stage3"
 GEN2_BIN="$OUTPUT_DIR/stage3_gen2"
-STAGE3_SELFHOST_SOURCE="${STAGE3_SELFHOST_SOURCE:-$ROOT/stages/stage3/compiler.ium}"
+DEFAULT_STAGE3_SELFHOST_SOURCE="$ROOT/stages/stage3/compiler.imp"
+STAGE3_SELFHOST_SOURCE="${STAGE3_SELFHOST_SOURCE:-$DEFAULT_STAGE3_SELFHOST_SOURCE}"
+STAGE3_BOOTSTRAP_READY_SENTINEL="${STAGE3_BOOTSTRAP_READY_SENTINEL:-$ROOT/stages/stage3/compiler.bootstrap-ready}"
+STAGE3_BUNDLE_SCRIPT="${STAGE3_BUNDLE_SCRIPT:-$ROOT/scripts/bundle_stage3_selfhost.sh}"
 TEST_NAMES=(
-  smoke_main
-  smoke_function_only
+  basic_empty_main
+  basic_function_only
 )
 
 mkdir -p "$OUTPUT_DIR"
+
+if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
+  bash "$STAGE3_BUNDLE_SCRIPT"
+fi
 
 if [ ! -f "$STAGE3_SELFHOST_SOURCE" ]; then
   echo "Stage 3 generation comparison is not available yet."
   echo "No self-hosted Stage 3 source was found at:"
   echo "  $STAGE3_SELFHOST_SOURCE"
-  echo "Create that source, or set STAGE3_SELFHOST_SOURCE to another .ium compiler source first."
+  echo "Create that source, or set STAGE3_SELFHOST_SOURCE to another .imp compiler source first."
+  exit 1
+fi
+
+if [ ! -f "$STAGE3_BOOTSTRAP_READY_SENTINEL" ]; then
+  echo "Stage 3 self-host source exists, but generation comparison is not enabled yet."
+  echo "Current scaffold source:"
+  echo "  $STAGE3_SELFHOST_SOURCE"
+  echo "Use the self-host smoke gates first:"
+  echo "  ./test_stage3_selfhost_sample.sh"
+  echo "  ./test_stage3_selfhost.sh"
+  echo "Then make sure ./bootstrap_stage3.sh can pass the second-generation compiler smoke."
+  echo "Create this marker file when the scaffold is bootstrap-ready:"
+  echo "  $STAGE3_BOOTSTRAP_READY_SENTINEL"
+  echo "or set STAGE3_BOOTSTRAP_READY_SENTINEL to another file."
   exit 1
 fi
 
@@ -35,7 +56,7 @@ for test_name in "${TEST_NAMES[@]}"; do
   python3 - <<PY | "$GEN1_BIN" > "$OUTPUT_DIR/$test_name.stage3.gen1.asm"
 from pathlib import Path
 import sys
-data = Path(r"$TEST_DIR/$test_name.ium").read_bytes()
+data = Path(r"$TEST_DIR/$test_name.imp").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
 
@@ -43,7 +64,7 @@ PY
   python3 - <<PY | "$GEN2_BIN" > "$OUTPUT_DIR/$test_name.stage3.gen2.asm"
 from pathlib import Path
 import sys
-data = Path(r"$TEST_DIR/$test_name.ium").read_bytes()
+data = Path(r"$TEST_DIR/$test_name.imp").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
 

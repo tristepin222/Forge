@@ -1,0 +1,29 @@
+module app.main
+
+interface Score {
+    function get(self) -> i32
+}
+
+class Counter {
+    private variable value: i32
+}
+
+implement Score for Counter {
+    function get(self) -> i32 => self.value
+
+    function add(self, delta: i32) -> i32 {
+        return self.value + delta
+    }
+}
+
+function main() {
+    value c: Counter = Counter { value: 4 }
+
+    print(c.get())
+
+    if c.add(3) != 7 {
+        print(0)
+    } else {
+        print(1)
+    }
+}

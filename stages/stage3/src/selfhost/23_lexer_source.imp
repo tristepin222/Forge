@@ -1,0 +1,44 @@
+function peek_char(self: Lexer) -> i32 {
+    if self.has_peeked == false {
+        self.peeked_char = __read_char
+        self.has_peeked = true
+    }
+
+    return self.peeked_char
+}
+
+function next_char(self: Lexer) -> i32 {
+    variable ch: i32 = self.peek_char()
+
+    self.has_peeked = false
+
+    if ch != 0 {
+        self.index += 1
+    }
+
+    if ch == 10 {
+        self.line += 1
+    }
+
+    return ch
+}
+
+function reset_token(self: Lexer) {
+    self.token_kind = token_end()
+    self.token_value = 0
+    self.token_hash = 0
+    self.token_line = self.line
+    self.token_length = 0
+}
+
+function skip_whitespace(self: Lexer) {
+    loop {
+        variable ch: i32 = self.peek_char()
+
+        if is_space(ch) == false {
+            break
+        }
+
+        self.next_char()
+    }
+}

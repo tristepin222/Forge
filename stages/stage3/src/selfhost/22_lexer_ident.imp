@@ -1,0 +1,31 @@
+function is_alpha(code: i32) -> i32 {
+    if code == 95 {
+        return true
+    }
+
+    if code < 65 {
+        return false
+    }
+
+    if code <= 90 {
+        return true
+    }
+
+    if code < 97 {
+        return false
+    }
+
+    if code <= 122 {
+        return true
+    }
+
+    return false
+}
+
+function is_ident_continue(code: i32) -> i32 {
+    if is_alpha(code) == true {
+        return true
+    }
+
+    return is_digit(code)
+}

@@ -1,0 +1,1905 @@
+function expect_keyword(self: Lexer, keyword: i32) -> i32 {
+    if self.next_token() != token_keyword() {
+        return 1
+    }
+
+    if self.token_value != keyword {
+        return 2
+    }
+
+    return 0
+}
+
+function expect_identifier(self: Lexer) -> i32 {
+    if self.next_token() != token_identifier() {
+        return 1
+    }
+
+    return 0
+}
+
+function expect_named_identifier(self: Lexer, expected_hash: i32) -> i32 {
+    if self.expect_identifier() != 0 {
+        return 1
+    }
+
+    if self.token_hash != expected_hash {
+        return 2
+    }
+
+    return 0
+}
+
+function expect_symbol(self: Lexer, code: i32) -> i32 {
+    if self.next_token() != token_symbol() {
+        return 1
+    }
+
+    if self.token_value != code {
+        return 2
+    }
+
+    return 0
+}
+
+function expect_number(self: Lexer, expected_value: i32) -> i32 {
+    if self.next_token() != token_number() {
+        return 1
+    }
+
+    if self.token_value != expected_value {
+        return 2
+    }
+
+    return 0
+}
+
+function parse_struct_literal_tail(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        return -1
+    }
+
+    if self.token_value == 125 {
+        return 0
+    }
+
+    self.push_token()
+
+    loop {
+        if self.expect_identifier() != 0 {
+            return -2
+        }
+
+        if self.expect_symbol(58) != 0 {
+            return -3
+        }
+
+        if self.parse_expression() != 0 {
+            return -4
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -5
+        }
+
+        if self.token_value == 125 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -6
+        }
+    }
+}
+
+function parse_postfix_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    loop {
+        kind = self.next_token()
+
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value == 40 {
+            if self.parse_argument_list_tail() != 0 {
+                return -1
+            }
+        } else {
+            if self.token_value == 46 {
+                if self.expect_identifier() != 0 {
+                    return -2
+                }
+            } else {
+                if self.token_value == 123 {
+                    if self.parse_struct_literal_tail() != 0 {
+                        return -3
+                    }
+                } else {
+                    self.push_token()
+                    return 0
+                }
+            }
+        }
+    }
+}
+
+function parse_factor(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind == token_number() {
+        return 0
+    }
+
+    if kind == token_string() {
+        return 0
+    }
+
+    if kind == token_keyword() {
+        if self.token_value == keyword_true() {
+            return 0
+        }
+
+        if self.token_value == keyword_false() {
+            return 0
+        }
+
+        if self.token_value == keyword_await() {
+            return self.parse_factor()
+        }
+    }
+
+    if kind == token_symbol() {
+        if self.token_value == 45 {
+            if self.parse_factor() != 0 {
+                return -4
+            }
+
+            return 0
+        }
+
+        if self.token_value != 40 {
+            return -1
+        }
+
+        if self.parse_expression() != 0 {
+            return -2
+        }
+
+        if self.expect_symbol(41) != 0 {
+            return -3
+        }
+
+        return 0
+    }
+
+    if kind == token_identifier() {
+        return self.parse_postfix_tail()
+    }
+
+    return -1
+}
+
+function parse_term(self: Lexer) -> i32 {
+    if self.parse_factor() != 0 {
+        return -1
+    }
+
+    loop {
+        variable kind: i32 = self.next_token()
+
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 42 {
+            self.push_token()
+            return 0
+        }
+
+        if self.parse_factor() != 0 {
+            return -2
+        }
+    }
+}
+
+function parse_expression(self: Lexer) -> i32 {
+    if self.parse_term() != 0 {
+        return -1
+    }
+
+    loop {
+        variable kind: i32 = self.next_token()
+
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 43 {
+            if self.token_value != 45 {
+                self.push_token()
+                return 0
+            }
+        }
+
+        if self.parse_term() != 0 {
+            return -2
+        }
+    }
+}
+
+function parse_argument_list_tail(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        return -1
+    }
+
+    if self.token_value == 41 {
+        return 0
+    }
+
+    self.push_token()
+
+    loop {
+        if self.parse_expression() != 0 {
+            return -2
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -3
+        }
+
+        if self.token_value == 41 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -4
+        }
+    }
+}
+
+function parse_return_tail(self: Lexer) -> i32 {
+    if self.parse_expression() != 0 {
+        return -1
+    }
+
+    return 0
+}
+
+function parse_throw_tail(self: Lexer) -> i32 {
+    if self.parse_expression() != 0 {
+        return -1
+    }
+
+    return 0
+}
+
+function parse_condition(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.parse_expression() != 0 {
+        return -1
+    }
+
+    kind = self.next_token()
+    if kind != token_symbol() {
+        return -2
+    }
+
+    if self.token_value == 60 {
+        kind = self.next_token()
+        if kind == token_symbol() {
+            if self.token_value != 61 {
+                self.push_token()
+            }
+        } else {
+            self.push_token()
+        }
+    } else {
+        if self.token_value == 62 {
+            kind = self.next_token()
+            if kind == token_symbol() {
+                if self.token_value != 61 {
+                    self.push_token()
+                }
+            } else {
+                self.push_token()
+            }
+        } else {
+            if self.token_value == 61 {
+                if self.expect_symbol(61) != 0 {
+                    return -3
+                }
+            } else {
+                if self.token_value == 33 {
+                    if self.expect_symbol(61) != 0 {
+                        return -4
+                    }
+                } else {
+                    return -6
+                }
+            }
+        }
+    }
+
+    if self.parse_expression() != 0 {
+        return -5
+    }
+
+    return 0
+}
+
+function parse_type_argument_list_tail(self: Lexer) -> i32 {
+    loop {
+        if self.parse_type_name() != 0 {
+            return -1
+        }
+
+        variable kind: i32 = self.next_token()
+        if kind != token_symbol() {
+            return -2
+        }
+
+        if self.token_value == 93 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -3
+        }
+    }
+}
+
+function parse_type_name(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    loop {
+        kind = self.next_token()
+
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value == 46 {
+            if self.expect_identifier() != 0 {
+                return -2
+            }
+
+            continue
+        }
+
+        if self.token_value == 91 {
+            if self.parse_type_argument_list_tail() != 0 {
+                return -3
+            }
+
+            continue
+        }
+
+        self.push_token()
+        return 0
+    }
+}
+
+function parse_parameter(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(58) != 0 {
+        return -2
+    }
+
+    if self.parse_type_name() != 0 {
+        return -3
+    }
+
+    return 0
+}
+
+function parse_parameter_list(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        return -1
+    }
+
+    if self.token_value == 41 {
+        return 0
+    }
+
+    self.push_token()
+
+    loop {
+        if self.parse_parameter() != 0 {
+            return -2
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -3
+        }
+
+        if self.token_value == 41 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -4
+        }
+    }
+}
+
+function parse_optional_generic_parameters(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != 91 {
+        self.push_token()
+        return 0
+    }
+
+    loop {
+        if self.expect_identifier() != 0 {
+            return -1
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -2
+        }
+
+        if self.token_value == 93 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -3
+        }
+    }
+}
+
+function parse_optional_return_type(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != 45 {
+        self.push_token()
+        return 0
+    }
+
+    if self.expect_symbol(62) != 0 {
+        return -1
+    }
+
+    if self.parse_type_name() != 0 {
+        return -2
+    }
+
+    return 0
+}
+
+function parse_skip_signature_clause(self: Lexer) -> i32 {
+    variable paren_depth: i32 = 0
+    variable bracket_depth: i32 = 0
+    variable kind: i32 = 0
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_end() {
+            return -1
+        }
+
+        if kind == token_symbol() {
+            if self.token_value == 40 {
+                paren_depth += 1
+                continue
+            }
+
+            if self.token_value == 41 {
+                if paren_depth > 0 {
+                    paren_depth -= 1
+                    continue
+                }
+            }
+
+            if self.token_value == 91 {
+                bracket_depth += 1
+                continue
+            }
+
+            if self.token_value == 93 {
+                if bracket_depth > 0 {
+                    bracket_depth -= 1
+                    continue
+                }
+            }
+
+            if paren_depth == 0 {
+                if bracket_depth == 0 {
+                    if self.token_value == 123 {
+                        self.push_token()
+                        return 0
+                    }
+
+                    if self.token_value == 61 {
+                        self.push_token()
+                        return 0
+                    }
+                }
+            }
+        }
+
+        if kind == token_keyword() {
+            if paren_depth == 0 {
+                if bracket_depth == 0 {
+                    if self.token_value == keyword_where() {
+                        self.push_token()
+                        return 0
+                    }
+
+                    if self.token_value == keyword_requires() {
+                        self.push_token()
+                        return 0
+                    }
+
+                    if self.token_value == keyword_ensures() {
+                        self.push_token()
+                        return 0
+                    }
+                }
+            }
+        }
+    }
+}
+
+function parse_optional_where_clause(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_keyword() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != keyword_where() {
+        self.push_token()
+        return 0
+    }
+
+    return self.parse_skip_signature_clause()
+}
+
+function parse_optional_contracts(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    loop {
+        kind = self.next_token()
+
+        if kind != token_keyword() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value == keyword_requires() {
+            if self.parse_skip_signature_clause() != 0 {
+                return -1
+            }
+        } else {
+            if self.token_value == keyword_ensures() {
+                if self.parse_skip_signature_clause() != 0 {
+                    return -2
+                }
+            } else {
+                self.push_token()
+                return 0
+            }
+        }
+    }
+}
+
+function parse_expression_body(self: Lexer) -> i32 {
+    if self.expect_symbol(62) != 0 {
+        return -1
+    }
+
+    if self.parse_expression() != 0 {
+        return -2
+    }
+
+    return 0
+}
+
+function parse_binding_tail(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(58) != 0 {
+        return -2
+    }
+
+    if self.parse_type_name() != 0 {
+        return -3
+    }
+
+    if self.expect_symbol(61) != 0 {
+        return -4
+    }
+
+    if self.parse_expression() != 0 {
+        return -5
+    }
+
+    return 0
+}
+
+function parse_identifier_statement_tail(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    loop {
+        if kind != token_symbol() {
+            return -1
+        }
+
+        if self.token_value != 46 {
+            break
+        }
+
+        if self.expect_identifier() != 0 {
+            return -4
+        }
+
+        kind = self.next_token()
+    }
+
+    if kind != token_symbol() {
+        return -1
+    }
+
+    if self.token_value == 61 {
+        if self.parse_expression() != 0 {
+            return -2
+        }
+
+        return 0
+    }
+
+    if self.token_value == 40 {
+        return self.parse_argument_list_tail()
+    }
+
+    return -3
+}
+
+function parse_if_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.parse_condition() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    if self.parse_block_body() != 0 {
+        return -3
+    }
+
+    kind = self.next_token()
+    if kind != token_keyword() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != keyword_else() {
+        self.push_token()
+        return 0
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -4
+    }
+
+    if self.parse_block_body() != 0 {
+        return -5
+    }
+
+    return 0
+}
+
+function parse_while_tail(self: Lexer) -> i32 {
+    if self.parse_condition() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    if self.parse_block_body() != 0 {
+        return -3
+    }
+
+    return 0
+}
+
+function parse_loop_tail(self: Lexer) -> i32 {
+    if self.expect_symbol(123) != 0 {
+        return -1
+    }
+
+    if self.parse_block_body() != 0 {
+        return -2
+    }
+
+    return 0
+}
+
+function parse_for_tail(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_keyword(keyword_in()) != 0 {
+        return -2
+    }
+
+    if self.parse_expression() != 0 {
+        return -3
+    }
+
+    if self.expect_symbol(46) != 0 {
+        return -4
+    }
+
+    if self.expect_symbol(46) != 0 {
+        return -5
+    }
+
+    if self.parse_expression() != 0 {
+        return -6
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -7
+    }
+
+    if self.parse_block_body() != 0 {
+        return -8
+    }
+
+    return 0
+}
+
+function parse_unsafe_tail(self: Lexer) -> i32 {
+    if self.expect_symbol(123) != 0 {
+        return -1
+    }
+
+    if self.parse_block_body() != 0 {
+        return -2
+    }
+
+    return 0
+}
+
+function parse_try_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+    variable saw_handler: i32 = false
+
+    if self.expect_symbol(123) != 0 {
+        return -1
+    }
+
+    if self.parse_block_body() != 0 {
+        return -2
+    }
+
+    kind = self.next_token()
+    if kind == token_keyword() {
+        if self.token_value == keyword_catch() {
+            saw_handler = true
+
+            kind = self.next_token()
+            if kind == token_identifier() {
+                kind = self.next_token()
+                if kind == token_symbol() {
+                    if self.token_value == 58 {
+                        if self.parse_type_name() != 0 {
+                            return -3
+                        }
+                    } else {
+                        self.push_token()
+                    }
+                } else {
+                    self.push_token()
+                }
+            } else {
+                self.push_token()
+            }
+
+            if self.expect_symbol(123) != 0 {
+                return -4
+            }
+
+            if self.parse_block_body() != 0 {
+                return -5
+            }
+
+            kind = self.next_token()
+        }
+    }
+
+    if kind == token_keyword() {
+        if self.token_value == keyword_finally() {
+            saw_handler = true
+
+            if self.expect_symbol(123) != 0 {
+                return -6
+            }
+
+            if self.parse_block_body() != 0 {
+                return -7
+            }
+
+            return 0
+        }
+    }
+
+    self.push_token()
+
+    if saw_handler == false {
+        return -8
+    }
+
+    return 0
+}
+
+function parse_match_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.parse_expression() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                return 0
+            }
+        }
+
+        if kind == token_keyword() {
+            if self.token_value == keyword_default() {
+                if self.expect_symbol(61) != 0 {
+                    return -3
+                }
+
+                if self.expect_symbol(62) != 0 {
+                    return -4
+                }
+
+                if self.expect_symbol(123) != 0 {
+                    return -5
+                }
+
+                if self.parse_block_body() != 0 {
+                    return -6
+                }
+
+                continue
+            }
+        }
+
+        self.push_token()
+
+        if self.parse_expression() != 0 {
+            return -7
+        }
+
+        if self.expect_symbol(61) != 0 {
+            return -8
+        }
+
+        if self.expect_symbol(62) != 0 {
+            return -9
+        }
+
+        if self.expect_symbol(123) != 0 {
+            return -10
+        }
+
+        if self.parse_block_body() != 0 {
+            return -11
+        }
+    }
+}
+
+function parse_statement(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind == token_identifier() {
+        return self.parse_identifier_statement_tail()
+    }
+
+    if kind == token_keyword() {
+        if self.token_value == keyword_return() {
+            return self.parse_return_tail()
+        }
+
+        if self.token_value == keyword_value() {
+            return self.parse_binding_tail()
+        }
+
+        if self.token_value == keyword_let() {
+            return self.parse_binding_tail()
+        }
+
+        if self.token_value == keyword_variable() {
+            return self.parse_binding_tail()
+        }
+
+        if self.token_value == keyword_var() {
+            return self.parse_binding_tail()
+        }
+
+        if self.token_value == keyword_constant() {
+            return self.parse_binding_tail()
+        }
+
+        if self.token_value == keyword_throw() {
+            return self.parse_throw_tail()
+        }
+
+        if self.token_value == keyword_if() {
+            return self.parse_if_tail()
+        }
+
+        if self.token_value == keyword_while() {
+            return self.parse_while_tail()
+        }
+
+        if self.token_value == keyword_loop() {
+            return self.parse_loop_tail()
+        }
+
+        if self.token_value == keyword_for() {
+            return self.parse_for_tail()
+        }
+
+        if self.token_value == keyword_match() {
+            return self.parse_match_tail()
+        }
+
+        if self.token_value == keyword_unsafe() {
+            return self.parse_unsafe_tail()
+        }
+
+        if self.token_value == keyword_try() {
+            return self.parse_try_tail()
+        }
+
+        if self.token_value == keyword_break() {
+            return 0
+        }
+
+        if self.token_value == keyword_continue() {
+            return 0
+        }
+    }
+
+    return -2
+}
+
+function parse_block_body(self: Lexer) -> i32 {
+    loop {
+        variable kind: i32 = self.next_token()
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                return 0
+            }
+        }
+
+        self.push_token()
+
+        if self.parse_statement() != 0 {
+            return -1
+        }
+    }
+}
+
+function parse_function_body(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        return -1
+    }
+
+    if self.token_value == 123 {
+        if self.parse_block_body() != 0 {
+            return -2
+        }
+        return 0
+    }
+
+    if self.token_value == 61 {
+        return self.parse_expression_body()
+    }
+
+    return -4
+}
+
+function parse_function_definition_tail(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+    variable name_hash: i32 = self.token_hash
+
+    if self.parse_optional_generic_parameters() != 0 {
+        return -6
+    }
+
+    if self.expect_symbol(40) != 0 {
+        return -2
+    }
+
+    if self.parse_parameter_list() != 0 {
+        return -3
+    }
+
+    if self.parse_optional_return_type() != 0 {
+        return -4
+    }
+
+    if self.parse_optional_where_clause() != 0 {
+        return -7
+    }
+
+    if self.parse_optional_contracts() != 0 {
+        return -8
+    }
+
+    if self.parse_function_body() != 0 {
+        return -5
+    }
+
+    return name_hash
+}
+
+function parse_function_definition(self: Lexer) -> i32 {
+    if self.next_token() != token_keyword() {
+        return -1
+    }
+
+    if self.token_value == keyword_async() {
+        if self.next_token() != token_keyword() {
+            return -3
+        }
+    }
+
+    if self.token_value != keyword_function() {
+        if self.token_value != keyword_fn() {
+            return -2
+        }
+    }
+
+    return self.parse_function_definition_tail()
+}
+
+function parse_enum_declaration_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                return 0
+            }
+        }
+
+        if kind != token_identifier() {
+            return -3
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            if kind == token_identifier() {
+                self.push_token()
+                continue
+            }
+
+            return -4
+        }
+
+        if self.token_value == 44 {
+        } else {
+            if self.token_value != 125 {
+                return -5
+            }
+            return 0
+        }
+    }
+}
+
+function parse_enum_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_enum()) != 0 {
+        return -1
+    }
+
+    return self.parse_enum_declaration_tail()
+}
+
+function parse_struct_field(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(58) != 0 {
+        return -2
+    }
+
+    if self.parse_type_name() != 0 {
+        return -3
+    }
+
+    return 0
+}
+
+function parse_struct_declaration_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                return 0
+            }
+        }
+
+        self.push_token()
+
+        if self.parse_struct_field() != 0 {
+            return -3
+        }
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            self.push_token()
+        } else {
+            if self.token_value == 44 {
+            } else {
+                if self.token_value == 125 {
+                    return 0
+                }
+                self.push_token()
+            }
+        }
+    }
+}
+
+function parse_struct_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_struct()) != 0 {
+        return -1
+    }
+
+    return self.parse_struct_declaration_tail()
+}
+
+function skip_brace_block(self: Lexer) -> i32 {
+    variable depth: i32 = 1
+    variable kind: i32 = 0
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_end() {
+            return -1
+        }
+
+        if kind != token_symbol() {
+            continue
+        }
+
+        if self.token_value == 123 {
+            depth += 1
+        } else {
+            if self.token_value == 125 {
+                depth -= 1
+
+                if depth == 0 {
+                    return 0
+                }
+            }
+        }
+    }
+}
+
+function parse_named_brace_skip_tail(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    kind = self.next_token()
+    if kind == token_symbol() {
+        if self.token_value == 58 {
+            if self.expect_identifier() != 0 {
+                return -2
+            }
+
+            kind = self.next_token()
+        }
+    }
+
+    if kind != token_symbol() {
+        return -3
+    }
+
+    if self.token_value != 123 {
+        return -4
+    }
+
+    return self.skip_brace_block()
+}
+
+function parse_class_declaration_tail(self: Lexer) -> i32 {
+    return self.parse_named_brace_skip_tail()
+}
+
+function parse_class_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_class()) != 0 {
+        return -1
+    }
+
+    return self.parse_class_declaration_tail()
+}
+
+function parse_interface_declaration_tail(self: Lexer) -> i32 {
+    return self.parse_named_brace_skip_tail()
+}
+
+function parse_interface_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_interface()) != 0 {
+        return -1
+    }
+
+    return self.parse_interface_declaration_tail()
+}
+
+function parse_implement_declaration_tail(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    if self.expect_keyword(keyword_for()) != 0 {
+        return -2
+    }
+
+    if self.expect_identifier() != 0 {
+        return -3
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -4
+    }
+
+    return self.skip_brace_block()
+}
+
+function parse_implement_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_implement()) != 0 {
+        return -1
+    }
+
+    return self.parse_implement_declaration_tail()
+}
+
+function parse_public_declaration(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_keyword() {
+        return -1
+    }
+
+    if self.token_value == keyword_function() {
+        return self.parse_function_definition_tail()
+    }
+
+    if self.token_value == keyword_fn() {
+        return self.parse_function_definition_tail()
+    }
+
+    if self.token_value == keyword_async() {
+        return self.parse_function_definition()
+    }
+
+    if self.token_value == keyword_struct() {
+        return self.parse_struct_declaration_tail()
+    }
+
+    if self.token_value == keyword_enum() {
+        return self.parse_enum_declaration_tail()
+    }
+
+    if self.token_value == keyword_class() {
+        return self.parse_class_declaration_tail()
+    }
+
+    if self.token_value == keyword_interface() {
+        return self.parse_interface_declaration_tail()
+    }
+
+    return -2
+}
+
+function parse_private_declaration(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_keyword() {
+        return -1
+    }
+
+    if self.token_value == keyword_function() {
+        return self.parse_function_definition_tail()
+    }
+
+    if self.token_value == keyword_fn() {
+        return self.parse_function_definition_tail()
+    }
+
+    if self.token_value == keyword_async() {
+        return self.parse_function_definition()
+    }
+
+    if self.token_value == keyword_class() {
+        return self.parse_class_declaration_tail()
+    }
+
+    if self.token_value == keyword_interface() {
+        return self.parse_interface_declaration_tail()
+    }
+
+    return -2
+}
+
+function parse_dotted_name_tail(self: Lexer) -> i32 {
+    if self.expect_identifier() != 0 {
+        return -1
+    }
+
+    loop {
+        if self.next_token() != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 46 {
+            self.push_token()
+            return 0
+        }
+
+        if self.expect_identifier() != 0 {
+            return -2
+        }
+    }
+}
+
+function skip_paren_block(self: Lexer) -> i32 {
+    variable depth: i32 = 1
+    variable kind: i32 = 0
+
+    loop {
+        kind = self.next_token()
+
+        if kind == token_end() {
+            return -1
+        }
+
+        if kind != token_symbol() {
+            continue
+        }
+
+        if self.token_value == 40 {
+            depth += 1
+        } else {
+            if self.token_value == 41 {
+                depth -= 1
+
+                if depth == 0 {
+                    return 0
+                }
+            }
+        }
+    }
+}
+
+function parse_annotation(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_symbol(64) != 0 {
+        return -1
+    }
+
+    if self.expect_identifier() != 0 {
+        return -2
+    }
+
+    kind = self.next_token()
+    if kind != token_symbol() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != 40 {
+        self.push_token()
+        return 0
+    }
+
+    return self.skip_paren_block()
+}
+
+function parse_module_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_module()) != 0 {
+        return -1
+    }
+
+    return self.parse_dotted_name_tail()
+}
+
+function parse_import_member_list_tail(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind == token_symbol() {
+        if self.token_value == 125 {
+            return 0
+        }
+
+        self.push_token()
+    } else {
+        self.push_token()
+    }
+
+    loop {
+        if self.expect_identifier() != 0 {
+            return -2
+        }
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_as() {
+                if self.expect_identifier() != 0 {
+                    return -3
+                }
+
+                kind = self.next_token()
+            } else {
+                return -4
+            }
+        }
+
+        if kind != token_symbol() {
+            return -5
+        }
+
+        if self.token_value == 125 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -6
+        }
+    }
+}
+
+function parse_import_declaration(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_keyword(keyword_import()) != 0 {
+        return -2
+    }
+
+    if self.expect_identifier() != 0 {
+        return -3
+    }
+
+    loop {
+        kind = self.next_token()
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 46 {
+            self.push_token()
+            return 0
+        }
+
+        kind = self.next_token()
+        if kind == token_symbol() {
+            if self.token_value == 123 {
+                return self.parse_import_member_list_tail()
+            }
+        }
+
+        if kind != token_identifier() {
+            return -4
+        }
+    }
+}
+
+function parse_from_import_declaration(self: Lexer) -> i32 {
+    if self.expect_keyword(keyword_from()) != 0 {
+        return -1
+    }
+
+    if self.parse_dotted_name_tail() != 0 {
+        return -2
+    }
+
+    if self.expect_keyword(keyword_import()) != 0 {
+        return -3
+    }
+
+    if self.expect_identifier() != 0 {
+        return -4
+    }
+
+    if self.next_token() == token_keyword() {
+        if self.token_value == keyword_as() {
+            if self.expect_identifier() != 0 {
+                return -5
+            }
+            return 0
+        }
+
+        self.push_token()
+        return 0
+    }
+
+    self.push_token()
+    return 0
+}
+
+function parse_top_level() -> i32 {
+    variable lexer: Lexer = Lexer {
+        index: 0,
+        line: 1,
+        peeked_char: 0,
+        has_peeked: false,
+        token_kind: token_end(),
+        token_value: 0,
+        token_hash: 0,
+        token_line: 1,
+        token_length: 0,
+        string_char_0: 0,
+        string_char_1: 0,
+        string_char_2: 0,
+        string_char_3: 0,
+        string_char_4: 0,
+        string_char_5: 0,
+        string_char_6: 0,
+        string_char_7: 0,
+        string_char_8: 0,
+        string_char_9: 0,
+        string_char_10: 0,
+        string_char_11: 0,
+        string_char_12: 0,
+        string_char_13: 0,
+        string_char_14: 0,
+        string_char_15: 0,
+        pushed_kind: token_end(),
+        pushed_value: 0,
+        pushed_hash: 0,
+        pushed_line: 1,
+        pushed_length: 0,
+        has_pushed: false
+    }
+    variable function_count: i32 = 0
+    variable saw_main: i32 = false
+    variable status: i32 = 0
+    variable kind: i32 = lexer.next_token()
+    variable top_keyword: i32 = 0
+    variable top_handled: i32 = false
+
+    loop {
+        if kind == token_symbol() {
+            if lexer.token_value == 64 {
+                lexer.push_token()
+                status = lexer.parse_annotation()
+                if status < 0 {
+                    return 1
+                }
+
+                kind = lexer.next_token()
+                continue
+            }
+        }
+
+        if kind != token_keyword() {
+            lexer.push_token()
+            break
+        }
+
+        if lexer.token_value == keyword_module() {
+            lexer.push_token()
+            status = lexer.parse_module_declaration()
+            if status < 0 {
+                return 1
+            }
+        } else {
+            if lexer.token_value == keyword_import() {
+                lexer.push_token()
+                status = lexer.parse_import_declaration()
+                if status < 0 {
+                    return 2
+                }
+            } else {
+                if lexer.token_value == keyword_from() {
+                    lexer.push_token()
+                    status = lexer.parse_from_import_declaration()
+                    if status < 0 {
+                        return 3
+                    }
+                } else {
+                    lexer.push_token()
+                    break
+                }
+            }
+        }
+
+        kind = lexer.next_token()
+    }
+
+    loop {
+        kind = lexer.next_token()
+
+        if kind == token_end() {
+            break
+        }
+
+        loop {
+            if kind != token_symbol() {
+                break
+            }
+
+            if lexer.token_value != 64 {
+                break
+            }
+
+            lexer.push_token()
+            status = lexer.parse_annotation()
+            if status < 0 {
+                return 8
+            }
+
+            kind = lexer.next_token()
+
+            if kind == token_end() {
+                break
+            }
+        }
+
+        if kind == token_end() {
+            break
+        }
+
+        if kind != token_keyword() {
+            return 9
+        }
+
+        top_keyword = lexer.token_value
+        top_handled = false
+
+        if top_keyword == keyword_function() {
+            status = lexer.parse_function_definition_tail()
+            top_handled = true
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_fn() {
+                status = lexer.parse_function_definition_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_public() {
+                status = lexer.parse_public_declaration()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_pub() {
+                status = lexer.parse_public_declaration()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_enum() {
+                status = lexer.parse_enum_declaration_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_struct() {
+                status = lexer.parse_struct_declaration_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_async() {
+                status = lexer.parse_function_definition()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_class() {
+                status = lexer.parse_class_declaration_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_interface() {
+                status = lexer.parse_interface_declaration_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_implement() {
+                status = lexer.parse_implement_declaration_tail()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_private() {
+                status = lexer.parse_private_declaration()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_import() {
+                status = lexer.parse_import_declaration()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            if top_keyword == keyword_from() {
+                status = lexer.parse_from_import_declaration()
+                top_handled = true
+            }
+        }
+
+        if top_handled == false {
+            return 9
+        }
+
+        if status < 0 {
+            return 10
+        }
+
+        if top_keyword == keyword_function() {
+            function_count += 1
+
+            if status == identifier_hash_main() {
+                saw_main = true
+            }
+        }
+
+        if top_keyword == keyword_fn() {
+            function_count += 1
+
+            if status == identifier_hash_main() {
+                saw_main = true
+            }
+        }
+
+        if top_keyword == keyword_async() {
+            function_count += 1
+
+            if status == identifier_hash_main() {
+                saw_main = true
+            }
+        }
+
+        if top_keyword == keyword_public() {
+            if status != 0 {
+                function_count += 1
+
+                if status == identifier_hash_main() {
+                    saw_main = true
+                }
+            }
+        }
+
+        if top_keyword == keyword_pub() {
+            if status != 0 {
+                function_count += 1
+
+                if status == identifier_hash_main() {
+                    saw_main = true
+                }
+            }
+        }
+
+        if top_keyword == keyword_private() {
+            if status != 0 {
+                function_count += 1
+
+                if status == identifier_hash_main() {
+                    saw_main = true
+                }
+            }
+        }
+    }
+
+    if function_count == 0 {
+        return 100
+    }
+
+    if saw_main == false {
+        return 101
+    }
+
+    return 0
+}

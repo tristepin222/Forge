@@ -17,8 +17,11 @@ For the long-term language design, see
 ## Compiler layering
 
 - Stage 0: [compiler.asm](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage0\compiler.asm)
-- Stage 2 trust base: [compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage2\compiler.imp)
-- Stage 3 front-end: [compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp)
+- Stage 2 trust base: [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage2\compiler.ium)
+- Stage 3 front-end: [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.ium)
+- Stage 3 self-host scaffold: [compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp)
+- Stage 3 self-host parts: `stages/stage3/src/selfhost/*.imp`
+- Stage 3 self-host sample input: `stages/stage3/src/selfhost/sample.imp`
 
 Build flow today:
 
@@ -26,6 +29,11 @@ Build flow today:
 2. Stage 2 builds Stage 3
 3. Stage 3 eventually becomes the user-facing compiler
 4. Stage 3 bootstrap only starts once the compiler itself is rewritten in Stage 3 syntax
+
+Extension convention:
+
+- `.ium` = bootstrap-language source
+- `.imp` = Imperium source
 
 ## Stage 3A subset
 
@@ -57,8 +65,8 @@ These are the features to implement first:
 - `for name in start..end { ... }`
 - `break`
 - `continue`
-- `match expr { literal => { ... } _ => { ... } }`
-- `match expr { State::Done(x) => { ... } _ => { ... } }`
+- `match expr { literal => { ... } default => { ... } }`
+- `match expr { State::Done(x) => { ... } default => { ... } }`
 - `return expr`
 - `print(expr)`
 - `print("text")`
@@ -119,7 +127,14 @@ function main() {
 
 ## Current status
 
-The current [compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp) is a very small real Stage 3 compiler, but only for the first syntax slice.
+The current [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.ium) is the bootstrap-language Stage 3 compiler.
+
+There is also a self-host source scaffold at
+[compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp).
+That file is an architectural starting point for the port, not a bootstrap-ready compiler yet.
+It is bundled from the split source parts under `stages/stage3/src/selfhost/`.
+It now includes a first real lexer slice plus a minimal top-level parser for a generated sample program from `stages/stage3/src/selfhost/sample.imp`, with `module`, `import`, `from ... import ... as ...`, parser-only `@name` / `@name(...)` annotations, `private`, `class`, `interface`, and `implement ... for ... { ... }`, `async fn`, `await`, `unsafe { ... }`, `try` / `catch` / `finally`, generic function parameter lists like `[T]`, `where`, `requires`, and `ensures`, top-level `enum` / `struct`, `public function` plus `pub fn`, `value` / `variable` / `constant` plus `let` / `var`, multiple `function` definitions, typed parameters, optional return types, expression-bodied helpers, simple block statements, assignment, call expressions, arithmetic expressions, grouped expressions, string literals, boolean literals, negative literals, struct literals, field access/assignment, `if` / `else`, `while`, `loop`, `for name in start..end { ... }`, `break`, `continue`, `match ... { ... default => ... }`, `<` / `<=` / `>` / `>=` / `==` / `!=` comparisons, and a required `main`.
+Its runtime path is still intentionally narrow: the current `compile_program()` now lexes real stdin and emits a small real Stage 3 subset instead of the old fixed empty-main smoke program. Right now that backend is intentionally limited to the early regression surface: top-level functions, basic bindings/assignment, arithmetic expressions, `print`, `return`, zero-arg calls, and first-cut `if` / `while`.
 
 It currently supports:
 
@@ -159,7 +174,7 @@ It currently supports:
 - `loop { ... }` and `break`
 - `for name in start..end { ... }` with arithmetic-expression range endpoints and exclusive end
 - `continue` in `while`, `loop`, and `for`
-- `match expr { literal => { ... } _ => { ... } }` with integer and boolean literal arms
+- `match expr { literal => { ... } default => { ... } }` with integer and boolean literal arms
 - `match` on enum variants, including one payload binding like `State::Done(x)`
 - arithmetic expressions with `+`, `-`, `*` in assignment, `print`, and `return`
 - grouped arithmetic expressions with parentheses
@@ -180,6 +195,7 @@ Current limitation:
 - imports are parsed and ignored semantically for now
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`
 - `implement` currently checks that the named interface exists and stores interface method names, but method/signature checking is not enforced yet
+- `default =>` is the canonical fallback arm in `match`; `_ =>` remains accepted as an alias for now
 - string literals are currently supported only in `print(...)`
 - string escapes are not supported yet
 - string variables are currently compile-time string bindings intended for `print(name)`
@@ -192,4 +208,11 @@ That means:
 
 - [build_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\build_stage3.sh) is valid now
 - [test_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3.sh) is valid now
-- [bootstrap_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\bootstrap_stage3.sh) and [compare_stage3_generations.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\compare_stage3_generations.sh) only become valid after a Stage 3 source file exists in Imperium syntax, for example `stages/stage3/compiler.ium`
+- [test_stage3_selfhost_sample.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost_sample.sh) is the quick compile-only self-host syntax smoke for `stages/stage3/src/selfhost/sample.imp`
+- [test_stage3_selfhost_parts.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost_parts.sh) compiles cumulative self-host bundle prefixes to find the first expensive or broken section
+- [test_stage3_selfhost.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost.sh) compiles, assembles, and links a lean bundled self-host scaffold
+- [bootstrap_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\bootstrap_stage3.sh) and [compare_stage3_generations.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\compare_stage3_generations.sh) stay gated until the self-host source is genuinely ready; that gate is the marker file `stages/stage3/compiler.bootstrap-ready`
+- once that marker exists, `bootstrap_stage3.sh` reruns `test_stage3_selfhost_sample.sh` and `test_stage3_selfhost.sh` automatically before attempting the second-generation build
+- after the second-generation binary is built, `bootstrap_stage3.sh` now runs a small compiler smoke on `tests/stage3/basic_empty_main.imp`; passing the scaffold smoke gates alone is not enough yet
+
+Use `./test_stage3_selfhost_sample.sh` first, then `./test_stage3_selfhost.sh`, before creating the bootstrap-ready marker.

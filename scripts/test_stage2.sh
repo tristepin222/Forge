@@ -126,7 +126,7 @@ for test_name in "${TEST_NAMES[@]}"; do
   python3 - <<PY | "$STAGE2_BIN" > "$OUTPUT_DIR/$test_name.asm"
 from pathlib import Path
 import sys
-data = Path(r"$TEST_DIR/$test_name.imp").read_bytes()
+data = Path(r"$TEST_DIR/$test_name.ium").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
 

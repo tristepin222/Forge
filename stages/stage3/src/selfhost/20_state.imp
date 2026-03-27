@@ -1,0 +1,43 @@
+struct SourceCursor {
+    index: i32
+    line: i32
+}
+
+struct ParserState {
+    phase: i32
+    current: i32
+}
+
+struct Lexer {
+    index: i32
+    line: i32
+    peeked_char: i32
+    has_peeked: i32
+    token_kind: i32
+    token_value: i32
+    token_hash: i32
+    token_line: i32
+    token_length: i32
+    string_char_0: i32
+    string_char_1: i32
+    string_char_2: i32
+    string_char_3: i32
+    string_char_4: i32
+    string_char_5: i32
+    string_char_6: i32
+    string_char_7: i32
+    string_char_8: i32
+    string_char_9: i32
+    string_char_10: i32
+    string_char_11: i32
+    string_char_12: i32
+    string_char_13: i32
+    string_char_14: i32
+    string_char_15: i32
+    pushed_kind: i32
+    pushed_value: i32
+    pushed_hash: i32
+    pushed_line: i32
+    pushed_length: i32
+    has_pushed: i32
+}

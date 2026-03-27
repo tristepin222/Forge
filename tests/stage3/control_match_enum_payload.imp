@@ -10,7 +10,7 @@ function main() {
         State::Done(x) => {
             print(x)
         }
-        _ => {
+        default => {
             print(0)
         }
     }

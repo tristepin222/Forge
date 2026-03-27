@@ -1,0 +1,124 @@
+module forge.stage3
+import forge.stage3.tokens
+from forge.stage3.parser import parse_top_level as parse_top
+enum TokenKind {
+    End
+    Identifier
+}
+@repr(c)
+struct SourceCursor {
+    index: i32
+    line: i32
+}
+struct ParserState {
+    phase: i32
+    current: i32
+}
+interface Printable {
+    fn draw(self: i32) -> i32
+}
+class Account : Base {
+    private variable balance: i32
+}
+implement Printable for Account {
+    fn draw(self: i32) -> i32 => 0
+}
+@test
+private async fn hidden_async() -> i32 => 0
+private fn hidden() -> i32 => 0
+fn identity[T](x: T) -> T where T => x
+function checked_add(a: i32, b: i32) -> i32
+requires b == b
+ensures a + b == a + b
+{
+    return a + b
+}
+function is_space(code: i32) -> i32 {
+    if code == 32 {
+        return true
+    }
+    if code == 10 {
+        return true
+    }
+    if code == 9 {
+        return true
+    }
+    return false
+}
+function is_digit(code: i32) -> i32 {
+    if code < 48 {
+        return false
+    }
+    if code > 57 {
+        return false
+    }
+    return true
+}
+function is_alpha(code: i32) -> i32 {
+    if code == 95 {
+        return true
+    }
+    if code < 65 {
+        return false
+    }
+    if code <= 90 {
+        return true
+    }
+    if code < 97 {
+        return false
+    }
+    if code <= 122 {
+        return true
+    }
+    return false
+}
+function parse_top_level() -> i32 {
+    if 0 != 1 {
+        return -1
+    }
+    return 0
+}
+fn emit_program(status: i32) -> i32 => status
+pub fn main() -> i32 {
+    let limit: i32 = 1
+    constant success: i32 = 0
+    constant banner: String = "ready"
+    constant maybe_value: Option[i32] = some(1)
+    constant result_value: Result[i32, Error] = ok(success)
+    var cursor: SourceCursor = SourceCursor { index: 0, line: 1 }
+    var parser: ParserState = ParserState { phase: 0, current: 0 }
+    var saw_main: i32 = false
+    while cursor.index < limit {
+        cursor.index = cursor.index + 1
+    }
+    loop {
+        if cursor.index >= limit {
+            saw_main = true
+            break
+        }
+        continue
+    }
+    for i in 0..limit {
+        cursor.index = cursor.index + i
+    }
+    if saw_main == true {
+        try {
+            unsafe {
+                parser.current = await hidden_async()
+            }
+        } catch error: Error {
+            throw error
+        } finally {
+            hidden()
+        }
+        parser.current = parse_top_level()
+    }
+    match parser.current {
+        success => {
+            return emit_program(parser.current)
+        }
+        default => {
+            return 0
+        }
+    }
+}

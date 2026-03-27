@@ -7,7 +7,7 @@ function main() {
         true => {
             print(1)
         }
-        _ => {
+        default => {
             print(0)
         }
     }

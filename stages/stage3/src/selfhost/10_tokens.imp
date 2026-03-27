@@ -1,0 +1,111 @@
+enum TokenKind {
+    End
+    Identifier
+    Number
+    String
+    Symbol
+    Keyword
+}
+
+struct Token {
+    kind: i32
+    value: i32
+    hash: i32
+    line: i32
+    length: i32
+}
+
+function token_end() -> i32 => 0
+function token_identifier() -> i32 => 1
+function token_number() -> i32 => 2
+function token_string() -> i32 => 3
+function token_symbol() -> i32 => 4
+function token_keyword() -> i32 => 5
+
+function keyword_function() -> i32 => 1
+function keyword_return() -> i32 => 2
+function keyword_module() -> i32 => 3
+function keyword_value() -> i32 => 4
+function keyword_variable() -> i32 => 5
+function keyword_if() -> i32 => 6
+function keyword_else() -> i32 => 7
+function keyword_while() -> i32 => 8
+function keyword_struct() -> i32 => 9
+function keyword_enum() -> i32 => 10
+function keyword_public() -> i32 => 11
+function keyword_true() -> i32 => 12
+function keyword_false() -> i32 => 13
+function keyword_loop() -> i32 => 14
+function keyword_break() -> i32 => 15
+function keyword_continue() -> i32 => 16
+function keyword_match() -> i32 => 17
+function keyword_default() -> i32 => 18
+function keyword_import() -> i32 => 19
+function keyword_from() -> i32 => 20
+function keyword_as() -> i32 => 21
+function keyword_constant() -> i32 => 22
+function keyword_fn() -> i32 => 23
+function keyword_let() -> i32 => 24
+function keyword_var() -> i32 => 25
+function keyword_pub() -> i32 => 26
+function keyword_private() -> i32 => 27
+function keyword_class() -> i32 => 28
+function keyword_interface() -> i32 => 29
+function keyword_implement() -> i32 => 30
+function keyword_for() -> i32 => 31
+function keyword_async() -> i32 => 32
+function keyword_await() -> i32 => 33
+function keyword_unsafe() -> i32 => 34
+function keyword_try() -> i32 => 35
+function keyword_catch() -> i32 => 36
+function keyword_finally() -> i32 => 37
+function keyword_throw() -> i32 => 38
+function keyword_in() -> i32 => 39
+function keyword_where() -> i32 => 40
+function keyword_requires() -> i32 => 41
+function keyword_ensures() -> i32 => 42
+
+function keyword_hash_function() -> i32 => 4502609522246
+function keyword_hash_return() -> i32 => 4585512800
+function keyword_hash_module() -> i32 => 4401119846
+function keyword_hash_value() -> i32 => 143546141
+function keyword_hash_variable() -> i32 => 5158838217062
+function keyword_hash_if() -> i32 => 3567
+function keyword_hash_else() -> i32 => 3751145
+function keyword_hash_while() -> i32 => 144980057
+function keyword_hash_struct() -> i32 => 4642364645
+function keyword_hash_enum() -> i32 => 3753397
+function keyword_hash_public() -> i32 => 4525559775
+function keyword_hash_true() -> i32 => 4296800
+function keyword_hash_false() -> i32 => 124571339
+function keyword_hash_loop() -> i32 => 4005850
+function keyword_hash_break() -> i32 => 120430373
+function keyword_hash_continue() -> i32 => 4367025156485
+function keyword_hash_match() -> i32 => 132880973
+function keyword_hash_default() -> i32 => 133224052517
+function keyword_hash_import() -> i32 => 4242631355
+function keyword_hash_from() -> i32 => 3793492
+function keyword_hash_as() -> i32 => 3316
+function keyword_hash_constant() -> i32 => 4367024351498
+function keyword_hash_fn() -> i32 => 3476
+function keyword_hash_let() -> i32 => 121061
+function keyword_hash_var() -> i32 => 131817
+function keyword_hash_pub() -> i32 => 125927
+function keyword_hash_private() -> i32 => 149234719163
+function keyword_hash_class() -> i32 => 121396918
+function keyword_hash_interface() -> i32 => 152514835571441
+function keyword_hash_implement() -> i32 => 152467310043659
+function keyword_hash_for() -> i32 => 114855
+function keyword_hash_async() -> i32 => 119302590
+function keyword_hash_await() -> i32 => 119420054
+function keyword_hash_unsafe() -> i32 => 4713534146
+function keyword_hash_try() -> i32 => 130207
+function keyword_hash_catch() -> i32 => 121021763
+function keyword_hash_finally() -> i32 => 135973007599
+function keyword_hash_throw() -> i32 => 141432212
+function keyword_hash_in() -> i32 => 3575
+function keyword_hash_where() -> i32 => 144975899
+function keyword_hash_requires() -> i32 => 4993505717392
+function keyword_hash_ensures() -> i32 => 134883871237
+function identifier_hash_main() -> i32 => 4026341
+function identifier_hash_str() -> i32 => 129177

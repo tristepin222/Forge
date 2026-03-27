@@ -1,0 +1,476 @@
+function scan_identifier(self: Lexer, first: i32) -> i32 {
+    variable hash: i32 = 0
+    variable length: i32 = 0
+    variable ch: i32 = first
+
+    hash = hash_step(hash, ch)
+    length += 1
+
+    loop {
+        variable peek: i32 = self.peek_char()
+
+        if is_ident_continue(peek) == false {
+            break
+        }
+
+        ch = self.next_char()
+        hash = hash_step(hash, ch)
+        length += 1
+    }
+
+    self.token_kind = token_identifier()
+    self.token_hash = hash
+    self.token_length = length
+
+    if length == 8 {
+        if hash == keyword_hash_function() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_function()
+            return self.token_kind
+        }
+    }
+
+    if length == 6 {
+        if hash == keyword_hash_return() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_return()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_module() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_module()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_struct() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_struct()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_public() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_public()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_import() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_import()
+            return self.token_kind
+        }
+    }
+
+    if length == 2 {
+        if hash == keyword_hash_if() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_if()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_in() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_in()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_as() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_as()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_fn() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_fn()
+            return self.token_kind
+        }
+    }
+
+    if length == 3 {
+        if hash == keyword_hash_for() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_for()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_try() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_try()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_let() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_let()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_var() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_var()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_pub() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_pub()
+            return self.token_kind
+        }
+    }
+
+    if length == 4 {
+        if hash == keyword_hash_from() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_from()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_loop() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_loop()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_true() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_true()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_enum() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_enum()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_else() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_else()
+            return self.token_kind
+        }
+    }
+
+    if length == 5 {
+        if hash == keyword_hash_value() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_value()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_async() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_async()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_await() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_await()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_match() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_match()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_class() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_class()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_break() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_break()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_false() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_false()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_while() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_while()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_throw() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_throw()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_where() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_where()
+            return self.token_kind
+        }
+    }
+
+    if length == 8 {
+        if hash == keyword_hash_constant() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_constant()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_continue() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_continue()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_variable() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_variable()
+            return self.token_kind
+        }
+    }
+
+    if length == 7 {
+        if hash == keyword_hash_default() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_default()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_private() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_private()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_unsafe() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_unsafe()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_ensures() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_ensures()
+            return self.token_kind
+        }
+    }
+
+    if length == 9 {
+        if hash == keyword_hash_interface() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_interface()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_implement() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_implement()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_finally() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_finally()
+            return self.token_kind
+        }
+
+        if hash == keyword_hash_requires() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_requires()
+            return self.token_kind
+        }
+    }
+
+    if length == 5 {
+        if hash == keyword_hash_catch() {
+            self.token_kind = token_keyword()
+            self.token_value = keyword_catch()
+            return self.token_kind
+        }
+    }
+
+    return self.token_kind
+}
+
+function scan_number(self: Lexer, first: i32) -> i32 {
+    variable number_value: i32 = first - 48
+    variable length: i32 = 1
+
+    loop {
+        variable peek: i32 = self.peek_char()
+
+        if is_digit(peek) == false {
+            break
+        }
+
+        number_value = number_value * 10 + self.next_char() - 48
+        length += 1
+    }
+
+    self.token_kind = token_number()
+    self.token_value = number_value
+    self.token_length = length
+    return self.token_kind
+}
+
+function set_string_char(self: Lexer, index: i32, ch: i32) -> i32 {
+    if index == 0 {
+        self.string_char_0 = ch
+        return 0
+    }
+    if index == 1 {
+        self.string_char_1 = ch
+        return 0
+    }
+    if index == 2 {
+        self.string_char_2 = ch
+        return 0
+    }
+    if index == 3 {
+        self.string_char_3 = ch
+        return 0
+    }
+    if index == 4 {
+        self.string_char_4 = ch
+        return 0
+    }
+    if index == 5 {
+        self.string_char_5 = ch
+        return 0
+    }
+    if index == 6 {
+        self.string_char_6 = ch
+        return 0
+    }
+    if index == 7 {
+        self.string_char_7 = ch
+        return 0
+    }
+    if index == 8 {
+        self.string_char_8 = ch
+        return 0
+    }
+    if index == 9 {
+        self.string_char_9 = ch
+        return 0
+    }
+    if index == 10 {
+        self.string_char_10 = ch
+        return 0
+    }
+    if index == 11 {
+        self.string_char_11 = ch
+        return 0
+    }
+    if index == 12 {
+        self.string_char_12 = ch
+        return 0
+    }
+    if index == 13 {
+        self.string_char_13 = ch
+        return 0
+    }
+    if index == 14 {
+        self.string_char_14 = ch
+        return 0
+    }
+    if index == 15 {
+        self.string_char_15 = ch
+        return 0
+    }
+
+    return -1
+}
+
+function string_char_at(self: Lexer, index: i32) -> i32 {
+    if index == 0 {
+        return self.string_char_0
+    }
+    if index == 1 {
+        return self.string_char_1
+    }
+    if index == 2 {
+        return self.string_char_2
+    }
+    if index == 3 {
+        return self.string_char_3
+    }
+    if index == 4 {
+        return self.string_char_4
+    }
+    if index == 5 {
+        return self.string_char_5
+    }
+    if index == 6 {
+        return self.string_char_6
+    }
+    if index == 7 {
+        return self.string_char_7
+    }
+    if index == 8 {
+        return self.string_char_8
+    }
+    if index == 9 {
+        return self.string_char_9
+    }
+    if index == 10 {
+        return self.string_char_10
+    }
+    if index == 11 {
+        return self.string_char_11
+    }
+    if index == 12 {
+        return self.string_char_12
+    }
+    if index == 13 {
+        return self.string_char_13
+    }
+    if index == 14 {
+        return self.string_char_14
+    }
+    if index == 15 {
+        return self.string_char_15
+    }
+
+    return 0
+}
+
+function scan_string(self: Lexer) -> i32 {
+    variable length: i32 = 0
+
+    loop {
+        variable ch: i32 = self.next_char()
+
+        if ch == 0 {
+            break
+        }
+
+        if ch == 10 {
+            break
+        }
+
+        if ch == 34 {
+            break
+        }
+
+        if length < 16 {
+            self.set_string_char(length, ch)
+        }
+
+        length += 1
+    }
+
+    self.token_kind = token_string()
+    self.token_value = 0
+    if length > 16 {
+        self.token_length = 16
+    } else {
+        self.token_length = length
+    }
+    return self.token_kind
+}

@@ -1,0 +1,11 @@
+function is_digit(code: i32) -> i32 {
+    if code < 48 {
+        return false
+    }
+
+    if code > 57 {
+        return false
+    }
+
+    return true
+}

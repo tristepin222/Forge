@@ -1,0 +1,29 @@
+module app.main
+
+struct Pair {
+    left: i32
+    right: i32
+}
+
+enum State {
+    Idle
+    Done(i32)
+}
+
+function sum(self: Pair) -> i32 => self.left + self.right
+
+function main() {
+    variable p: Pair = Pair { left: 1, right: 2 }
+    p.left += 3
+
+    value s = State::Done(p.sum())
+
+    match s {
+        State::Done(x) => {
+            print(x)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

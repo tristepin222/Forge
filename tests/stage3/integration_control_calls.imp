@@ -1,0 +1,18 @@
+module app.main
+
+function step(x: i32) -> i32 => x + 1
+function scale(x: i32) -> i32 => x * 2
+
+function main() {
+    variable total: i32 = 0
+
+    for i in 0..5 {
+        if (i * 2) >= 6 {
+            continue
+        }
+
+        total += scale(step(i))
+    }
+
+    print(total)
+}

@@ -34,7 +34,7 @@ default rel
 %define MAX_BLOCKS   128
 
 section .data
-    input_file      db "program.imp", 0
+    input_file      db "program.ium", 0
     output_file     db "output/program.asm", 0
 
     kw_print        db "PRINT", 0

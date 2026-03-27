@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="$ROOT/output"
-STAGE2_SOURCE="$ROOT/stages/stage2/compiler.imp"
+STAGE2_SOURCE="$ROOT/stages/stage2/compiler.ium"
 
 VERBOSE=0
 if [[ "${1:-}" == "--verbose" ]]; then
@@ -23,7 +23,7 @@ mkdir -p "$OUTPUT_DIR"
 log "Building first-generation Stage 2 compiler with Stage 0..."
 "$SCRIPT_DIR/build_stage2.sh"
 
-log "Compiling stages/stage2/compiler.imp with first-generation Stage 2..."
+log "Compiling stages/stage2/compiler.ium with first-generation Stage 2..."
 python3 - <<PY | "$OUTPUT_DIR/stage1" > "$OUTPUT_DIR/stage1_gen2.asm"
 from pathlib import Path
 import sys

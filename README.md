@@ -16,8 +16,10 @@ The canonical compiler sources and scripts are now split by stage:
 ```text
 stages/
   stage0/compiler.asm
-  stage2/compiler.imp
+  stage2/compiler.ium
+  stage3/compiler.ium
   stage3/compiler.imp
+  stage3/src/selfhost/
 
 scripts/
   test_stage0.sh
@@ -27,11 +29,33 @@ scripts/
   compare_stage2_generations.sh
   build_stage3.sh
   test_stage3.sh
+  test_stage3_selfhost_sample.sh
+  test_stage3_selfhost_parts.sh
+  test_stage3_selfhost.sh
   bootstrap_stage3.sh
   compare_stage3_generations.sh
 ```
 
 The root `build_*.sh` / `test_*.sh` files remain as compatibility wrappers.
+
+Extension convention:
+- `.ium` = bootstrap-language source
+- `.imp` = Imperium source
+
+The Stage 3 self-host scaffold is split into source parts under
+`stages/stage3/src/selfhost/` and bundled into `stages/stage3/compiler.imp`.
+Its sample input now lives at `stages/stage3/src/selfhost/sample.imp`.
+The bundler supports two modes:
+- `STAGE3_SELFHOST_SAMPLE_MODE=stub` keeps the lexer source table stubbed and produces a lean self-host bundle
+- `STAGE3_SELFHOST_SAMPLE_MODE=generated` injects the sample into the lexer as generated `source_length` / `source_char_at` code
+Use:
+
+```bash
+chmod +x bundle_stage3_selfhost.sh
+./bundle_stage3_selfhost.sh
+```
+
+to regenerate the bundled scaffold after editing those parts.
 
 ### Prerequisites
 
@@ -55,9 +79,9 @@ ld -o compiler compiler.o
 
 ### The Compilation Pipeline
 
-Running the compiler processes `program.imp` and generates a standalone Linux executable.
+Running the compiler processes `program.ium` and generates a standalone Linux executable.
 
-1. **Generate Assembly:** `./compiler` (Reads `program.imp`, outputs `output/program.asm`)
+1. **Generate Assembly:** `./compiler` (Reads `program.ium`, outputs `output/program.asm`)
 2. **Assemble:** `nasm -f elf64 output/program.asm -o output/program.o`
 3. **Link:** `ld -o output/program output/program.o`
 4. **Run:** `./output/program`
@@ -70,7 +94,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-This will compile your `program.imp`, link it, and execute it in one go.
+This will compile your `program.ium`, link it, and execute it in one go.
 
 ### Regression Tests
 
@@ -81,7 +105,7 @@ chmod +x test_stage0.sh
 ./test_stage0.sh
 ```
 
-The runner rebuilds the compiler, swaps each test program into `program.imp`, compiles it, runs the generated binary, and compares stdout against the expected `.out` file.
+The runner rebuilds the compiler, swaps each test program into `program.ium`, compiles it, runs the generated binary, and compares stdout against the expected `.out` file.
 
 ### Building Stage 2
 
@@ -94,13 +118,13 @@ chmod +x build_stage1.sh
 
 This script:
 - builds the Stage 0 compiler
-- swaps `stages/stage2/compiler.imp` into `program.imp`
+- swaps `stages/stage2/compiler.ium` into `program.ium`
 - assembles the generated `output/stage1.asm`
 - links the resulting `output/stage1` compiler
 
-### Running `stage1_test.imp`
+### Running `stage1_test.ium`
 
-If you have a small Stage 1 input program in `stage1_test.imp`, you can build Stage 1, compile that test, and run the resulting binary with:
+If you have a small Stage 1 input program in `stage1_test.ium`, you can build Stage 1, compile that test, and run the resulting binary with:
 
 ```bash
 chmod +x run_stage1_test.sh
@@ -147,7 +171,21 @@ chmod +x build_stage3.sh
 ./build_stage3.sh
 ```
 
-This compiles `stages/stage3/compiler.imp` and produces `output/stage3`.
+This compiles `stages/stage3/compiler.ium` and produces `output/stage3`.
+
+For the self-host path there are now two intermediate checks:
+
+```bash
+./test_stage3_selfhost_sample.sh
+./test_stage3_selfhost_parts.sh
+./test_stage3_selfhost.sh
+```
+
+- `test_stage3_selfhost_sample.sh` compiles the smaller Imperium sample at `stages/stage3/src/selfhost/sample.imp`
+- `test_stage3_selfhost_parts.sh` compiles cumulative self-host bundle prefixes to find the first expensive or broken section
+- `test_stage3_selfhost.sh` compiles, assembles, and links a lean bundled self-host scaffold
+
+Use the sample smoke first when bringing `stages/stage3/compiler.ium` closer to the self-host source. Use the full smoke after that to measure whether the bundled compiler source itself is getting close enough for real bootstrap work.
 
 The current Stage 3 milestone supports only the first real surface-syntax slice:
 - optional `module ...`
@@ -163,7 +201,7 @@ The current Stage 3 milestone supports only the first real surface-syntax slice:
 - `loop { ... }` and `break`
 - `for name in start..end { ... }` with arithmetic-expression endpoints and exclusive end
 - `continue` in `while`, `loop`, and `for`
-- `match expr { literal => { ... } _ => { ... } }` with integer and boolean literal arms
+- `match expr { literal => { ... } default => { ... } }` with integer and boolean literal arms
 - `match` on enum variants, including one payload binding like `State::Done(x)`
 - arithmetic expressions with `+`, `-`, `*` in assignment, `print`, and `return`
 - arithmetic expressions on both sides of `if` / `while` conditions
@@ -216,9 +254,37 @@ chmod +x test_stage3.sh
 ./test_stage3.sh
 ```
 
-At the current milestone, Stage 3 is **not self-hosting yet**. The bootstrap/compare scripts only become valid once you also have a Stage 3 compiler source written in Stage 3 syntax, for example `stages/stage3/compiler.ium`.
+To run the intermediate self-host smoke gate for the Stage 3 scaffold:
 
-After that exists, you can bootstrap and compare Stage 3 generations with:
+```bash
+chmod +x test_stage3_selfhost.sh
+./test_stage3_selfhost.sh
+```
+
+This rebundles `stages/stage3/compiler.imp`, builds `output/stage3`,
+compiles the self-host scaffold with that compiler, assembles/links the
+result, and checks that the produced smoke binary exits cleanly.
+
+At the current milestone, Stage 3 is **not self-hosting yet**.
+
+There is now a Stage 3 self-host scaffold at
+`stages/stage3/compiler.imp`, but the bootstrap/compare scripts remain intentionally gated until that source is explicitly marked ready.
+That scaffold is bundled from `stages/stage3/src/selfhost/`, with its sample source in `stages/stage3/src/selfhost/sample.imp`, and now includes a first real lexer slice plus a minimal top-level parser over the self-host source shape with `module`, `import`, `from ... import ... as ...`, parser-only `@name` / `@name(...)` annotations, `private`, `class`, `interface`, and `implement ... for ... { ... }`, `async fn`, `await`, `unsafe { ... }`, `try` / `catch` / `finally`, generic function parameter lists like `[T]`, `where`, `requires`, and `ensures`, top-level `enum` / `struct`, `public function` plus `pub fn`, `value` / `variable` / `constant` plus `let` / `var`, typed signatures, expression-bodied helpers, simple block statements, assignment, calls, arithmetic expressions, grouped expressions, string literals, boolean literals, negative literals, struct literals, field access/assignment, `if` / `else`, `while`, `loop`, `for name in start..end { ... }`, `break`, `continue`, `match ... { ... default => ... }`, `<` / `<=` / `>` / `>=` / `==` / `!=` comparisons, and multiple functions.
+
+When the self-host source is ready, create the marker file:
+
+```text
+stages/stage3/compiler.bootstrap-ready
+```
+
+Before enabling that marker, use `./test_stage3_selfhost_sample.sh` and then
+`./test_stage3_selfhost.sh` as the intermediate gates for the self-host source.
+Those prove that the current scaffold can be compiled, assembled, and linked by the trusted Stage 3 compiler.
+The current self-host runtime path now lexes real stdin and emits a small real Stage 3 subset instead of the old fixed empty-main smoke program. Right now that backend is intentionally limited to the early regression surface: top-level functions, basic bindings/assignment, arithmetic expressions, `print`, `return`, zero-arg calls, and first-cut `if` / `while`.
+They still do **not** prove that the resulting second-generation binary is a regression-capable compiler.
+Once the marker exists, `./bootstrap_stage3.sh` reruns those two preflight checks automatically and then runs a second-generation compiler smoke on `tests/stage3/basic_empty_main.imp` before attempting the full Stage 3 regression suite.
+
+After that, you can bootstrap and compare Stage 3 generations with:
 
 ```bash
 chmod +x bootstrap_stage3.sh compare_stage3_generations.sh
