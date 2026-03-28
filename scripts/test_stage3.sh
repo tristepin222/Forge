@@ -126,13 +126,7 @@ run_stage3_test() {
 
   log "==> $test_name"
   log "    compile"
-  python3 - <<PY > "$OUTPUT_DIR/$test_name.stage3.source"
-from pathlib import Path
-import sys
-data = Path(r"$TEST_DIR/$test_name.imp").read_bytes()
-sys.stdout.buffer.write(data + b"\0")
-PY
-  "$STAGE3_BIN" < "$OUTPUT_DIR/$test_name.stage3.source" > "$OUTPUT_DIR/$test_name.stage3.asm"
+  ( cat "$TEST_DIR/$test_name.imp"; printf '\0' ) | "$STAGE3_BIN" > "$OUTPUT_DIR/$test_name.stage3.asm"
 
   log "    assemble"
   nasm -f elf64 "$OUTPUT_DIR/$test_name.stage3.asm" -o "$OUTPUT_DIR/$test_name.stage3.o"
@@ -169,34 +163,72 @@ PY
   fi
 }
 
-flush_test_batch() {
+launch_test_job() {
+  local test_name="$1"
+  local test_log="$OUTPUT_DIR/$test_name.stage3.testlog"
+  local test_status="$OUTPUT_DIR/$test_name.stage3.teststatus"
+
+  rm -f "$test_log" "$test_status"
+  (
+    set +e
+    run_stage3_test "$test_name"
+    status=$?
+    printf '%s\n' "$status" > "$test_status"
+    exit "$status"
+  ) > "$test_log" 2>&1 &
+
+  active_pids+=("$!")
+  active_logs+=("$test_log")
+  active_statuses+=("$test_status")
+}
+
+reap_test_jobs() {
+  local keep_pids=()
+  local keep_logs=()
+  local keep_statuses=()
   local i
   local j
   local status
+  local reaped=0
 
-  for ((i = 0; i < ${#batch_pids[@]}; i += 1)); do
-    status=0
-    wait "${batch_pids[$i]}" || status=$?
-
-    if [ "$VERBOSE" -eq 1 ] || [ "$status" -ne 0 ]; then
-      cat "${batch_logs[$i]}"
+  for ((i = 0; i < ${#active_pids[@]}; i += 1)); do
+    if [ ! -f "${active_statuses[$i]}" ]; then
+      keep_pids+=("${active_pids[$i]}")
+      keep_logs+=("${active_logs[$i]}")
+      keep_statuses+=("${active_statuses[$i]}")
+      continue
     fi
 
-    if [ "$status" -ne 0 ]; then
-      for ((j = i + 1; j < ${#batch_pids[@]}; j += 1)); do
-        kill "${batch_pids[$j]}" >/dev/null 2>&1 || true
+    status="$(cat "${active_statuses[$i]}")"
+    wait "${active_pids[$i]}" 2>/dev/null || true
+    reaped=1
+
+    if [ "$VERBOSE" -eq 1 ] || [ "$status" != "0" ]; then
+      cat "${active_logs[$i]}"
+    fi
+
+    if [ "$status" != "0" ]; then
+      for ((j = i + 1; j < ${#active_pids[@]}; j += 1)); do
+        kill "${active_pids[$j]}" >/dev/null 2>&1 || true
       done
-      for ((j = i + 1; j < ${#batch_pids[@]}; j += 1)); do
-        wait "${batch_pids[$j]}" 2>/dev/null || true
+      for ((j = i + 1; j < ${#active_pids[@]}; j += 1)); do
+        wait "${active_pids[$j]}" 2>/dev/null || true
       done
-      batch_pids=()
-      batch_logs=()
+      active_pids=()
+      active_logs=()
+      active_statuses=()
       return "$status"
     fi
   done
 
-  batch_pids=()
-  batch_logs=()
+  active_pids=("${keep_pids[@]}")
+  active_logs=("${keep_logs[@]}")
+  active_statuses=("${keep_statuses[@]}")
+
+  if [ "$reaped" -eq 0 ]; then
+    return 10
+  fi
+
   return 0
 }
 
@@ -231,24 +263,35 @@ if [ "${#SELECTED_TEST_NAMES[@]}" -le 1 ] || [ "$TEST_JOBS" -le 1 ]; then
   done
 else
   log "Using $TEST_JOBS parallel test jobs."
-  batch_pids=()
-  batch_logs=()
+  active_pids=()
+  active_logs=()
+  active_statuses=()
 
   for test_name in "${SELECTED_TEST_NAMES[@]}"; do
-    test_log="$OUTPUT_DIR/$test_name.stage3.testlog"
-    rm -f "$test_log"
-    ( run_stage3_test "$test_name" ) > "$test_log" 2>&1 &
-    batch_pids+=("$!")
-    batch_logs+=("$test_log")
+    while [ "${#active_pids[@]}" -ge "$TEST_JOBS" ]; do
+      status=0
+      reap_test_jobs || status=$?
+      if [ "$status" -ne 0 ]; then
+        if [ "$status" -ne 10 ]; then
+          exit "$status"
+        fi
+        sleep 0.02
+      fi
+    done
 
-    if [ "${#batch_pids[@]}" -ge "$TEST_JOBS" ]; then
-      flush_test_batch
-    fi
+    launch_test_job "$test_name"
   done
 
-  if [ "${#batch_pids[@]}" -gt 0 ]; then
-    flush_test_batch
-  fi
+  while [ "${#active_pids[@]}" -gt 0 ]; do
+    status=0
+    reap_test_jobs || status=$?
+    if [ "$status" -ne 0 ]; then
+      if [ "$status" -ne 10 ]; then
+        exit "$status"
+      fi
+      sleep 0.02
+    fi
+  done
 fi
 
 echo "All Stage 3 tests passed."
