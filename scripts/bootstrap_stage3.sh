@@ -16,6 +16,7 @@ DEFAULT_STAGE3_SELFHOST_SAMPLE="$ROOT/stages/stage3/src/selfhost/sample.imp"
 FORCE_SELFHOST_SAMPLE="${FORCE_SELFHOST_SAMPLE:-0}"
 FORCE_SELFHOST_SMOKE="${FORCE_SELFHOST_SMOKE:-0}"
 SELFHOST_BUNDLE_MODE="${SELFHOST_BUNDLE_MODE:-stub}"
+TIMING_ONLY="${TIMING_ONLY:-0}"
 
 VERBOSE=0
 TEST_ONLY="${TEST_ONLY:-}"
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --verbose)
       VERBOSE=1
+      shift
+      ;;
+    --timing)
+      TIMING_ONLY=1
       shift
       ;;
     --only)
@@ -45,6 +50,13 @@ log() {
   if [ "$VERBOSE" -eq 1 ]; then
     echo "$@"
   fi
+}
+
+show_timing() {
+  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING_ONLY" = "1" ]; then
+    return 0
+  fi
+  return 1
 }
 
 now_ns() {
@@ -151,11 +163,13 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   preflight_build_start_ns="$(now_ns)"
   if [ "$VERBOSE" -eq 1 ]; then
     "$SCRIPT_DIR/build_stage3.sh" --verbose
+  elif [ "$TIMING_ONLY" = "1" ]; then
+    TIMING_ONLY=1 "$SCRIPT_DIR/build_stage3.sh" --timing
   else
     "$SCRIPT_DIR/build_stage3.sh"
   fi
   preflight_build_end_ns="$(now_ns)"
-  if [ "$VERBOSE" -eq 1 ]; then
+  if show_timing; then
     echo "    preflight build elapsed: $(format_elapsed "$preflight_build_start_ns" "$preflight_build_end_ns")"
   fi
 
@@ -165,12 +179,14 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   else
     if [ "$VERBOSE" -eq 1 ]; then
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --verbose
+    elif [ "$TIMING_ONLY" = "1" ]; then
+      BUILD_STAGE3=0 TIMING_ONLY=1 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --timing
     else
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh"
     fi
   fi
   preflight_sample_end_ns="$(now_ns)"
-  if [ "$VERBOSE" -eq 1 ]; then
+  if show_timing; then
     echo "    preflight sample elapsed: $(format_elapsed "$preflight_sample_start_ns" "$preflight_sample_end_ns")"
   fi
 
@@ -181,12 +197,14 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   else
     if [ "$VERBOSE" -eq 1 ]; then
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
+    elif [ "$TIMING_ONLY" = "1" ]; then
+      BUILD_STAGE3=0 TIMING_ONLY=1 "$SCRIPT_DIR/test_stage3_selfhost.sh" --timing
     else
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh"
     fi
   fi
   preflight_smoke_end_ns="$(now_ns)"
-  if [ "$VERBOSE" -eq 1 ]; then
+  if show_timing; then
     echo "    preflight smoke elapsed: $(format_elapsed "$preflight_smoke_start_ns" "$preflight_smoke_end_ns")"
   fi
 
@@ -197,6 +215,8 @@ if [ "$stage3_built" -eq 0 ]; then
   log "Building first-generation Stage 3 compiler with Stage 2..."
   if [ "$VERBOSE" -eq 1 ]; then
     "$SCRIPT_DIR/build_stage3.sh" --verbose
+  elif [ "$TIMING_ONLY" = "1" ]; then
+    TIMING_ONLY=1 "$SCRIPT_DIR/build_stage3.sh" --timing
   else
     "$SCRIPT_DIR/build_stage3.sh"
   fi
@@ -229,7 +249,7 @@ data = Path(r"$STAGE3_SELFHOST_SOURCE").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
     gen2_compile_end_ns="$(now_ns)"
-    if [ "$VERBOSE" -eq 1 ]; then
+    if show_timing; then
       echo "    gen2 compile elapsed: $(format_elapsed "$gen2_compile_start_ns" "$gen2_compile_end_ns")"
     fi
 
@@ -238,7 +258,7 @@ PY
     nasm -f elf64 "$OUTPUT_DIR/stage3_gen2.asm" -o "$OUTPUT_DIR/stage3_gen2.o"
     ld "$OUTPUT_DIR/stage3_gen2.o" -o "$OUTPUT_DIR/stage3_gen2"
     gen2_assemble_end_ns="$(now_ns)"
-    if [ "$VERBOSE" -eq 1 ]; then
+    if show_timing; then
       echo "    gen2 assemble/link elapsed: $(format_elapsed "$gen2_assemble_start_ns" "$gen2_assemble_end_ns")"
     fi
   fi
@@ -258,7 +278,7 @@ data = Path(r"$STAGE3_SELFHOST_SOURCE").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
     gen2_compile_end_ns="$(now_ns)"
-    if [ "$VERBOSE" -eq 1 ]; then
+    if show_timing; then
       echo "    gen2 compile elapsed: $(format_elapsed "$gen2_compile_start_ns" "$gen2_compile_end_ns")"
     fi
 
@@ -267,7 +287,7 @@ PY
     nasm -f elf64 "$OUTPUT_DIR/stage3_gen2.asm" -o "$OUTPUT_DIR/stage3_gen2.o"
     ld "$OUTPUT_DIR/stage3_gen2.o" -o "$OUTPUT_DIR/stage3_gen2"
     gen2_assemble_end_ns="$(now_ns)"
-    if [ "$VERBOSE" -eq 1 ]; then
+    if show_timing; then
       echo "    gen2 assemble/link elapsed: $(format_elapsed "$gen2_assemble_start_ns" "$gen2_assemble_end_ns")"
     fi
   fi
@@ -305,7 +325,7 @@ if ! nasm -f elf64 "$OUTPUT_DIR/stage3_gen2_smoke.asm" -o "$OUTPUT_DIR/stage3_ge
   exit 1
 fi
 smoke_end_ns="$(now_ns)"
-if [ "$VERBOSE" -eq 1 ]; then
+if show_timing; then
   echo "    gen2 smoke elapsed: $(format_elapsed "$smoke_start_ns" "$smoke_end_ns")"
 fi
 
@@ -317,6 +337,12 @@ if [ "$VERBOSE" -eq 1 ]; then
   else
     BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" "$SCRIPT_DIR/test_stage3.sh" --verbose
   fi
+elif [ "$TIMING_ONLY" = "1" ]; then
+  if [ -n "$TEST_ONLY" ]; then
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" TEST_ONLY="$TEST_ONLY" TIMING_ONLY=1 "$SCRIPT_DIR/test_stage3.sh" --timing --only "$TEST_ONLY"
+  else
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" TIMING_ONLY=1 "$SCRIPT_DIR/test_stage3.sh" --timing
+  fi
 else
   if [ -n "$TEST_ONLY" ]; then
     BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" TEST_ONLY="$TEST_ONLY" "$SCRIPT_DIR/test_stage3.sh" --only "$TEST_ONLY"
@@ -325,7 +351,7 @@ else
   fi
 fi
 regression_end_ns="$(now_ns)"
-if [ "$VERBOSE" -eq 1 ]; then
+if show_timing; then
   echo "    regression elapsed: $(format_elapsed "$regression_start_ns" "$regression_end_ns")"
 fi
 

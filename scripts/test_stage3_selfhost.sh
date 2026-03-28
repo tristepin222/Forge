@@ -13,16 +13,37 @@ BUILD_STAGE3="${BUILD_STAGE3:-1}"
 SELFHOST_COMPILE_TIMEOUT="${SELFHOST_COMPILE_TIMEOUT:-300}"
 SELFHOST_BUNDLE_MODE="${SELFHOST_BUNDLE_MODE:-stub}"
 FORCE_SELFHOST_SMOKE="${FORCE_SELFHOST_SMOKE:-0}"
+TIMING_ONLY="${TIMING_ONLY:-0}"
 
 VERBOSE=0
-if [[ "${1:-}" == "--verbose" ]]; then
-  VERBOSE=1
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --verbose)
+      VERBOSE=1
+      shift
+      ;;
+    --timing)
+      TIMING_ONLY=1
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
 
 log() {
   if [ "$VERBOSE" -eq 1 ]; then
     echo "$@"
   fi
+}
+
+show_timing() {
+  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING_ONLY" = "1" ]; then
+    return 0
+  fi
+  return 1
 }
 
 now_ns() {
@@ -62,6 +83,8 @@ if [ "$BUILD_STAGE3" = "1" ]; then
   echo "Building Stage 3 compiler..."
   if [ "$VERBOSE" -eq 1 ]; then
     "$SCRIPT_DIR/build_stage3.sh" --verbose
+  elif [ "$TIMING_ONLY" = "1" ]; then
+    TIMING_ONLY=1 "$SCRIPT_DIR/build_stage3.sh" --timing
   else
     "$SCRIPT_DIR/build_stage3.sh"
   fi
@@ -160,7 +183,7 @@ if [ "$status" -ne 0 ]; then
   exit 1
 fi
 
-if [ "$VERBOSE" -eq 1 ]; then
+if show_timing; then
   echo "    compile elapsed: $(format_elapsed "$compile_start_ns" "$compile_end_ns")"
 fi
 
@@ -168,7 +191,7 @@ log "    assemble"
 assemble_start_ns="$(now_ns)"
 nasm -f elf64 "$OUTPUT_DIR/stage3_selfhost_smoke.asm" -o "$OUTPUT_DIR/stage3_selfhost_smoke.o"
 assemble_end_ns="$(now_ns)"
-if [ "$VERBOSE" -eq 1 ]; then
+if show_timing; then
   echo "    assemble elapsed: $(format_elapsed "$assemble_start_ns" "$assemble_end_ns")"
 fi
 
@@ -176,7 +199,7 @@ log "    link"
 link_start_ns="$(now_ns)"
 ld "$OUTPUT_DIR/stage3_selfhost_smoke.o" -o "$OUTPUT_DIR/stage3_selfhost_smoke"
 link_end_ns="$(now_ns)"
-if [ "$VERBOSE" -eq 1 ]; then
+if show_timing; then
   echo "    link elapsed: $(format_elapsed "$link_start_ns" "$link_end_ns")"
 fi
 

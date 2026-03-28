@@ -8,12 +8,13 @@ OUTPUT_DIR="$ROOT/output"
 BENCH_DIR="$OUTPUT_DIR/benchmarks"
 
 VERBOSE=0
+TIMING=0
 ONLY="all"
 REPEAT=1
 
 usage() {
   cat <<'EOF'
-Usage: ./benchmark_stage3.sh [--verbose] [--only <name>] [--repeat <n>]
+Usage: ./benchmark_stage3.sh [--verbose] [--timing] [--only <name>] [--repeat <n>]
 
 Benchmarks:
   stage3     Force a trusted Stage 3 rebuild with the current Stage 2 compiler.
@@ -26,6 +27,7 @@ Benchmarks:
 Examples:
   ./benchmark_stage3.sh
   ./benchmark_stage3.sh --verbose
+  ./benchmark_stage3.sh --timing
   ./benchmark_stage3.sh --only selfhost
   ./benchmark_stage3.sh --repeat 3 --only stage3
 EOF
@@ -35,6 +37,10 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --verbose)
       VERBOSE=1
+      shift
+      ;;
+    --timing)
+      TIMING=1
       shift
       ;;
     --only)
@@ -90,6 +96,10 @@ VERBOSE_ARGS=()
 if [ "$VERBOSE" -eq 1 ]; then
   VERBOSE_ARGS+=(--verbose)
 fi
+TIMING_ARGS=()
+if [ "$TIMING" -eq 1 ]; then
+  TIMING_ARGS+=(--timing)
+fi
 
 RESULT_LINES=()
 
@@ -131,7 +141,7 @@ run_logged() {
   start_ns="$(date +%s%N)"
 
   set +e
-  if [ "$VERBOSE" -eq 1 ]; then
+  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING" -eq 1 ]; then
     "$@" 2>&1 | tee "$log_file"
     status=${PIPESTATUS[0]}
   else
@@ -162,19 +172,19 @@ run_logged() {
 }
 
 bench_stage3() {
-  FORCE_REBUILD_STAGE3=1 "$SCRIPT_DIR/build_stage3.sh" "${VERBOSE_ARGS[@]}"
+  FORCE_REBUILD_STAGE3=1 TIMING_ONLY="$TIMING" "$SCRIPT_DIR/build_stage3.sh" "${VERBOSE_ARGS[@]}" "${TIMING_ARGS[@]}"
 }
 
 bench_selfhost() {
-  BUILD_STAGE3=0 FORCE_SELFHOST_SMOKE=1 "$SCRIPT_DIR/test_stage3_selfhost.sh" "${VERBOSE_ARGS[@]}"
+  BUILD_STAGE3=0 FORCE_SELFHOST_SMOKE=1 TIMING_ONLY="$TIMING" "$SCRIPT_DIR/test_stage3_selfhost.sh" "${VERBOSE_ARGS[@]}" "${TIMING_ARGS[@]}"
 }
 
 bench_bootstrap() {
-  "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}"
+  TIMING_ONLY="$TIMING" "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}" "${TIMING_ARGS[@]}"
 }
 
 bench_bootstrap_forced() {
-  FORCE_SELFHOST_SAMPLE=1 FORCE_SELFHOST_SMOKE=1 FORCE_BOOTSTRAP_GEN2=1 "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}"
+  FORCE_SELFHOST_SAMPLE=1 FORCE_SELFHOST_SMOKE=1 FORCE_BOOTSTRAP_GEN2=1 TIMING_ONLY="$TIMING" "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}" "${TIMING_ARGS[@]}"
 }
 
 echo "Stage 3 benchmark run"

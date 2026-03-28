@@ -9,6 +9,7 @@ TEST_DIR="$ROOT/tests/stage3"
 STAGE3_BIN="${STAGE3_BIN:-$OUTPUT_DIR/stage3}"
 BUILD_STAGE3="${BUILD_STAGE3:-1}"
 TEST_JOBS="${TEST_JOBS:-}"
+TIMING_ONLY="${TIMING_ONLY:-0}"
 
 VERBOSE=0
 TEST_ONLY="${TEST_ONLY:-}"
@@ -17,6 +18,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --verbose)
       VERBOSE=1
+      shift
+      ;;
+    --timing)
+      TIMING_ONLY=1
       shift
       ;;
     --only)
@@ -95,6 +100,29 @@ log() {
   if [ "$VERBOSE" -eq 1 ]; then
     echo "$@"
   fi
+}
+
+show_timing() {
+  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING_ONLY" = "1" ]; then
+    return 0
+  fi
+  return 1
+}
+
+now_ns() {
+  date +%s%N
+}
+
+format_elapsed() {
+  local start_ns="$1"
+  local end_ns="$2"
+  local total_ms
+  local whole
+  local frac
+  total_ms=$(((end_ns - start_ns) / 1000000))
+  whole=$((total_ms / 1000))
+  frac=$((total_ms % 1000))
+  printf "%d.%03ds" "$whole" "$frac"
 }
 
 detect_test_jobs() {
@@ -236,10 +264,15 @@ mkdir -p "$OUTPUT_DIR"
 
 if [ "$BUILD_STAGE3" = "1" ]; then
   echo "Building Stage 3 compiler..."
-  "$SCRIPT_DIR/build_stage3.sh"
+  if [ "$TIMING_ONLY" = "1" ] && [ "$VERBOSE" -eq 0 ]; then
+    TIMING_ONLY=1 "$SCRIPT_DIR/build_stage3.sh" --timing
+  else
+    "$SCRIPT_DIR/build_stage3.sh"
+  fi
 fi
 
 echo "Running Stage 3 tests..."
+suite_start_ns="$(now_ns)"
 
 SELECTED_TEST_NAMES=("${TEST_NAMES[@]}")
 if [ -n "$TEST_ONLY" ]; then
@@ -262,7 +295,9 @@ if [ "${#SELECTED_TEST_NAMES[@]}" -le 1 ] || [ "$TEST_JOBS" -le 1 ]; then
     run_stage3_test "$test_name"
   done
 else
-  log "Using $TEST_JOBS parallel test jobs."
+  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING_ONLY" = "1" ]; then
+    echo "Using $TEST_JOBS parallel test jobs."
+  fi
   active_pids=()
   active_logs=()
   active_statuses=()
@@ -292,6 +327,11 @@ else
       sleep 0.02
     fi
   done
+fi
+
+suite_end_ns="$(now_ns)"
+if show_timing; then
+  echo "    suite elapsed: $(format_elapsed "$suite_start_ns" "$suite_end_ns")"
 fi
 
 echo "All Stage 3 tests passed."
