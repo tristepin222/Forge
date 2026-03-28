@@ -33,6 +33,8 @@ scripts/
   test_stage3_selfhost_parts.sh
   test_stage3_selfhost.sh
   bootstrap_stage3.sh
+  benchmark_stage3.sh
+  check_stage3_perf.sh
   compare_stage3_generations.sh
 ```
 
@@ -218,6 +220,31 @@ The current Stage 3 milestone supports only the first real surface-syntax slice:
 - top-level `interface ... { function ... }` blocks with stored method names
 - top-level `implement ... for Struct { function ... }` blocks with methods compiled as normal functions
 - aliases `pub`, `fn`, `let`, `var`
+
+### Stage 3 Benchmarking
+
+Use the benchmark harness to measure trusted rebuilds, self-host smoke, and warm bootstrap timings:
+
+```bash
+./benchmark_stage3.sh --only bootstrap --timing
+./benchmark_stage3.sh --only bootstrap-forced --timing
+./benchmark_stage3.sh --only bootstrap --json --timing
+```
+
+- `--timing` keeps phase timings but suppresses most chatter
+- `--json` writes machine-readable results to `output/benchmarks/stage3_benchmark_latest.json`
+- JSON aggregates include `avg_ms`, `median_ms`, `min_ms`, and `max_ms`
+
+The committed warm baseline lives at [stage3_warm_baseline.json](C:\Users\trist\OneDrive\Documents\GitHub\Forge\perf\stage3_warm_baseline.json).
+To compare the current machine against that baseline:
+
+```bash
+./check_stage3_perf.sh
+./check_stage3_perf.sh --benchmark bootstrap-forced
+./check_stage3_perf.sh --repeat 5 --stat avg
+```
+
+The perf check defaults to `--repeat 3 --stat median`, warns on moderate regressions, and only fails on larger ones.
 - `import ...` parsed and ignored semantically for now
 - `from ... import ... as ...` parsed and ignored semantically for now
 - string literals in `print(...)`

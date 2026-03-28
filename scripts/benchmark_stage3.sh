@@ -9,12 +9,13 @@ BENCH_DIR="$OUTPUT_DIR/benchmarks"
 
 VERBOSE=0
 TIMING=0
+JSON=0
 ONLY="all"
 REPEAT=1
 
 usage() {
   cat <<'EOF'
-Usage: ./benchmark_stage3.sh [--verbose] [--timing] [--only <name>] [--repeat <n>]
+Usage: ./benchmark_stage3.sh [--verbose] [--timing] [--json] [--only <name>] [--repeat <n>]
 
 Benchmarks:
   stage3     Force a trusted Stage 3 rebuild with the current Stage 2 compiler.
@@ -28,6 +29,7 @@ Examples:
   ./benchmark_stage3.sh
   ./benchmark_stage3.sh --verbose
   ./benchmark_stage3.sh --timing
+  ./benchmark_stage3.sh --json --only bootstrap
   ./benchmark_stage3.sh --only selfhost
   ./benchmark_stage3.sh --repeat 3 --only stage3
 EOF
@@ -41,6 +43,10 @@ while [ $# -gt 0 ]; do
       ;;
     --timing)
       TIMING=1
+      shift
+      ;;
+    --json)
+      JSON=1
       shift
       ;;
     --only)
@@ -91,6 +97,8 @@ mkdir -p "$BENCH_DIR"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 SUMMARY_FILE="$BENCH_DIR/stage3_benchmark_$TIMESTAMP.txt"
 LATEST_FILE="$BENCH_DIR/stage3_benchmark_latest.txt"
+JSON_FILE="$BENCH_DIR/stage3_benchmark_$TIMESTAMP.json"
+LATEST_JSON_FILE="$BENCH_DIR/stage3_benchmark_latest.json"
 
 VERBOSE_ARGS=()
 if [ "$VERBOSE" -eq 1 ]; then
@@ -102,6 +110,7 @@ if [ "$TIMING" -eq 1 ]; then
 fi
 
 RESULT_LINES=()
+RESULT_ROWS=()
 
 format_ms() {
   local total_ms="$1"
@@ -125,6 +134,74 @@ write_summary() {
   } > "$SUMMARY_FILE"
 
   cp "$SUMMARY_FILE" "$LATEST_FILE"
+
+  if [ "$JSON" -eq 1 ]; then
+    local rows_file
+    rows_file="$(mktemp)"
+    {
+      for line in "${RESULT_ROWS[@]}"; do
+        printf "%s\n" "$line"
+      done
+    } > "$rows_file"
+
+    python3 - "$TIMESTAMP" "$REPEAT" "$ONLY" "$VERBOSE" "$TIMING" "$rows_file" "$JSON_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+timestamp, repeat, only, verbose, timing, rows_path, json_path = sys.argv[1:]
+rows = []
+aggregates = {}
+
+rows_text = Path(rows_path).read_text(encoding="utf-8")
+for raw in rows_text.splitlines():
+    if not raw:
+        continue
+    benchmark, run_index, status, elapsed_ms, elapsed_fmt, log_path = raw.split("\t")
+    row = {
+        "benchmark": benchmark,
+        "run_index": int(run_index),
+        "status": status,
+        "elapsed_ms": int(elapsed_ms),
+        "elapsed": elapsed_fmt,
+        "log": log_path,
+    }
+    rows.append(row)
+
+    agg = aggregates.setdefault(benchmark, {"runs": 0, "ok": True, "elapsed_ms": []})
+    agg["runs"] += 1
+    agg["ok"] = agg["ok"] and status == "ok"
+    agg["elapsed_ms"].append(int(elapsed_ms))
+
+for benchmark, agg in aggregates.items():
+    values = agg["elapsed_ms"]
+    sorted_values = sorted(values)
+    mid = len(sorted_values) // 2
+    agg["min_ms"] = min(values)
+    agg["max_ms"] = max(values)
+    agg["avg_ms"] = sum(values) / len(values)
+    if len(sorted_values) % 2 == 1:
+        agg["median_ms"] = sorted_values[mid]
+    else:
+        agg["median_ms"] = (sorted_values[mid - 1] + sorted_values[mid]) / 2
+
+payload = {
+    "schema": 1,
+    "timestamp": timestamp,
+    "repeat": int(repeat),
+    "only": only,
+    "verbose": verbose == "1",
+    "timing": timing == "1",
+    "results": rows,
+    "aggregates": aggregates,
+}
+
+Path(json_path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
+
+    rm -f "$rows_file"
+    cp "$JSON_FILE" "$LATEST_JSON_FILE"
+  fi
 }
 
 run_logged() {
@@ -158,8 +235,10 @@ run_logged() {
 
   if [ "$status" -eq 0 ]; then
     RESULT_LINES+=("$(printf "%-12s %-8s %-12s %s" "${name}#${run_index}" "ok" "$elapsed_fmt" "$log_file")")
+    RESULT_ROWS+=("$(printf "%s\t%s\t%s\t%s\t%s\t%s" "$name" "$run_index" "ok" "$elapsed_ms" "$elapsed_fmt" "$log_file")")
   else
     RESULT_LINES+=("$(printf "%-12s %-8s %-12s %s" "${name}#${run_index}" "failed" "$elapsed_fmt" "$log_file")")
+    RESULT_ROWS+=("$(printf "%s\t%s\t%s\t%s\t%s\t%s" "$name" "$run_index" "failed" "$elapsed_ms" "$elapsed_fmt" "$log_file")")
   fi
 
   write_summary

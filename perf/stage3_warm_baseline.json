@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "name": "stage3-warm-baseline",
+  "updated_at": "2026-03-28",
+  "thresholds": {
+    "warn_pct": 15.0,
+    "warn_abs_ms": 750,
+    "fail_pct": 30.0,
+    "fail_abs_ms": 2000
+  },
+  "benchmarks": {
+    "bootstrap": {
+      "elapsed_ms": 11403,
+      "command": "./benchmark_stage3.sh --only bootstrap --timing --repeat 3",
+      "notes": "Warm bootstrap with fresh stage3, sample smoke, selfhost smoke, and gen2 artifacts. Baseline refreshed to the current timing-only warm range."
+    },
+    "bootstrap-forced": {
+      "elapsed_ms": 24088,
+      "command": "./benchmark_stage3.sh --only bootstrap-forced --timing",
+      "notes": "Forced bootstrap including sample smoke and full self-host smoke rebuild."
+    }
+  }
+}
