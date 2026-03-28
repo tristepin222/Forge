@@ -67,7 +67,9 @@ fi
 
 if [ "$FORCE_REBUILD_STAGE3" != "1" ] && [ -f "$OUTPUT_DIR/stage3" ]; then
   if [ "$OUTPUT_DIR/stage3" -nt "$STAGE3_SOURCE" ] && [ "$OUTPUT_DIR/stage3" -nt "$OUTPUT_DIR/stage1" ]; then
-    echo "Stage 3 compiler already up to date at output/stage3"
+    if [ "$TIMING_ONLY" != "1" ]; then
+      echo "Stage 3 compiler already up to date at output/stage3"
+    fi
     exit 0
   fi
 fi
@@ -127,4 +129,6 @@ if show_timing; then
   echo "    assemble/link elapsed: $(format_elapsed "$assemble_start_ns" "$assemble_end_ns")"
 fi
 
-echo "Stage 3 compiler built at output/stage3"
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Stage 3 compiler built at output/stage3"
+fi

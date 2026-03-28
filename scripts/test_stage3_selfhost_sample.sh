@@ -70,7 +70,9 @@ if [ ! -f "$STAGE3_SELFHOST_SAMPLE" ]; then
 fi
 
 if [ "$BUILD_STAGE3" = "1" ]; then
-  echo "Building Stage 3 compiler..."
+  if [ "$TIMING_ONLY" != "1" ]; then
+    echo "Building Stage 3 compiler..."
+  fi
   if [ "$VERBOSE" -eq 1 ]; then
     "$SCRIPT_DIR/build_stage3.sh" --verbose
   elif [ "$TIMING_ONLY" = "1" ]; then
@@ -80,7 +82,9 @@ if [ "$BUILD_STAGE3" = "1" ]; then
   fi
 fi
 
-echo "Running Stage 3 self-host sample smoke test..."
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Running Stage 3 self-host sample smoke test..."
+fi
 
 log "    compile self-host sample"
 python3 - <<PY > "$OUTPUT_DIR/stage3_selfhost_sample.source"
@@ -92,7 +96,9 @@ PY
 
 if [ "$FORCE_SELFHOST_SAMPLE" != "1" ] && [ -f "$OUTPUT_DIR/stage3_selfhost_sample.asm" ]; then
   if [ "$OUTPUT_DIR/stage3_selfhost_sample.asm" -nt "$STAGE3_SELFHOST_SAMPLE" ] && [ "$OUTPUT_DIR/stage3_selfhost_sample.asm" -nt "$STAGE3_BIN" ]; then
-    echo "Stage 3 self-host sample smoke test already up to date."
+    if [ "$TIMING_ONLY" != "1" ]; then
+      echo "Stage 3 self-host sample smoke test already up to date."
+    fi
     exit 0
   fi
 fi
@@ -128,4 +134,6 @@ if show_timing; then
   echo "    sample compile elapsed: $(format_elapsed "$compile_start_ns" "$compile_end_ns")"
 fi
 
-echo "Stage 3 self-host sample smoke test passed."
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Stage 3 self-host sample smoke test passed."
+fi

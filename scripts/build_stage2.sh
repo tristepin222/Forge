@@ -10,11 +10,25 @@ STAGE2_SOURCE="$ROOT/stages/stage2/compiler.ium"
 STAGE0_SOURCE="$ROOT/stages/stage0/compiler.asm"
 BACKUP_FILE="$OUTPUT_DIR/program.ium.stage2.bak"
 FORCE_REBUILD_STAGE2="${FORCE_REBUILD_STAGE2:-0}"
+TIMING_ONLY="${TIMING_ONLY:-0}"
 
 VERBOSE=0
-if [[ "${1:-}" == "--verbose" ]]; then
-  VERBOSE=1
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --verbose)
+      VERBOSE=1
+      shift
+      ;;
+    --timing)
+      TIMING_ONLY=1
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
 
 log() {
   if [ "$VERBOSE" -eq 1 ]; then
@@ -26,7 +40,9 @@ mkdir -p "$OUTPUT_DIR"
 
 if [ "$FORCE_REBUILD_STAGE2" != "1" ] && [ -f "$OUTPUT_DIR/stage1" ]; then
   if [ "$OUTPUT_DIR/stage1" -nt "$STAGE2_SOURCE" ] && [ "$OUTPUT_DIR/stage1" -nt "$STAGE0_SOURCE" ]; then
-    echo "Stage 2 compiler already up to date at output/stage1"
+    if [ "$TIMING_ONLY" != "1" ]; then
+      echo "Stage 2 compiler already up to date at output/stage1"
+    fi
     exit 0
   fi
 fi
@@ -59,4 +75,6 @@ log "Assembling Stage 2 compiler..."
 nasm -f elf64 "$OUTPUT_DIR/stage1.asm" -o "$OUTPUT_DIR/stage1.o"
 ld "$OUTPUT_DIR/stage1.o" -o "$OUTPUT_DIR/stage1"
 
-echo "Stage 2 compiler built at output/stage1"
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Stage 2 compiler built at output/stage1"
+fi

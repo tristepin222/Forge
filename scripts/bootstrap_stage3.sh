@@ -85,7 +85,7 @@ SELFHOST_RESOLVED_SMOKE_SOURCE="$STAGE3_SELFHOST_SOURCE"
 
 if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
   log "Bundling Stage 3 self-host scaffold..."
-  bash "$STAGE3_BUNDLE_SCRIPT"
+  TIMING_ONLY="$TIMING_ONLY" bash "$STAGE3_BUNDLE_SCRIPT"
 fi
 
 if [ ! -f "$STAGE3_SELFHOST_SOURCE" ]; then
@@ -120,6 +120,7 @@ resolve_selfhost_smoke_source() {
     log "Bundling Stage 3 self-host scaffold ($SELFHOST_BUNDLE_MODE)..."
     STAGE3_SELFHOST_SAMPLE_MODE="$SELFHOST_BUNDLE_MODE" \
     STAGE3_SELFHOST_OUT_FILE="$SELFHOST_RESOLVED_SMOKE_SOURCE" \
+    TIMING_ONLY="$TIMING_ONLY" \
     bash "$STAGE3_BUNDLE_SCRIPT"
   fi
 }
@@ -175,7 +176,9 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
 
   preflight_sample_start_ns="$(now_ns)"
   if selfhost_sample_fresh; then
-    echo "Stage 3 self-host sample smoke test already up to date."
+    if [ "$TIMING_ONLY" != "1" ]; then
+      echo "Stage 3 self-host sample smoke test already up to date."
+    fi
   else
     if [ "$VERBOSE" -eq 1 ]; then
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --verbose
@@ -193,7 +196,9 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   resolve_selfhost_smoke_source
   preflight_smoke_start_ns="$(now_ns)"
   if selfhost_smoke_fresh; then
-    echo "Stage 3 self-host smoke test already up to date."
+    if [ "$TIMING_ONLY" != "1" ]; then
+      echo "Stage 3 self-host smoke test already up to date."
+    fi
   else
     if [ "$VERBOSE" -eq 1 ]; then
       BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
@@ -355,6 +360,8 @@ if show_timing; then
   echo "    regression elapsed: $(format_elapsed "$regression_start_ns" "$regression_end_ns")"
 fi
 
-echo "Stage 3 bootstrap succeeded."
-echo "First generation:  output/stage3"
-echo "Second generation: output/stage3_gen2"
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Stage 3 bootstrap succeeded."
+  echo "First generation:  output/stage3"
+  echo "Second generation: output/stage3_gen2"
+fi

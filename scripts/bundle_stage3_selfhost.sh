@@ -8,6 +8,7 @@ SRC_DIR="$ROOT/stages/stage3/src/selfhost"
 OUT_FILE="${STAGE3_SELFHOST_OUT_FILE:-$ROOT/stages/stage3/compiler.imp}"
 SAMPLE_FILE="$SRC_DIR/sample.imp"
 SAMPLE_MODE="${STAGE3_SELFHOST_SAMPLE_MODE:-stub}"
+TIMING_ONLY="${TIMING_ONLY:-0}"
 DEFAULT_PARTS=(
   00_module.imp
   10_tokens.imp
@@ -92,9 +93,13 @@ for part in "${PARTS[@]}"; do
 done
 
 if [ -f "$OUT_FILE" ] && cmp -s "$tmp_file" "$OUT_FILE"; then
-  echo "Stage 3 self-host scaffold ($SAMPLE_MODE) already up to date at ${OUT_FILE#$ROOT/}"
+  if [ "$TIMING_ONLY" != "1" ]; then
+    echo "Stage 3 self-host scaffold ($SAMPLE_MODE) already up to date at ${OUT_FILE#$ROOT/}"
+  fi
   exit 0
 fi
 
 mv "$tmp_file" "$OUT_FILE"
-echo "Bundled Stage 3 self-host scaffold ($SAMPLE_MODE) to ${OUT_FILE#$ROOT/}"
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Bundled Stage 3 self-host scaffold ($SAMPLE_MODE) to ${OUT_FILE#$ROOT/}"
+fi

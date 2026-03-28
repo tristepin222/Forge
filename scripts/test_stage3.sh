@@ -263,7 +263,9 @@ reap_test_jobs() {
 mkdir -p "$OUTPUT_DIR"
 
 if [ "$BUILD_STAGE3" = "1" ]; then
-  echo "Building Stage 3 compiler..."
+  if [ "$TIMING_ONLY" != "1" ]; then
+    echo "Building Stage 3 compiler..."
+  fi
   if [ "$TIMING_ONLY" = "1" ] && [ "$VERBOSE" -eq 0 ]; then
     TIMING_ONLY=1 "$SCRIPT_DIR/build_stage3.sh" --timing
   else
@@ -271,7 +273,9 @@ if [ "$BUILD_STAGE3" = "1" ]; then
   fi
 fi
 
-echo "Running Stage 3 tests..."
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "Running Stage 3 tests..."
+fi
 suite_start_ns="$(now_ns)"
 
 SELECTED_TEST_NAMES=("${TEST_NAMES[@]}")
@@ -295,7 +299,7 @@ if [ "${#SELECTED_TEST_NAMES[@]}" -le 1 ] || [ "$TEST_JOBS" -le 1 ]; then
     run_stage3_test "$test_name"
   done
 else
-  if [ "$VERBOSE" -eq 1 ] || [ "$TIMING_ONLY" = "1" ]; then
+  if [ "$VERBOSE" -eq 1 ]; then
     echo "Using $TEST_JOBS parallel test jobs."
   fi
   active_pids=()
@@ -334,4 +338,6 @@ if show_timing; then
   echo "    suite elapsed: $(format_elapsed "$suite_start_ns" "$suite_end_ns")"
 fi
 
-echo "All Stage 3 tests passed."
+if [ "$TIMING_ONLY" != "1" ]; then
+  echo "All Stage 3 tests passed."
+fi
