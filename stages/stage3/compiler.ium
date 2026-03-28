@@ -151,7 +151,7 @@ VAR active_class_index
 VAR generic_resume_state
 VAR skip_resume_state
 
-ALLOC token_buf 64
+ALLOC token_buf 16384
 ALLOC symbol_hash_tbl 512
 ALLOC symbol_off_tbl 512
 ALLOC symbol_kind_tbl 512
@@ -1770,24 +1770,17 @@ WHILE 1 == 1
                 POKE temp current_param_start
 
                 IF header_emitted == 0
-                    WRITE_STR "BITS 64"
-                    WRITE_CHAR 10
-                    WRITE_STR "section .text"
-                    WRITE_CHAR 10
-                    WRITE_STR "global _start"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "_start:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    call main"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 60"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rdi, rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
+                    WRITE_STR "BITS 64
+section .text
+global _start
+
+_start:
+    call main
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+"
                     LET header_emitted 1
                 END
 
@@ -3286,24 +3279,17 @@ WHILE 1 == 1
                 POKE temp current_param_start
 
                 IF header_emitted == 0
-                    WRITE_STR "BITS 64"
-                    WRITE_CHAR 10
-                    WRITE_STR "section .text"
-                    WRITE_CHAR 10
-                    WRITE_STR "global _start"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "_start:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    call main"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 60"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rdi, rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
+                    WRITE_STR "BITS 64
+section .text
+global _start
+
+_start:
+    call main
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+"
                     LET header_emitted 1
                 END
 
@@ -6570,143 +6556,46 @@ WHILE 1 == 1
                     END
                 END
 
-                IF expr_end_mode == 1
+                IF emit_handled == 0
                     IF tok_type == 2
                         IF tok_value == 42
-                            IF tok_line == expr_line
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 2
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 3
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 4
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 5
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 6
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 7
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 8
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 10
-                        IF tok_type == 2
-                            IF tok_value == 42
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_mul_pending 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 9
-                        IF tok_type == 2
-                            IF tok_line == expr_line
-                                IF tok_value == 42
-                                    WRITE_STR "    push rax"
-                                    WRITE_CHAR 10
-                                    LET expr_mul_pending 1
-                                    LET parser_state 30
-                                    LET emit_handled 1
+                            LET temp 0
+                            IF expr_end_mode > 0
+                                IF expr_end_mode < 11
+                                    LET temp 1
                                 END
+                            END
+
+                            IF temp == 1
+                                IF expr_end_mode == 1
+                                    LET temp2 0
+                                    IF tok_line == expr_line
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 0
+                                        LET temp 0
+                                    END
+                                END
+                            END
+
+                            IF temp == 1
+                                IF expr_end_mode == 9
+                                    LET temp2 0
+                                    IF tok_line == expr_line
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 0
+                                        LET temp 0
+                                    END
+                                END
+                            END
+
+                            IF temp == 1
+                                WRITE_STR "    push rax"
+                                WRITE_CHAR 10
+                                LET expr_mul_pending 1
+                                LET parser_state 30
+                                LET emit_handled 1
                             END
                         END
                     END
@@ -6746,214 +6635,53 @@ WHILE 1 == 1
                 END
 
                 IF emit_handled == 0
-                    IF expr_end_mode == 1
-                        IF tok_type == 2
-                            IF tok_line == expr_line
-                                IF tok_value == 43
-                                    WRITE_STR "    push rax"
-                                    WRITE_CHAR 10
-                                    LET expr_pending_add 1
-                                    LET parser_state 30
-                                    LET emit_handled 1
-                                END
-                                IF tok_value == 45
-                                    WRITE_STR "    push rax"
-                                    WRITE_CHAR 10
-                                    LET expr_pending_add 2
-                                    LET parser_state 30
-                                    LET emit_handled 1
+                    IF tok_type == 2
+                        LET temp 0
+                        IF tok_value == 43
+                            LET temp 1
+                        END
+                        IF tok_value == 45
+                            LET temp 2
+                        END
+
+                        IF temp > 0
+                            LET temp2 0
+                            IF expr_end_mode > 0
+                                IF expr_end_mode < 11
+                                    LET temp2 1
                                 END
                             END
-                        END
-                    END
-                END
 
-                IF emit_handled == 0
-                    IF expr_end_mode == 5
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 6
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 7
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 8
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 10
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 2
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 3
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 4
-                        IF tok_type == 2
-                            IF tok_value == 43
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 1
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                            IF tok_value == 45
-                                WRITE_STR "    push rax"
-                                WRITE_CHAR 10
-                                LET expr_pending_add 2
-                                LET parser_state 30
-                                LET emit_handled 1
-                            END
-                        END
-                    END
-                END
-
-                IF emit_handled == 0
-                    IF expr_end_mode == 9
-                        IF tok_type == 2
-                            IF tok_line == expr_line
-                                IF tok_value == 43
-                                    WRITE_STR "    push rax"
-                                    WRITE_CHAR 10
-                                    LET expr_pending_add 1
-                                    LET parser_state 30
-                                    LET emit_handled 1
+                            IF temp2 == 1
+                                IF expr_end_mode == 1
+                                    LET found_flag 0
+                                    IF tok_line == expr_line
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        LET temp2 0
+                                    END
                                 END
-                                IF tok_value == 45
-                                    WRITE_STR "    push rax"
-                                    WRITE_CHAR 10
-                                    LET expr_pending_add 2
-                                    LET parser_state 30
-                                    LET emit_handled 1
+                            END
+
+                            IF temp2 == 1
+                                IF expr_end_mode == 9
+                                    LET found_flag 0
+                                    IF tok_line == expr_line
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        LET temp2 0
+                                    END
                                 END
+                            END
+
+                            IF temp2 == 1
+                                WRITE_STR "    push rax"
+                                WRITE_CHAR 10
+                                LET expr_pending_add temp
+                                LET parser_state 30
+                                LET emit_handled 1
                             END
                         END
                     END
@@ -8622,258 +8350,135 @@ WHILE 1 == 1
         IF emit_handled == 0
             IF parser_state == 8
                 IF tok_type == 3
-                    WRITE_STR "write_char_rax:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov [char_buf], al"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdi, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rsi, [char_buf]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdx, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    ret"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "write_int_rax:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rdi, [print_buf + 32]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rcx, 10"
-                    WRITE_CHAR 10
-                    WRITE_STR "    test rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jnz .write_int_loop"
-                    WRITE_CHAR 10
-                    WRITE_STR "    dec rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov byte [rdi], '0'"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jmp .write_int_emit"
-                    WRITE_CHAR 10
-                    WRITE_STR ".write_int_loop:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rdx, rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    div rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    add dl, '0'"
-                    WRITE_CHAR 10
-                    WRITE_STR "    dec rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov [rdi], dl"
-                    WRITE_CHAR 10
-                    WRITE_STR "    test rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jnz .write_int_loop"
-                    WRITE_CHAR 10
-                    WRITE_STR ".write_int_emit:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rsi, rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rbx, [print_buf + 32]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    sub rbx, rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdx, rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdi, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    ret"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "print_rax:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rdi, [print_buf + 31]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov byte [rdi], 10"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rcx, 10"
-                    WRITE_CHAR 10
-                    WRITE_STR "    test rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jnz .print_loop"
-                    WRITE_CHAR 10
-                    WRITE_STR "    dec rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov byte [rdi], '0'"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jmp .print_emit"
-                    WRITE_CHAR 10
-                    WRITE_STR ".print_loop:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rdx, rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    div rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    add dl, '0'"
-                    WRITE_CHAR 10
-                    WRITE_STR "    dec rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov [rdi], dl"
-                    WRITE_CHAR 10
-                    WRITE_STR "    test rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jnz .print_loop"
-                    WRITE_CHAR 10
-                    WRITE_STR ".print_emit:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rsi, rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rbx, [print_buf + 32]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    sub rbx, rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdx, rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdi, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    ret"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "read_char_rax:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    push rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rax, 0"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdi, 0"
-                    WRITE_CHAR 10
-                    WRITE_STR "    lea rsi, [io_buf]"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov rdx, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    syscall"
-                    WRITE_CHAR 10
-                    WRITE_STR "    cmp rax, 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "    je .read_char_ok"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    jmp .read_char_done"
-                    WRITE_CHAR 10
-                    WRITE_STR ".read_char_ok:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    xor rax, rax"
-                    WRITE_CHAR 10
-                    WRITE_STR "    mov al, [io_buf]"
-                    WRITE_CHAR 10
-                    WRITE_STR ".read_char_done:"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rsi"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rdx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rcx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    pop rbx"
-                    WRITE_CHAR 10
-                    WRITE_STR "    ret"
-                    WRITE_CHAR 10
-                    WRITE_CHAR 10
-                    WRITE_STR "section .bss"
-                    WRITE_CHAR 10
-                    WRITE_STR "vars: resq 4096"
-                    WRITE_CHAR 10
-                    WRITE_STR "print_buf: resb 32"
-                    WRITE_CHAR 10
-                    WRITE_STR "char_buf: resb 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "io_buf: resb 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "cond_expr_lhs: resq 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "cond_expr_rhs: resq 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "match_expr_value: resq 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "match_expr_payload: resq 1"
-                    WRITE_CHAR 10
-                    WRITE_STR "enum_expr_payload: resq 1"
-                    WRITE_CHAR 10
+                    WRITE_STR "write_char_rax:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    mov [char_buf], al
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [char_buf]
+    mov rdx, 1
+    syscall
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+
+write_int_rax:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    lea rdi, [print_buf + 32]
+    mov rcx, 10
+    test rax, rax
+    jnz .write_int_loop
+    dec rdi
+    mov byte [rdi], '0'
+    jmp .write_int_emit
+.write_int_loop:
+    xor rdx, rdx
+    div rcx
+    add dl, '0'
+    dec rdi
+    mov [rdi], dl
+    test rax, rax
+    jnz .write_int_loop
+.write_int_emit:
+    mov rsi, rdi
+    lea rbx, [print_buf + 32]
+    sub rbx, rsi
+    mov rdx, rbx
+    mov rax, 1
+    mov rdi, 1
+    syscall
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+
+print_rax:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    lea rdi, [print_buf + 31]
+    mov byte [rdi], 10
+    mov rcx, 10
+    test rax, rax
+    jnz .print_loop
+    dec rdi
+    mov byte [rdi], '0'
+    jmp .print_emit
+.print_loop:
+    xor rdx, rdx
+    div rcx
+    add dl, '0'
+    dec rdi
+    mov [rdi], dl
+    test rax, rax
+    jnz .print_loop
+.print_emit:
+    mov rsi, rdi
+    lea rbx, [print_buf + 32]
+    sub rbx, rsi
+    mov rdx, rbx
+    mov rax, 1
+    mov rdi, 1
+    syscall
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+
+read_char_rax:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    mov rax, 0
+    mov rdi, 0
+    lea rsi, [io_buf]
+    mov rdx, 1
+    syscall
+    cmp rax, 1
+    je .read_char_ok
+    xor rax, rax
+    jmp .read_char_done
+.read_char_ok:
+    xor rax, rax
+    mov al, [io_buf]
+.read_char_done:
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+
+section .bss
+vars: resq 131072
+print_buf: resb 32
+char_buf: resb 1
+io_buf: resb 1
+cond_expr_lhs: resq 1
+cond_expr_rhs: resq 1
+match_expr_value: resq 1
+match_expr_payload: resq 1
+enum_expr_payload: resq 1
+"
                     EXIT
                 END
             END

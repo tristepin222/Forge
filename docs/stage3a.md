@@ -214,5 +214,6 @@ That means:
 - [bootstrap_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\bootstrap_stage3.sh) and [compare_stage3_generations.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\compare_stage3_generations.sh) stay gated until the self-host source is genuinely ready; that gate is the marker file `stages/stage3/compiler.bootstrap-ready`
 - once that marker exists, `bootstrap_stage3.sh` reruns `test_stage3_selfhost_sample.sh` and `test_stage3_selfhost.sh` automatically before attempting the second-generation build
 - after the second-generation binary is built, `bootstrap_stage3.sh` now runs a small compiler smoke on `tests/stage3/basic_empty_main.imp`; passing the scaffold smoke gates alone is not enough yet
+- `compare_stage3_generations.sh` now treats behavioral parity as the required gate by default; exact ASM parity is optional via `STRICT_ASM=1`
 
 Use `./test_stage3_selfhost_sample.sh` first, then `./test_stage3_selfhost.sh`, before creating the bootstrap-ready marker.

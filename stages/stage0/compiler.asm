@@ -119,6 +119,9 @@ section .data
         db "    pop rbx", 10
         db "    ret", 10, 10
         db "print_int_raw:", 10
+        db "    push rax", 10
+        db "    call flush_write_buf", 10
+        db "    pop rax", 10
         db "    push rbx", 10
         db "    push rcx", 10
         db "    push rdx", 10
@@ -162,26 +165,57 @@ section .data
         db "    pop rcx", 10
         db "    pop rbx", 10
         db "    ret", 10, 10
-        db "write_char:", 10
-        db "    mov [read_char], al", 10
+        db "flush_write_buf:", 10
         db "    push rax", 10
+        db "    push rbx", 10
+        db "    push rdx", 10
+        db "    push rsi", 10
+        db "    push rdi", 10
+        db "    mov rbx, [write_len]", 10
+        db "    cmp rbx, 0", 10
+        db "    je .flush_done", 10
+        db "    mov rax, 1", 10
+        db "    mov rdi, 1", 10
+        db "    mov rsi, write_buf", 10
+        db "    mov rdx, rbx", 10
+        db "    syscall", 10
+        db "    mov qword [write_len], 0", 10
+        db ".flush_done:", 10
+        db "    pop rdi", 10
+        db "    pop rsi", 10
+        db "    pop rdx", 10
+        db "    pop rbx", 10
+        db "    pop rax", 10
+        db "    ret", 10, 10
+        db "write_char:", 10
+        db "    push rax", 10
+        db "    push rbx", 10
         db "    push rdi", 10
         db "    push rsi", 10
         db "    push rdx", 10
-        db "    mov rax, 1", 10
-        db "    mov rdi, 1", 10
-        db "    mov rsi, read_char", 10
-        db "    mov rdx, 1", 10
-        db "    syscall", 10
+        db "    mov rbx, [write_len]", 10
+        db "    mov [write_buf + rbx], al", 10
+        db "    inc rbx", 10
+        db "    mov [write_len], rbx", 10
+        db "    cmp al, 10", 10
+        db "    je .write_flush", 10
+        db "    cmp rbx, 4096", 10
+        db "    jb .write_done", 10
+        db ".write_flush:", 10
+        db "    call flush_write_buf", 10
+        db ".write_done:", 10
         db "    pop rdx", 10
         db "    pop rsi", 10
         db "    pop rdi", 10
+        db "    pop rbx", 10
         db "    pop rax", 10
         db "    ret", 10, 10
         db "section .bss", 10
         db "vars      resq 128", 10
-        db "heap      resb 65536", 10
+        db "heap      resb 262144", 10
         db "alloc_ptr resq 1", 10
+        db "write_len  resq 1", 10
+        db "write_buf  resb 4096", 10
         db "read_char resb 1", 10
         db "int_buf   resb 32", 10, 0
 

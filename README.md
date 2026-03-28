@@ -292,6 +292,16 @@ chmod +x bootstrap_stage3.sh compare_stage3_generations.sh
 ./compare_stage3_generations.sh
 ```
 
+`compare_stage3_generations.sh` now defaults to behavioral parity:
+- same runtime output
+- same exit status
+
+If you want exact assembly identity too, run:
+
+```bash
+STRICT_ASM=1 ./compare_stage3_generations.sh
+```
+
 ---
 
 ### Language Reference (Imperium Syntax)

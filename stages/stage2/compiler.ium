@@ -67,7 +67,7 @@ VAR block_tbl
 VAR expr_group_tbl
 
 # Bootstrap allocations
-ALLOC token_buf 128
+ALLOC token_buf 16384
 ALLOC symbol_tbl 4096
 ALLOC block_tbl 256
 ALLOC expr_group_tbl 128
@@ -3622,6 +3622,12 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "print_int_raw:"
         WRITE_CHAR 10
+        WRITE_STR "    push rax"
+        WRITE_CHAR 10
+        WRITE_STR "    call flush_write_buf"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rax"
+        WRITE_CHAR 10
         WRITE_STR "    push rbx"
         WRITE_CHAR 10
         WRITE_STR "    push rcx"
@@ -3710,11 +3716,57 @@ WHILE 1 == 1
         WRITE_CHAR 10
 
         WRITE_CHAR 10
-        WRITE_STR "write_char:"
-        WRITE_CHAR 10
-        WRITE_STR "    mov [char_buf], al"
+        WRITE_STR "flush_write_buf:"
         WRITE_CHAR 10
         WRITE_STR "    push rax"
+        WRITE_CHAR 10
+        WRITE_STR "    push rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    push rdx"
+        WRITE_CHAR 10
+        WRITE_STR "    push rsi"
+        WRITE_CHAR 10
+        WRITE_STR "    push rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rbx, [write_len]"
+        WRITE_CHAR 10
+        WRITE_STR "    cmp rbx, 0"
+        WRITE_CHAR 10
+        WRITE_STR "    je .flush_done"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rax, 1"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rdi, 1"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rsi, write_buf"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rdx, rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    syscall"
+        WRITE_CHAR 10
+        WRITE_STR "    mov qword [write_len], 0"
+        WRITE_CHAR 10
+        WRITE_STR ".flush_done:"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rsi"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rdx"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rax"
+        WRITE_CHAR 10
+        WRITE_STR "    ret"
+        WRITE_CHAR 10
+
+        WRITE_CHAR 10
+        WRITE_STR "write_char:"
+        WRITE_CHAR 10
+        WRITE_STR "    push rax"
+        WRITE_CHAR 10
+        WRITE_STR "    push rbx"
         WRITE_CHAR 10
         WRITE_STR "    push rdi"
         WRITE_CHAR 10
@@ -3722,21 +3774,35 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "    push rdx"
         WRITE_CHAR 10
-        WRITE_STR "    mov rax, 1"
+        WRITE_STR "    mov rbx, [write_len]"
         WRITE_CHAR 10
-        WRITE_STR "    mov rdi, 1"
+        WRITE_STR "    mov [write_buf + rbx], al"
         WRITE_CHAR 10
-        WRITE_STR "    mov rsi, char_buf"
+        WRITE_STR "    inc rbx"
         WRITE_CHAR 10
-        WRITE_STR "    mov rdx, 1"
+        WRITE_STR "    mov [write_len], rbx"
         WRITE_CHAR 10
-        WRITE_STR "    syscall"
+        WRITE_STR "    cmp al, 10"
+        WRITE_CHAR 10
+        WRITE_STR "    je .write_flush"
+        WRITE_CHAR 10
+        WRITE_STR "    cmp rbx, 4096"
+        WRITE_CHAR 10
+        WRITE_STR "    jb .write_done"
+        WRITE_CHAR 10
+        WRITE_STR ".write_flush:"
+        WRITE_CHAR 10
+        WRITE_STR "    call flush_write_buf"
+        WRITE_CHAR 10
+        WRITE_STR ".write_done:"
         WRITE_CHAR 10
         WRITE_STR "    pop rdx"
         WRITE_CHAR 10
         WRITE_STR "    pop rsi"
         WRITE_CHAR 10
         WRITE_STR "    pop rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rbx"
         WRITE_CHAR 10
         WRITE_STR "    pop rax"
         WRITE_CHAR 10
@@ -3746,11 +3812,15 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "section .bss"
         WRITE_CHAR 10
-        WRITE_STR "vars    resq 16384"
+        WRITE_STR "vars    resq 131072"
         WRITE_CHAR 10
         WRITE_STR "int_buf resb 32"
         WRITE_CHAR 10
         WRITE_STR "char_buf resb 1"
+        WRITE_CHAR 10
+        WRITE_STR "write_len resq 1"
+        WRITE_CHAR 10
+        WRITE_STR "write_buf resb 4096"
         WRITE_CHAR 10
         WRITE_STR "read_char resb 1"
         WRITE_CHAR 10
@@ -3760,7 +3830,7 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "alloc_ptr resq 1"
         WRITE_CHAR 10
-        WRITE_STR "heap    resb 262144"
+        WRITE_STR "heap    resb 1048576"
         WRITE_CHAR 10
 
         EXIT
