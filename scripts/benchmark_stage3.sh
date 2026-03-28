@@ -18,7 +18,9 @@ Usage: ./benchmark_stage3.sh [--verbose] [--only <name>] [--repeat <n>]
 Benchmarks:
   stage3     Force a trusted Stage 3 rebuild with the current Stage 2 compiler.
   selfhost   Force the Stage 3 self-host smoke compile using the current stage3 binary.
-  bootstrap  Force the gen2/bootstrap path while reusing the current stage3 binary unless stale.
+  bootstrap  Run the normal warm bootstrap path with current freshness checks.
+  bootstrap-forced
+             Force the sample smoke, self-host smoke, and gen2/bootstrap path.
   all        Run all of the above in that order.
 
 Examples:
@@ -64,7 +66,7 @@ while [ $# -gt 0 ]; do
 done
 
 case "$ONLY" in
-  all|stage3|selfhost|bootstrap)
+  all|stage3|selfhost|bootstrap|bootstrap-forced)
     ;;
   *)
     echo "Unknown benchmark name: $ONLY"
@@ -168,6 +170,10 @@ bench_selfhost() {
 }
 
 bench_bootstrap() {
+  "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}"
+}
+
+bench_bootstrap_forced() {
   FORCE_SELFHOST_SAMPLE=1 FORCE_SELFHOST_SMOKE=1 FORCE_BOOTSTRAP_GEN2=1 "$SCRIPT_DIR/bootstrap_stage3.sh" "${VERBOSE_ARGS[@]}"
 }
 
@@ -195,6 +201,10 @@ fi
 
 if [ "$ONLY" = "all" ] || [ "$ONLY" = "bootstrap" ]; then
   run_benchmark_group "bootstrap" bench_bootstrap
+fi
+
+if [ "$ONLY" = "bootstrap-forced" ]; then
+  run_benchmark_group "bootstrap-forced" bench_bootstrap_forced
 fi
 
 echo

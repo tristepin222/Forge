@@ -12,6 +12,10 @@ STAGE3_BOOTSTRAP_READY_SENTINEL="${STAGE3_BOOTSTRAP_READY_SENTINEL:-$ROOT/stages
 STAGE3_BUNDLE_SCRIPT="${STAGE3_BUNDLE_SCRIPT:-$ROOT/scripts/bundle_stage3_selfhost.sh}"
 STAGE3_BOOTSTRAP_PREFLIGHT="${STAGE3_BOOTSTRAP_PREFLIGHT:-1}"
 FORCE_BOOTSTRAP_GEN2="${FORCE_BOOTSTRAP_GEN2:-0}"
+DEFAULT_STAGE3_SELFHOST_SAMPLE="$ROOT/stages/stage3/src/selfhost/sample.imp"
+FORCE_SELFHOST_SAMPLE="${FORCE_SELFHOST_SAMPLE:-0}"
+FORCE_SELFHOST_SMOKE="${FORCE_SELFHOST_SMOKE:-0}"
+SELFHOST_BUNDLE_MODE="${SELFHOST_BUNDLE_MODE:-stub}"
 
 VERBOSE=0
 TEST_ONLY="${TEST_ONLY:-}"
@@ -64,6 +68,8 @@ mkdir -p "$OUTPUT_DIR"
 SELFHOST_SMOKE_ASM="$OUTPUT_DIR/stage3_selfhost_smoke.asm"
 SELFHOST_SMOKE_OBJ="$OUTPUT_DIR/stage3_selfhost_smoke.o"
 SELFHOST_SMOKE_BIN="$OUTPUT_DIR/stage3_selfhost_smoke"
+SELFHOST_SAMPLE_ASM="$OUTPUT_DIR/stage3_selfhost_sample.asm"
+SELFHOST_RESOLVED_SMOKE_SOURCE="$STAGE3_SELFHOST_SOURCE"
 
 if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
   log "Bundling Stage 3 self-host scaffold..."
@@ -94,6 +100,50 @@ if [ ! -f "$STAGE3_BOOTSTRAP_READY_SENTINEL" ]; then
   exit 1
 fi
 
+resolve_selfhost_smoke_source() {
+  SELFHOST_RESOLVED_SMOKE_SOURCE="$STAGE3_SELFHOST_SOURCE"
+
+  if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
+    SELFHOST_RESOLVED_SMOKE_SOURCE="$OUTPUT_DIR/stage3_selfhost_bundle.imp"
+    log "Bundling Stage 3 self-host scaffold ($SELFHOST_BUNDLE_MODE)..."
+    STAGE3_SELFHOST_SAMPLE_MODE="$SELFHOST_BUNDLE_MODE" \
+    STAGE3_SELFHOST_OUT_FILE="$SELFHOST_RESOLVED_SMOKE_SOURCE" \
+    bash "$STAGE3_BUNDLE_SCRIPT"
+  fi
+}
+
+selfhost_sample_fresh() {
+  if [ "$FORCE_SELFHOST_SAMPLE" = "1" ]; then
+    return 1
+  fi
+
+  if [ ! -f "$SELFHOST_SAMPLE_ASM" ]; then
+    return 1
+  fi
+
+  if [ "$SELFHOST_SAMPLE_ASM" -nt "$DEFAULT_STAGE3_SELFHOST_SAMPLE" ] && [ "$SELFHOST_SAMPLE_ASM" -nt "$OUTPUT_DIR/stage3" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
+selfhost_smoke_fresh() {
+  if [ "$FORCE_SELFHOST_SMOKE" = "1" ]; then
+    return 1
+  fi
+
+  if [ ! -f "$SELFHOST_SMOKE_ASM" ] || [ ! -f "$SELFHOST_SMOKE_OBJ" ] || [ ! -f "$SELFHOST_SMOKE_BIN" ]; then
+    return 1
+  fi
+
+  if [ "$SELFHOST_SMOKE_BIN" -nt "$SELFHOST_RESOLVED_SMOKE_SOURCE" ] && [ "$SELFHOST_SMOKE_BIN" -nt "$OUTPUT_DIR/stage3" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
 stage3_built=0
 
 if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
@@ -110,21 +160,30 @@ if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   fi
 
   preflight_sample_start_ns="$(now_ns)"
-  if [ "$VERBOSE" -eq 1 ]; then
-    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --verbose
+  if selfhost_sample_fresh; then
+    echo "Stage 3 self-host sample smoke test already up to date."
   else
-    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh"
+    if [ "$VERBOSE" -eq 1 ]; then
+      BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --verbose
+    else
+      BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh"
+    fi
   fi
   preflight_sample_end_ns="$(now_ns)"
   if [ "$VERBOSE" -eq 1 ]; then
     echo "    preflight sample elapsed: $(format_elapsed "$preflight_sample_start_ns" "$preflight_sample_end_ns")"
   fi
 
+  resolve_selfhost_smoke_source
   preflight_smoke_start_ns="$(now_ns)"
-  if [ "$VERBOSE" -eq 1 ]; then
-    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
+  if selfhost_smoke_fresh; then
+    echo "Stage 3 self-host smoke test already up to date."
   else
-    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh"
+    if [ "$VERBOSE" -eq 1 ]; then
+      BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
+    else
+      BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh"
+    fi
   fi
   preflight_smoke_end_ns="$(now_ns)"
   if [ "$VERBOSE" -eq 1 ]; then
@@ -143,9 +202,11 @@ if [ "$stage3_built" -eq 0 ]; then
   fi
 fi
 
+resolve_selfhost_smoke_source
+
 reuse_smoke_gen2=0
 if [ -f "$SELFHOST_SMOKE_ASM" ] && [ -f "$SELFHOST_SMOKE_OBJ" ] && [ -f "$SELFHOST_SMOKE_BIN" ]; then
-  if [ "$SELFHOST_SMOKE_BIN" -nt "$STAGE3_SELFHOST_SOURCE" ] && [ "$SELFHOST_SMOKE_BIN" -nt "$OUTPUT_DIR/stage3" ]; then
+  if [ "$SELFHOST_SMOKE_BIN" -nt "$SELFHOST_RESOLVED_SMOKE_SOURCE" ] && [ "$SELFHOST_SMOKE_BIN" -nt "$OUTPUT_DIR/stage3" ]; then
     reuse_smoke_gen2=1
   fi
 fi
