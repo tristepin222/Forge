@@ -14,9 +14,28 @@ STAGE3_BOOTSTRAP_PREFLIGHT="${STAGE3_BOOTSTRAP_PREFLIGHT:-1}"
 FORCE_BOOTSTRAP_GEN2="${FORCE_BOOTSTRAP_GEN2:-0}"
 
 VERBOSE=0
-if [[ "${1:-}" == "--verbose" ]]; then
-  VERBOSE=1
-fi
+TEST_ONLY="${TEST_ONLY:-}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --verbose)
+      VERBOSE=1
+      shift
+      ;;
+    --only)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing test name after --only"
+        exit 1
+      fi
+      TEST_ONLY="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
 
 log() {
   if [ "$VERBOSE" -eq 1 ]; then
@@ -24,7 +43,27 @@ log() {
   fi
 }
 
+now_ns() {
+  date +%s%N
+}
+
+format_elapsed() {
+  local start_ns="$1"
+  local end_ns="$2"
+  local total_ms
+  local whole
+  local frac
+  total_ms=$(((end_ns - start_ns) / 1000000))
+  whole=$((total_ms / 1000))
+  frac=$((total_ms % 1000))
+  printf "%d.%03ds" "$whole" "$frac"
+}
+
 mkdir -p "$OUTPUT_DIR"
+
+SELFHOST_SMOKE_ASM="$OUTPUT_DIR/stage3_selfhost_smoke.asm"
+SELFHOST_SMOKE_OBJ="$OUTPUT_DIR/stage3_selfhost_smoke.o"
+SELFHOST_SMOKE_BIN="$OUTPUT_DIR/stage3_selfhost_smoke"
 
 if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
   log "Bundling Stage 3 self-host scaffold..."
@@ -59,18 +98,37 @@ stage3_built=0
 
 if [ "$STAGE3_BOOTSTRAP_PREFLIGHT" = "1" ]; then
   log "Running Stage 3 self-host bootstrap preflight..."
+  preflight_build_start_ns="$(now_ns)"
   if [ "$VERBOSE" -eq 1 ]; then
     "$SCRIPT_DIR/build_stage3.sh" --verbose
   else
     "$SCRIPT_DIR/build_stage3.sh"
   fi
+  preflight_build_end_ns="$(now_ns)"
+  if [ "$VERBOSE" -eq 1 ]; then
+    echo "    preflight build elapsed: $(format_elapsed "$preflight_build_start_ns" "$preflight_build_end_ns")"
+  fi
 
+  preflight_sample_start_ns="$(now_ns)"
   if [ "$VERBOSE" -eq 1 ]; then
     BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh" --verbose
-    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
   else
     BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost_sample.sh"
+  fi
+  preflight_sample_end_ns="$(now_ns)"
+  if [ "$VERBOSE" -eq 1 ]; then
+    echo "    preflight sample elapsed: $(format_elapsed "$preflight_sample_start_ns" "$preflight_sample_end_ns")"
+  fi
+
+  preflight_smoke_start_ns="$(now_ns)"
+  if [ "$VERBOSE" -eq 1 ]; then
+    BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh" --verbose
+  else
     BUILD_STAGE3=0 "$SCRIPT_DIR/test_stage3_selfhost.sh"
+  fi
+  preflight_smoke_end_ns="$(now_ns)"
+  if [ "$VERBOSE" -eq 1 ]; then
+    echo "    preflight smoke elapsed: $(format_elapsed "$preflight_smoke_start_ns" "$preflight_smoke_end_ns")"
   fi
 
   stage3_built=1
@@ -85,37 +143,77 @@ if [ "$stage3_built" -eq 0 ]; then
   fi
 fi
 
+reuse_smoke_gen2=0
+if [ -f "$SELFHOST_SMOKE_ASM" ] && [ -f "$SELFHOST_SMOKE_OBJ" ] && [ -f "$SELFHOST_SMOKE_BIN" ]; then
+  if [ "$SELFHOST_SMOKE_BIN" -nt "$STAGE3_SELFHOST_SOURCE" ] && [ "$SELFHOST_SMOKE_BIN" -nt "$OUTPUT_DIR/stage3" ]; then
+    reuse_smoke_gen2=1
+  fi
+fi
+
 if [ "$FORCE_BOOTSTRAP_GEN2" != "1" ] && [ -f "$OUTPUT_DIR/stage3_gen2" ]; then
   if [ "$OUTPUT_DIR/stage3_gen2" -nt "$STAGE3_SELFHOST_SOURCE" ] && [ "$OUTPUT_DIR/stage3_gen2" -nt "$OUTPUT_DIR/stage3" ]; then
     log "Second-generation Stage 3 compiler already up to date at output/stage3_gen2"
+  elif [ "$reuse_smoke_gen2" -eq 1 ]; then
+    log "Reusing self-host smoke artifacts for second-generation Stage 3 compiler..."
+    cp "$SELFHOST_SMOKE_ASM" "$OUTPUT_DIR/stage3_gen2.asm"
+    cp "$SELFHOST_SMOKE_OBJ" "$OUTPUT_DIR/stage3_gen2.o"
+    cp "$SELFHOST_SMOKE_BIN" "$OUTPUT_DIR/stage3_gen2"
   else
     log "Compiling self-hosted Stage 3 source with first-generation Stage 3..."
+    gen2_compile_start_ns="$(now_ns)"
     python3 - <<PY | "$OUTPUT_DIR/stage3" > "$OUTPUT_DIR/stage3_gen2.asm"
 from pathlib import Path
 import sys
 data = Path(r"$STAGE3_SELFHOST_SOURCE").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
+    gen2_compile_end_ns="$(now_ns)"
+    if [ "$VERBOSE" -eq 1 ]; then
+      echo "    gen2 compile elapsed: $(format_elapsed "$gen2_compile_start_ns" "$gen2_compile_end_ns")"
+    fi
 
     log "Assembling second-generation Stage 3 compiler..."
+    gen2_assemble_start_ns="$(now_ns)"
     nasm -f elf64 "$OUTPUT_DIR/stage3_gen2.asm" -o "$OUTPUT_DIR/stage3_gen2.o"
     ld "$OUTPUT_DIR/stage3_gen2.o" -o "$OUTPUT_DIR/stage3_gen2"
+    gen2_assemble_end_ns="$(now_ns)"
+    if [ "$VERBOSE" -eq 1 ]; then
+      echo "    gen2 assemble/link elapsed: $(format_elapsed "$gen2_assemble_start_ns" "$gen2_assemble_end_ns")"
+    fi
   fi
 else
-  log "Compiling self-hosted Stage 3 source with first-generation Stage 3..."
-  python3 - <<PY | "$OUTPUT_DIR/stage3" > "$OUTPUT_DIR/stage3_gen2.asm"
+  if [ "$reuse_smoke_gen2" -eq 1 ]; then
+    log "Reusing self-host smoke artifacts for second-generation Stage 3 compiler..."
+    cp "$SELFHOST_SMOKE_ASM" "$OUTPUT_DIR/stage3_gen2.asm"
+    cp "$SELFHOST_SMOKE_OBJ" "$OUTPUT_DIR/stage3_gen2.o"
+    cp "$SELFHOST_SMOKE_BIN" "$OUTPUT_DIR/stage3_gen2"
+  else
+    log "Compiling self-hosted Stage 3 source with first-generation Stage 3..."
+    gen2_compile_start_ns="$(now_ns)"
+    python3 - <<PY | "$OUTPUT_DIR/stage3" > "$OUTPUT_DIR/stage3_gen2.asm"
 from pathlib import Path
 import sys
 data = Path(r"$STAGE3_SELFHOST_SOURCE").read_bytes()
 sys.stdout.buffer.write(data + b"\0")
 PY
+    gen2_compile_end_ns="$(now_ns)"
+    if [ "$VERBOSE" -eq 1 ]; then
+      echo "    gen2 compile elapsed: $(format_elapsed "$gen2_compile_start_ns" "$gen2_compile_end_ns")"
+    fi
 
-  log "Assembling second-generation Stage 3 compiler..."
-  nasm -f elf64 "$OUTPUT_DIR/stage3_gen2.asm" -o "$OUTPUT_DIR/stage3_gen2.o"
-  ld "$OUTPUT_DIR/stage3_gen2.o" -o "$OUTPUT_DIR/stage3_gen2"
+    log "Assembling second-generation Stage 3 compiler..."
+    gen2_assemble_start_ns="$(now_ns)"
+    nasm -f elf64 "$OUTPUT_DIR/stage3_gen2.asm" -o "$OUTPUT_DIR/stage3_gen2.o"
+    ld "$OUTPUT_DIR/stage3_gen2.o" -o "$OUTPUT_DIR/stage3_gen2"
+    gen2_assemble_end_ns="$(now_ns)"
+    if [ "$VERBOSE" -eq 1 ]; then
+      echo "    gen2 assemble/link elapsed: $(format_elapsed "$gen2_assemble_start_ns" "$gen2_assemble_end_ns")"
+    fi
+  fi
 fi
 
 log "Running second-generation compiler smoke..."
+smoke_start_ns="$(now_ns)"
 python3 - <<PY > "$OUTPUT_DIR/stage3_gen2_smoke.source"
 from pathlib import Path
 import sys
@@ -145,12 +243,29 @@ if ! nasm -f elf64 "$OUTPUT_DIR/stage3_gen2_smoke.asm" -o "$OUTPUT_DIR/stage3_ge
   echo "Keep growing stages/stage3/compiler.imp until this smoke emits valid asm."
   exit 1
 fi
+smoke_end_ns="$(now_ns)"
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "    gen2 smoke elapsed: $(format_elapsed "$smoke_start_ns" "$smoke_end_ns")"
+fi
 
 log "Running Stage 3 regression suite with second-generation compiler..."
+regression_start_ns="$(now_ns)"
 if [ "$VERBOSE" -eq 1 ]; then
-  BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" "$SCRIPT_DIR/test_stage3.sh" --verbose
+  if [ -n "$TEST_ONLY" ]; then
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" TEST_ONLY="$TEST_ONLY" "$SCRIPT_DIR/test_stage3.sh" --verbose --only "$TEST_ONLY"
+  else
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" "$SCRIPT_DIR/test_stage3.sh" --verbose
+  fi
 else
-  BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" "$SCRIPT_DIR/test_stage3.sh"
+  if [ -n "$TEST_ONLY" ]; then
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" TEST_ONLY="$TEST_ONLY" "$SCRIPT_DIR/test_stage3.sh" --only "$TEST_ONLY"
+  else
+    BUILD_STAGE3=0 STAGE3_BIN="$OUTPUT_DIR/stage3_gen2" "$SCRIPT_DIR/test_stage3.sh"
+  fi
+fi
+regression_end_ns="$(now_ns)"
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "    regression elapsed: $(format_elapsed "$regression_start_ns" "$regression_end_ns")"
 fi
 
 echo "Stage 3 bootstrap succeeded."

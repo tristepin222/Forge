@@ -25,6 +25,22 @@ log() {
   fi
 }
 
+now_ns() {
+  date +%s%N
+}
+
+format_elapsed() {
+  local start_ns="$1"
+  local end_ns="$2"
+  local total_ms
+  local whole
+  local frac
+  total_ms=$(((end_ns - start_ns) / 1000000))
+  whole=$((total_ms / 1000))
+  frac=$((total_ms % 1000))
+  printf "%d.%03ds" "$whole" "$frac"
+}
+
 mkdir -p "$OUTPUT_DIR"
 
 if [ "$STAGE3_SELFHOST_SOURCE" = "$DEFAULT_STAGE3_SELFHOST_SOURCE" ] && [ -f "$STAGE3_BUNDLE_SCRIPT" ]; then
@@ -82,8 +98,10 @@ PY
 fi
 
 if command -v timeout >/dev/null 2>&1; then
+  compile_start_ns="$(now_ns)"
   timeout "$SELFHOST_COMPILE_TIMEOUT" "$STAGE3_BIN" < "$OUTPUT_DIR/stage3_selfhost_smoke.source" > "$asm_out" &
 else
+  compile_start_ns="$(now_ns)"
   "$STAGE3_BIN" < "$OUTPUT_DIR/stage3_selfhost_smoke.source" > "$asm_out" &
 fi
 compile_pid=$!
@@ -119,6 +137,7 @@ fi
 
 wait "$compile_pid"
 status=$?
+compile_end_ns="$(now_ns)"
 
 if [ -n "$monitor_pid" ]; then
   kill "$monitor_pid" >/dev/null 2>&1 || true
@@ -141,10 +160,24 @@ if [ "$status" -ne 0 ]; then
   exit 1
 fi
 
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "    compile elapsed: $(format_elapsed "$compile_start_ns" "$compile_end_ns")"
+fi
+
 log "    assemble"
+assemble_start_ns="$(now_ns)"
 nasm -f elf64 "$OUTPUT_DIR/stage3_selfhost_smoke.asm" -o "$OUTPUT_DIR/stage3_selfhost_smoke.o"
+assemble_end_ns="$(now_ns)"
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "    assemble elapsed: $(format_elapsed "$assemble_start_ns" "$assemble_end_ns")"
+fi
 
 log "    link"
+link_start_ns="$(now_ns)"
 ld "$OUTPUT_DIR/stage3_selfhost_smoke.o" -o "$OUTPUT_DIR/stage3_selfhost_smoke"
+link_end_ns="$(now_ns)"
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "    link elapsed: $(format_elapsed "$link_start_ns" "$link_end_ns")"
+fi
 
 echo "Stage 3 self-host smoke test passed."

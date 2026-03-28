@@ -199,7 +199,7 @@ section .data
         db "    mov [write_len], rbx", 10
         db "    cmp al, 10", 10
         db "    je .write_flush", 10
-        db "    cmp rbx, 4096", 10
+        db "    cmp rbx, 16384", 10
         db "    jb .write_done", 10
         db ".write_flush:", 10
         db "    call flush_write_buf", 10
@@ -210,13 +210,48 @@ section .data
         db "    pop rbx", 10
         db "    pop rax", 10
         db "    ret", 10, 10
+        db "read_char_rax:", 10
+        db "    push rbx", 10
+        db "    push rcx", 10
+        db "    push rdx", 10
+        db "    push rsi", 10
+        db "    push rdi", 10
+        db "    mov rbx, [read_pos]", 10
+        db "    cmp rbx, [read_len]", 10
+        db "    jb .read_have_char", 10
+        db "    mov rax, 0", 10
+        db "    mov rdi, 0", 10
+        db "    mov rsi, read_buf", 10
+        db "    mov rdx, 16384", 10
+        db "    syscall", 10
+        db "    cmp rax, 0", 10
+        db "    jle .read_eof", 10
+        db "    mov [read_len], rax", 10
+        db "    mov qword [read_pos], 0", 10
+        db "    xor rbx, rbx", 10
+        db ".read_have_char:", 10
+        db "    movzx rax, byte [read_buf + rbx]", 10
+        db "    inc rbx", 10
+        db "    mov [read_pos], rbx", 10
+        db "    jmp .read_done", 10
+        db ".read_eof:", 10
+        db "    xor rax, rax", 10
+        db ".read_done:", 10
+        db "    pop rdi", 10
+        db "    pop rsi", 10
+        db "    pop rdx", 10
+        db "    pop rcx", 10
+        db "    pop rbx", 10
+        db "    ret", 10, 10
         db "section .bss", 10
         db "vars      resq 128", 10
         db "heap      resb 262144", 10
         db "alloc_ptr resq 1", 10
         db "write_len  resq 1", 10
-        db "write_buf  resb 4096", 10
-        db "read_char resb 1", 10
+        db "write_buf  resb 16384", 10
+        db "read_len  resq 1", 10
+        db "read_pos  resq 1", 10
+        db "read_buf  resb 16384", 10
         db "int_buf   resb 32", 10, 0
 
     str_mov_rax_imm      db "    mov rax, ", 0
@@ -240,13 +275,7 @@ section .data
     str_shl_rbx_3        db "    shl rbx, 3", 10, 0
     str_mov_ptr_rbx_rcx  db "    mov [rbx], rcx", 10, 0
     str_mov_rax_ptr_rbx  db "    mov rax, [rbx]", 10, 0
-    str_movzx_rax_read   db "    movzx rax, byte [read_char]", 10, 0
-    str_read_syscall:
-        db "    mov rax, 0", 10
-        db "    mov rdi, 0", 10
-        db "    mov rsi, read_char", 10
-        db "    mov rdx, 1", 10
-        db "    syscall", 10, 0
+    str_call_read_char   db "    call read_char_rax", 10, 0
     str_call_print       db "    call print_rax", 10, 0
     str_call_print_raw   db "    call print_int_raw", 10, 0
     str_call_write_char  db "    call write_char", 10, 0
@@ -675,9 +704,7 @@ handle_read:
     call expect_ident
     call require_variable
     mov [tmp_offset], rax
-    lea rsi, [str_read_syscall]
-    call emit_cstr
-    lea rsi, [str_movzx_rax_read]
+    lea rsi, [str_call_read_char]
     call emit_cstr
     mov rax, [tmp_offset]
     call emit_store_rax_to_var

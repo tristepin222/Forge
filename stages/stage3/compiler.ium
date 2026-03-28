@@ -1006,9 +1006,10 @@ WHILE 1 == 1
                 IF tok_type == 1
                     LET current_hash tok_hash
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan interface_count
 
-                    WHILE sym_scan < interface_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp interface_hash_tbl
@@ -1017,9 +1018,8 @@ WHILE 1 == 1
                         IF temp2 == current_hash
                             LET current_impl_interface_index sym_scan
                             LET found_flag 1
+                            LET sym_scan 0
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -1552,9 +1552,10 @@ WHILE 1 == 1
                         PEEK temp token_buf
                         IF temp == 40
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan func_count
 
-                            WHILE sym_scan < func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp func_hash_tbl
@@ -1567,9 +1568,8 @@ WHILE 1 == 1
                                     ADD temp func_param_start_tbl
                                     PEEK current_param_start temp
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 0
@@ -1894,9 +1894,10 @@ _start:
                         IF current_hash == 260277976
                             IF temp == 44
                                 LET found_flag 0
-                                LET sym_scan 0
+                                LET sym_scan struct_count
 
-                                WHILE sym_scan < struct_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
                                     LET temp2 sym_scan
                                     MUL temp2 8
                                     ADD temp2 struct_hash_tbl
@@ -1905,9 +1906,8 @@ _start:
                                     IF found_off == impl_type_hash
                                         LET current_struct_index sym_scan
                                         LET found_flag 1
+                                        LET sym_scan 0
                                     END
-
-                                    ADD sym_scan 1
                                 END
 
                                 IF found_flag == 1
@@ -1925,9 +1925,10 @@ _start:
 
                             IF temp == 41
                                 LET found_flag 0
-                                LET sym_scan 0
+                                LET sym_scan struct_count
 
-                                WHILE sym_scan < struct_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
                                     LET temp2 sym_scan
                                     MUL temp2 8
                                     ADD temp2 struct_hash_tbl
@@ -1936,9 +1937,8 @@ _start:
                                     IF found_off == impl_type_hash
                                         LET current_struct_index sym_scan
                                         LET found_flag 1
+                                        LET sym_scan 0
                                     END
-
-                                    ADD sym_scan 1
                                 END
 
                                 IF found_flag == 1
@@ -2013,9 +2013,10 @@ _start:
             IF parser_state == 46
                 IF tok_type == 1
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan struct_count
 
-                    WHILE sym_scan < struct_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp struct_hash_tbl
@@ -2024,9 +2025,8 @@ _start:
                         IF temp2 == tok_hash
                             LET current_struct_index sym_scan
                             LET found_flag 1
+                            LET sym_scan 0
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -2853,10 +2853,11 @@ _start:
             IF parser_state == 102
                 IF tok_type == 1
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan enum_variant_count
                     LET current_enum_variant_payload_flag 0
 
-                    WHILE sym_scan < enum_variant_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp enum_variant_enum_tbl
@@ -2879,10 +2880,9 @@ _start:
                                 ADD temp enum_variant_payload_tbl
                                 PEEK current_enum_variant_payload_flag temp
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -3334,9 +3334,10 @@ _start:
                 IF tok_type == 2
                     IF tok_value == 123
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan struct_count
 
-                        WHILE sym_scan < struct_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp struct_hash_tbl
@@ -3345,9 +3346,8 @@ _start:
                             IF temp2 == current_struct_hash
                                 LET current_struct_index sym_scan
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 1
@@ -3493,9 +3493,10 @@ _start:
                             LET call_arg_index 0
                             LET call_func_index 0
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan func_count
 
-                            WHILE sym_scan < func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp func_hash_tbl
@@ -3514,9 +3515,8 @@ _start:
                                     PEEK call_param_start temp
 
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 0
@@ -3562,9 +3562,10 @@ _start:
                         IF tok_type == 2
                             IF tok_value == 46
                                 LET found_flag 0
-                                LET sym_scan 0
+                                LET sym_scan sym_count
 
-                                WHILE sym_scan < sym_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
                                     LET temp sym_scan
                                     MUL temp 8
                                     ADD temp symbol_hash_tbl
@@ -3577,9 +3578,8 @@ _start:
                                         ADD temp symbol_off_tbl
                                         PEEK current_struct_base_off temp
                                         LET found_flag 1
+                                        LET sym_scan 0
                                     END
-
-                                    ADD sym_scan 1
                                 END
 
                                 IF found_flag == 1
@@ -3638,9 +3638,10 @@ _start:
 
                     IF emit_handled == 0
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan sym_count
 
-                        WHILE sym_scan < sym_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp symbol_hash_tbl
@@ -3653,9 +3654,8 @@ _start:
                                 ADD temp symbol_off_tbl
                                 PEEK found_off temp
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 1
@@ -3736,9 +3736,11 @@ _start:
                         LET current_field_hash tok_hash
                         LET found_flag 0
 
-                        LET sym_scan current_struct_field_start
-                        LET current_field_index 0
-                        WHILE current_field_index < current_struct_field_count
+                        LET current_field_index current_struct_field_count
+                        WHILE current_field_index > 0
+                            SUB current_field_index 1
+                            LET sym_scan current_struct_field_start
+                            ADD sym_scan current_field_index
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp struct_field_hash_tbl
@@ -3750,10 +3752,8 @@ _start:
                                 LET temp current_field_index
                                 MUL temp 8
                                 ADD current_field_off temp
+                                LET current_field_index 0
                             END
-
-                            ADD sym_scan 1
-                            ADD current_field_index 1
                         END
 
                         IF found_flag == 1
@@ -3804,9 +3804,11 @@ _start:
                     ADD temp struct_field_count_tbl
                     PEEK current_struct_field_count temp
 
-                    LET sym_scan current_struct_field_start
-                    LET current_field_index 0
-                    WHILE current_field_index < current_struct_field_count
+                    LET current_field_index current_struct_field_count
+                    WHILE current_field_index > 0
+                        SUB current_field_index 1
+                        LET sym_scan current_struct_field_start
+                        ADD sym_scan current_field_index
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp struct_field_hash_tbl
@@ -3824,10 +3826,8 @@ _start:
                                 LET current_field_off current_field_index
                                 MUL current_field_off 8
                             END
+                            LET current_field_index 0
                         END
-
-                        ADD sym_scan 1
-                        ADD current_field_index 1
                     END
 
                     LET parser_state 104
@@ -3847,9 +3847,10 @@ _start:
                         LET call_arg_index 0
                         LET call_func_index 0
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan func_count
 
-                        WHILE sym_scan < func_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp func_hash_tbl
@@ -3868,9 +3869,8 @@ _start:
                                 PEEK call_param_start temp
 
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 0
@@ -4105,9 +4105,10 @@ _start:
                     PEEK temp token_buf
                     IF temp == 46
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan sym_count
 
-                        WHILE sym_scan < sym_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp symbol_hash_tbl
@@ -4120,9 +4121,8 @@ _start:
                                 PEEK current_struct_base_off temp
                                 LET current_symbol_index sym_scan
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 1
@@ -4164,9 +4164,10 @@ _start:
                     IF emit_handled == 0
                         IF temp == 61
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan sym_count
 
-                            WHILE sym_scan < sym_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp symbol_hash_tbl
@@ -4179,9 +4180,8 @@ _start:
                                     PEEK current_target_off temp
                                     LET current_symbol_index sym_scan
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 1
@@ -4210,9 +4210,10 @@ _start:
                     IF emit_handled == 0
                         IF temp == 43
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan sym_count
 
-                            WHILE sym_scan < sym_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp symbol_hash_tbl
@@ -4225,9 +4226,8 @@ _start:
                                     PEEK current_target_off temp
                                     LET current_symbol_index sym_scan
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 1
@@ -4257,9 +4257,10 @@ _start:
                     IF emit_handled == 0
                         IF temp == 45
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan sym_count
 
-                            WHILE sym_scan < sym_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp symbol_hash_tbl
@@ -4272,9 +4273,8 @@ _start:
                                     PEEK current_target_off temp
                                     LET current_symbol_index sym_scan
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 1
@@ -4310,9 +4310,10 @@ _start:
                             LET call_arg_index 0
                             LET call_func_index 0
                             LET found_flag 0
-                            LET sym_scan 0
+                            LET sym_scan func_count
 
-                            WHILE sym_scan < func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
                                 LET temp sym_scan
                                 MUL temp 8
                                 ADD temp func_hash_tbl
@@ -4331,9 +4332,8 @@ _start:
                                     PEEK call_param_start temp
 
                                     LET found_flag 1
+                                    LET sym_scan 0
                                 END
-
-                                ADD sym_scan 1
                             END
 
                             IF found_flag == 0
@@ -5452,9 +5452,10 @@ _start:
             IF parser_state == 17
                 IF tok_type == 1
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan sym_count
 
-                    WHILE sym_scan < sym_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp symbol_hash_tbl
@@ -5463,9 +5464,8 @@ _start:
                         IF temp2 == tok_hash
                             LET found_index sym_scan
                             LET found_flag 1
+                            LET sym_scan 0
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -5508,7 +5508,6 @@ _start:
                 IF tok_type == 5
                     ADD next_label 1
                     LET temp next_label
-
                     WRITE_STR "section .data"
                     WRITE_CHAR 10
                     WRITE_STR "STR_"
@@ -5538,6 +5537,7 @@ _start:
 
                     WRITE_STR "section .text"
                     WRITE_CHAR 10
+
                     WRITE_STR "    mov rax, 1"
                     WRITE_CHAR 10
                     WRITE_STR "    mov rdi, 1"
@@ -5597,9 +5597,10 @@ _start:
             IF parser_state == 137
                 IF tok_type == 1
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan sym_count
 
-                    WHILE sym_scan < sym_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp symbol_hash_tbl
@@ -5608,9 +5609,8 @@ _start:
                         IF temp2 == tok_hash
                             LET found_index sym_scan
                             LET found_flag 1
+                            LET sym_scan 0
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -5653,7 +5653,6 @@ _start:
                     IF tok_type == 5
                         ADD next_label 1
                         LET temp next_label
-
                         WRITE_STR "section .data"
                         WRITE_CHAR 10
                         WRITE_STR "STR_"
@@ -5682,6 +5681,7 @@ _start:
 
                         WRITE_STR "section .text"
                         WRITE_CHAR 10
+
                         WRITE_STR "    mov rax, 1"
                         WRITE_CHAR 10
                         WRITE_STR "    mov rdi, 1"
@@ -5775,7 +5775,6 @@ _start:
                     IF emit_handled == 0
                     ADD next_label 1
                     LET temp next_label
-
                     WRITE_STR "section .data"
                     WRITE_CHAR 10
                     WRITE_STR "STR_"
@@ -6031,9 +6030,10 @@ _start:
                     IF tok_type == 2
                     IF tok_value == 46
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan sym_count
 
-                        WHILE sym_scan < sym_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp symbol_hash_tbl
@@ -6046,9 +6046,8 @@ _start:
                                 ADD temp symbol_off_tbl
                                 PEEK current_struct_base_off temp
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 1
@@ -6140,9 +6139,10 @@ _start:
                         LET call_arg_index 0
                         LET call_func_index 0
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan func_count
 
-                        WHILE sym_scan < func_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp func_hash_tbl
@@ -6161,9 +6161,8 @@ _start:
                                 PEEK call_param_start temp
 
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 0
@@ -6207,9 +6206,10 @@ _start:
 
                 IF emit_handled == 0
                     LET found_flag 0
-                    LET sym_scan 0
+                    LET sym_scan sym_count
 
-                    WHILE sym_scan < sym_count
+                    WHILE sym_scan > 0
+                        SUB sym_scan 1
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp symbol_hash_tbl
@@ -6222,9 +6222,8 @@ _start:
                             ADD temp symbol_off_tbl
                             PEEK found_off temp
                             LET found_flag 1
+                            LET sym_scan 0
                         END
-
-                        ADD sym_scan 1
                     END
 
                     IF found_flag == 1
@@ -6301,10 +6300,12 @@ _start:
                     PEEK current_struct_field_count temp
 
                     LET found_flag 0
-                    LET sym_scan current_struct_field_start
-                    LET current_field_index 0
+                    LET current_field_index current_struct_field_count
 
-                    WHILE current_field_index < current_struct_field_count
+                    WHILE current_field_index > 0
+                        SUB current_field_index 1
+                        LET sym_scan current_struct_field_start
+                        ADD sym_scan current_field_index
                         LET temp sym_scan
                         MUL temp 8
                         ADD temp struct_field_hash_tbl
@@ -6322,10 +6323,8 @@ _start:
                                 LET current_field_off current_field_index
                                 MUL current_field_off 8
                             END
+                            LET current_field_index 0
                         END
-
-                        ADD sym_scan 1
-                        ADD current_field_index 1
                     END
 
                     LET parser_state 103
@@ -6394,9 +6393,10 @@ _start:
                         LET call_arg_index 0
                         LET call_func_index 0
                         LET found_flag 0
-                        LET sym_scan 0
+                        LET sym_scan func_count
 
-                        WHILE sym_scan < func_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
                             LET temp sym_scan
                             MUL temp 8
                             ADD temp func_hash_tbl
@@ -6415,9 +6415,8 @@ _start:
                                 PEEK call_param_start temp
 
                                 LET found_flag 1
+                                LET sym_scan 0
                             END
-
-                            ADD sym_scan 1
                         END
 
                         IF found_flag == 0
@@ -8350,26 +8349,57 @@ _start:
         IF emit_handled == 0
             IF parser_state == 8
                 IF tok_type == 3
-                    WRITE_STR "write_char_rax:
+                    WRITE_STR "flush_write_buf:
+    push rax
     push rbx
-    push rcx
     push rdx
     push rsi
     push rdi
-    mov [char_buf], al
+    mov rbx, [write_len]
+    cmp rbx, 0
+    je .flush_done
     mov rax, 1
     mov rdi, 1
-    lea rsi, [char_buf]
-    mov rdx, 1
+    lea rsi, [write_buf]
+    mov rdx, rbx
     syscall
+    mov qword [write_len], 0
+.flush_done:
     pop rdi
     pop rsi
     pop rdx
-    pop rcx
     pop rbx
+    pop rax
+    ret
+
+write_char_rax:
+    push rax
+    push rbx
+    push rdi
+    push rsi
+    push rdx
+    mov rbx, [write_len]
+    mov [write_buf + rbx], al
+    inc rbx
+    mov [write_len], rbx
+    cmp al, 10
+    je .write_flush
+    cmp rbx, 16384
+    jb .write_done
+.write_flush:
+    call flush_write_buf
+.write_done:
+    pop rdx
+    pop rsi
+    pop rdi
+    pop rbx
+    pop rax
     ret
 
 write_int_rax:
+    push rax
+    call flush_write_buf
+    pop rax
     push rbx
     push rcx
     push rdx
@@ -8406,6 +8436,9 @@ write_int_rax:
     ret
 
 print_rax:
+    push rax
+    call flush_write_buf
+    pop rax
     push rbx
     push rcx
     push rdx
@@ -8448,18 +8481,27 @@ read_char_rax:
     push rdx
     push rsi
     push rdi
+    mov rbx, [read_pos]
+    cmp rbx, [read_len]
+    jb .read_char_ok
     mov rax, 0
     mov rdi, 0
-    lea rsi, [io_buf]
-    mov rdx, 1
+    lea rsi, [read_buf]
+    mov rdx, 16384
     syscall
-    cmp rax, 1
-    je .read_char_ok
-    xor rax, rax
-    jmp .read_char_done
+    cmp rax, 0
+    jle .read_char_eof
+    mov [read_len], rax
+    mov qword [read_pos], 0
+    xor rbx, rbx
 .read_char_ok:
     xor rax, rax
-    mov al, [io_buf]
+    mov al, [read_buf + rbx]
+    inc rbx
+    mov [read_pos], rbx
+    jmp .read_char_done
+.read_char_eof:
+    xor rax, rax
 .read_char_done:
     pop rdi
     pop rsi
@@ -8468,16 +8510,20 @@ read_char_rax:
     pop rbx
     ret
 
-section .bss
-vars: resq 131072
-print_buf: resb 32
-char_buf: resb 1
-io_buf: resb 1
-cond_expr_lhs: resq 1
-cond_expr_rhs: resq 1
-match_expr_value: resq 1
-match_expr_payload: resq 1
-enum_expr_payload: resq 1
+ section .bss
+ vars: resq 131072
+ print_buf: resb 32
+ char_buf: resb 1
+ write_len: resq 1
+ write_buf: resb 16384
+ read_len: resq 1
+ read_pos: resq 1
+ read_buf: resb 16384
+ cond_expr_lhs: resq 1
+ cond_expr_rhs: resq 1
+ match_expr_value: resq 1
+ match_expr_payload: resq 1
+ enum_expr_payload: resq 1
 "
                     EXIT
                 END

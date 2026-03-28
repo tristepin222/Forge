@@ -2743,17 +2743,7 @@ WHILE 1 == 1
                                 LET sym_scan symbol_tbl
                             END
                         END
-                        WRITE_STR "    mov rax, 0"
-                        WRITE_CHAR 10
-                        WRITE_STR "    mov rdi, 0"
-                        WRITE_CHAR 10
-                        WRITE_STR "    mov rsi, read_char"
-                        WRITE_CHAR 10
-                        WRITE_STR "    mov rdx, 1"
-                        WRITE_CHAR 10
-                        WRITE_STR "    syscall"
-                        WRITE_CHAR 10
-                        WRITE_STR "    movzx rax, byte [read_char]"
+                        WRITE_STR "    call read_char_rax"
                         WRITE_CHAR 10
                         IF found_off < 0
                             WRITE_STR "    mov [rbp - "
@@ -3786,7 +3776,7 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "    je .write_flush"
         WRITE_CHAR 10
-        WRITE_STR "    cmp rbx, 4096"
+        WRITE_STR "    cmp rbx, 16384"
         WRITE_CHAR 10
         WRITE_STR "    jb .write_done"
         WRITE_CHAR 10
@@ -3810,6 +3800,74 @@ WHILE 1 == 1
         WRITE_CHAR 10
 
         WRITE_CHAR 10
+        WRITE_STR "read_char_rax:"
+        WRITE_CHAR 10
+        WRITE_STR "    push rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    push rcx"
+        WRITE_CHAR 10
+        WRITE_STR "    push rdx"
+        WRITE_CHAR 10
+        WRITE_STR "    push rsi"
+        WRITE_CHAR 10
+        WRITE_STR "    push rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rbx, [read_pos]"
+        WRITE_CHAR 10
+        WRITE_STR "    cmp rbx, [read_len]"
+        WRITE_CHAR 10
+        WRITE_STR "    jb .read_have_char"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rax, 0"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rdi, 0"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rsi, read_buf"
+        WRITE_CHAR 10
+        WRITE_STR "    mov rdx, 16384"
+        WRITE_CHAR 10
+        WRITE_STR "    syscall"
+        WRITE_CHAR 10
+        WRITE_STR "    cmp rax, 0"
+        WRITE_CHAR 10
+        WRITE_STR "    jle .read_eof"
+        WRITE_CHAR 10
+        WRITE_STR "    mov [read_len], rax"
+        WRITE_CHAR 10
+        WRITE_STR "    mov qword [read_pos], 0"
+        WRITE_CHAR 10
+        WRITE_STR "    xor rbx, rbx"
+        WRITE_CHAR 10
+        WRITE_STR ".read_have_char:"
+        WRITE_CHAR 10
+        WRITE_STR "    movzx rax, byte [read_buf + rbx]"
+        WRITE_CHAR 10
+        WRITE_STR "    inc rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    mov [read_pos], rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    jmp .read_done"
+        WRITE_CHAR 10
+        WRITE_STR ".read_eof:"
+        WRITE_CHAR 10
+        WRITE_STR "    xor rax, rax"
+        WRITE_CHAR 10
+        WRITE_STR ".read_done:"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rdi"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rsi"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rdx"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rcx"
+        WRITE_CHAR 10
+        WRITE_STR "    pop rbx"
+        WRITE_CHAR 10
+        WRITE_STR "    ret"
+        WRITE_CHAR 10
+
+        WRITE_CHAR 10
         WRITE_STR "section .bss"
         WRITE_CHAR 10
         WRITE_STR "vars    resq 131072"
@@ -3820,9 +3878,13 @@ WHILE 1 == 1
         WRITE_CHAR 10
         WRITE_STR "write_len resq 1"
         WRITE_CHAR 10
-        WRITE_STR "write_buf resb 4096"
+        WRITE_STR "write_buf resb 16384"
         WRITE_CHAR 10
-        WRITE_STR "read_char resb 1"
+        WRITE_STR "read_len resq 1"
+        WRITE_CHAR 10
+        WRITE_STR "read_pos resq 1"
+        WRITE_CHAR 10
+        WRITE_STR "read_buf resb 16384"
         WRITE_CHAR 10
         WRITE_STR "cond_expr_lhs resq 1"
         WRITE_CHAR 10
