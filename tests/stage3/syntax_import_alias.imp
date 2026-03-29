@@ -1,0 +1,7 @@
+module app.main
+
+from std.io import print as p
+
+function main() {
+    p(7)
+}

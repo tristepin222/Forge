@@ -1,4 +1,4 @@
-function is_alpha(code: i32) -> i32 {
+function is_alpha(code: i32) -> bool {
     if code == 95 {
         return true
     }
@@ -22,7 +22,7 @@ function is_alpha(code: i32) -> i32 {
     return false
 }
 
-function is_ident_continue(code: i32) -> i32 {
+function is_ident_continue(code: i32) -> bool {
     if is_alpha(code) == true {
         return true
     }

@@ -1,0 +1,10 @@
+module app.main
+
+function main() {
+    variable xs = [10, 20, 30]
+    value i = 1
+    xs[i] += 4
+    xs[i + 1] -= xs[i]
+    print(xs[i])
+    print(xs[2])
+}

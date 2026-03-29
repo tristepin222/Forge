@@ -1,0 +1,6 @@
+module app.main
+
+function main() {
+    value xs = [10, 20, 30]
+    print(xs[1])
+}

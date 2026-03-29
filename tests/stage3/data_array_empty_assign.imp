@@ -1,0 +1,8 @@
+module app.main
+
+function main() {
+    variable xs = []
+    xs[0] = 7
+    xs[0] += 2
+    print(xs[0])
+}

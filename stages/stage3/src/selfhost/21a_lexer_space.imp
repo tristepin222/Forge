@@ -1,4 +1,4 @@
-function is_space(code: i32) -> i32 {
+function is_space(code: i32) -> bool {
     if code == 32 {
         return true
     }

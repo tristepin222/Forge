@@ -73,15 +73,35 @@ TEST_NAMES=(
   func_call_arg_expr
   func_nested_call_args
   syntax_return_type
+  semantic_return_bool_to_i32
+  semantic_return_i32_to_bool
   syntax_public_import
+  syntax_import_alias
+  syntax_import_group_alias
+  semantic_import_len_alias
+  semantic_import_group_len_alias
+  semantic_import_group_builtin_aliases
+  semantic_from_import_builtin_aliases
+  semantic_import_group_function_alias
+  semantic_from_import_function_alias
   syntax_aliases
   syntax_private_from
   syntax_struct_enum
   syntax_class_interface
   syntax_implement_methods
   data_class_methods
+  data_array_index
+  data_array_index_expr
+  data_array_index_assign
+  data_array_index_expr_assign
+  data_array_index_compound
+  data_array_index_expr_compound
+  data_array_empty_assign
+  data_array_len
   string_print_literal
+  string_escape_print
   string_variable_print
+  string_escape_variable
   bool_literals
   data_enum_unit
   data_enum_payload
@@ -151,16 +171,57 @@ run_stage3_test() {
   local test_name="$1"
   local run_status=0
   local expected_file
+  local error_file
+  local compile_status=0
+  local had_errexit=0
 
   log "==> $test_name"
   log "    compile"
-  ( cat "$TEST_DIR/$test_name.imp"; printf '\0' ) | "$STAGE3_BIN" > "$OUTPUT_DIR/$test_name.stage3.asm"
+  error_file="$TEST_DIR/$test_name.err"
+  if [[ $- == *e* ]]; then
+    had_errexit=1
+  fi
+  set +e
+  ( cat "$TEST_DIR/$test_name.imp"; printf '\0' ) | "$STAGE3_BIN" > "$OUTPUT_DIR/$test_name.stage3.asm" 2>&1
+  compile_status=$?
+  if [ "$had_errexit" -eq 1 ]; then
+    set -e
+  fi
+
+  if [ -f "$error_file" ]; then
+    if ! actual_output="$(cat "$OUTPUT_DIR/$test_name.stage3.asm")"; then
+      echo "FAILED: $test_name"
+      return 1
+    fi
+    if ! expected_output="$(cat "$error_file")"; then
+      echo "FAILED: $test_name"
+      return 1
+    fi
+    if [[ "$actual_output" != *"$expected_output"* ]]; then
+      diff -u "$error_file" "$OUTPUT_DIR/$test_name.stage3.asm" || true
+      echo "FAILED: $test_name"
+      return 1
+    fi
+    return 0
+  fi
+
+  if [ "$compile_status" -ne 0 ]; then
+    cat "$OUTPUT_DIR/$test_name.stage3.asm"
+    echo "FAILED: $test_name"
+    return 1
+  fi
 
   log "    assemble"
-  nasm -f elf64 "$OUTPUT_DIR/$test_name.stage3.asm" -o "$OUTPUT_DIR/$test_name.stage3.o"
+  if ! nasm -f elf64 "$OUTPUT_DIR/$test_name.stage3.asm" -o "$OUTPUT_DIR/$test_name.stage3.o"; then
+    echo "FAILED: $test_name"
+    return 1
+  fi
 
   log "    link"
-  ld "$OUTPUT_DIR/$test_name.stage3.o" -o "$OUTPUT_DIR/$test_name.stage3"
+  if ! ld "$OUTPUT_DIR/$test_name.stage3.o" -o "$OUTPUT_DIR/$test_name.stage3"; then
+    echo "FAILED: $test_name"
+    return 1
+  fi
 
   log "    run"
   if [ -f "$TEST_DIR/$test_name.in" ]; then

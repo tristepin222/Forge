@@ -1,0 +1,7 @@
+module app.main
+
+import std.io.{print as p}
+
+function main() {
+    p(9)
+}

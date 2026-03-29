@@ -1,0 +1,8 @@
+module app.main
+
+import std.array.{len as count}
+
+function main() {
+    value xs = [7]
+    print(count(xs))
+}

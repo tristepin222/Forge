@@ -111,7 +111,10 @@ function keyword_hash_where() -> i32 => 144975899
 function keyword_hash_requires() -> i32 => 4993505717392
 function keyword_hash_ensures() -> i32 => 134883871237
 function identifier_hash_main() -> i32 => 4026341
+function identifier_hash_i32() -> i32 => 116078
+function identifier_hash_bool() -> i32 => 3646476
 function identifier_hash_str() -> i32 => 129177
+function identifier_hash_array_i32() -> i32 => 2109876543
 
 
 struct SourceCursor {
@@ -162,7 +165,7 @@ struct Lexer {
 function hash_step(hash: i32, ch: i32) -> i32 => hash * 33 + ch
 
 
-function is_space(code: i32) -> i32 {
+function is_space(code: i32) -> bool {
     if code == 32 {
         return true
     }
@@ -179,7 +182,7 @@ function is_space(code: i32) -> i32 {
 }
 
 
-function is_digit(code: i32) -> i32 {
+function is_digit(code: i32) -> bool {
     if code < 48 {
         return false
     }
@@ -192,7 +195,7 @@ function is_digit(code: i32) -> i32 {
 }
 
 
-function is_alpha(code: i32) -> i32 {
+function is_alpha(code: i32) -> bool {
     if code == 95 {
         return true
     }
@@ -216,7 +219,7 @@ function is_alpha(code: i32) -> i32 {
     return false
 }
 
-function is_ident_continue(code: i32) -> i32 {
+function is_ident_continue(code: i32) -> bool {
     if is_alpha(code) == true {
         return true
     }
@@ -718,6 +721,7 @@ function scan_string(self: Lexer) -> i32 {
 
     loop {
         variable ch: i32 = self.next_char()
+        variable escaped: i32 = 0
 
         if ch == 0 {
             break
@@ -729,6 +733,48 @@ function scan_string(self: Lexer) -> i32 {
 
         if ch == 34 {
             break
+        }
+
+        if ch == 92 {
+            ch = self.next_char()
+            if ch == 0 {
+                break
+            }
+
+            if ch == 10 {
+                break
+            }
+
+            if ch == 110 {
+                ch = 10
+                escaped = 1
+            } else {
+                if ch == 116 {
+                    ch = 9
+                    escaped = 1
+                } else {
+                    if ch == 114 {
+                        ch = 13
+                        escaped = 1
+                    } else {
+                        if ch == 34 {
+                            escaped = 1
+                        } else {
+                            if ch == 92 {
+                                escaped = 1
+                            }
+                        }
+                    }
+                }
+            }
+
+            if escaped == 0 {
+                if length < 16 {
+                    self.set_string_char(length, 92)
+                }
+
+                length += 1
+            }
         }
 
         if length < 16 {
@@ -802,6 +848,54 @@ function next_token(self: Lexer) -> i32 {
 
 
 function identifier_hash_print() -> i32 => 137038061
+function identifier_hash_len() -> i32 => 121055
+
+function emit_type_name(hash: i32) {
+    variable emitted: bool = false
+
+    if hash == identifier_hash_i32() {
+        emits("i32")
+        emitted = true
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_bool() {
+            emits("bool")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_str() {
+            emits("str")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_array_i32() {
+            emits("array_i32")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        emits("unknown")
+    }
+}
+
+function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
+    emits("type error")
+    emitc(10)
+    emits("return type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
 
 function emit_hash_suffix(hash: i32) {
     if hash < 0 {
@@ -827,6 +921,11 @@ function emit_variable_name(function_hash: i32, variable_hash: i32) {
     emit_hash_suffix(function_hash)
     emitc(95)
     emit_hash_suffix(variable_hash)
+}
+
+function emit_variable_length_name(function_hash: i32, variable_hash: i32) {
+    emit_variable_name(function_hash, variable_hash)
+    emits("_LEN")
 }
 
 function emit_internal_label_name(label: i32) {
@@ -1108,18 +1207,28 @@ function parse_postfix_tail(self: Lexer) -> i32 {
                 return -1
             }
         } else {
-            if self.token_value == 46 {
-                if self.expect_identifier() != 0 {
-                    return -2
+            if self.token_value == 91 {
+                if self.parse_expression() != 0 {
+                    return -4
+                }
+
+                if self.expect_symbol(93) != 0 {
+                    return -5
                 }
             } else {
-                if self.token_value == 123 {
-                    if self.parse_struct_literal_tail() != 0 {
-                        return -3
+                if self.token_value == 46 {
+                    if self.expect_identifier() != 0 {
+                        return -2
                     }
                 } else {
-                    self.push_token()
-                    return 0
+                    if self.token_value == 123 {
+                        if self.parse_struct_literal_tail() != 0 {
+                            return -3
+                        }
+                    } else {
+                        self.push_token()
+                        return 0
+                    }
                 }
             }
         }
@@ -2576,6 +2685,8 @@ function parse_import_declaration(self: Lexer) -> i32 {
 }
 
 function parse_from_import_declaration(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
     if self.expect_keyword(keyword_from()) != 0 {
         return -1
     }
@@ -2588,24 +2699,35 @@ function parse_from_import_declaration(self: Lexer) -> i32 {
         return -3
     }
 
-    if self.expect_identifier() != 0 {
-        return -4
-    }
+    loop {
+        if self.expect_identifier() != 0 {
+            return -4
+        }
 
-    if self.next_token() == token_keyword() {
-        if self.token_value == keyword_as() {
-            if self.expect_identifier() != 0 {
-                return -5
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_as() {
+                if self.expect_identifier() != 0 {
+                    return -5
+                }
+
+                kind = self.next_token()
+            } else {
+                self.push_token()
+                return 0
             }
+        }
+
+        if kind != token_symbol() {
+            self.push_token()
             return 0
         }
 
-        self.push_token()
-        return 0
+        if self.token_value != 44 {
+            self.push_token()
+            return 0
+        }
     }
-
-    self.push_token()
-    return 0
 }
 
 function parse_top_level() -> i32 {
@@ -3036,6 +3158,18 @@ struct CompileState {
     var_type_13: i32
     var_type_14: i32
     var_type_15: i32
+    print_alias_hash: i32
+    len_alias_hash: i32
+    import_call_alias_hash_0: i32
+    import_call_alias_hash_1: i32
+    import_call_alias_hash_2: i32
+    import_call_alias_hash_3: i32
+    import_call_target_hash_0: i32
+    import_call_target_hash_1: i32
+    import_call_target_hash_2: i32
+    import_call_target_hash_3: i32
+    current_return_type_hash: i32
+    last_expression_type_hash: i32
 }
 
 function new_compile_state() -> CompileState {
@@ -3172,10 +3306,126 @@ function new_compile_state() -> CompileState {
         var_type_12: 0,
         var_type_13: 0,
         var_type_14: 0,
-        var_type_15: 0
+        var_type_15: 0,
+        print_alias_hash: 0,
+        len_alias_hash: 0,
+        import_call_alias_hash_0: 0,
+        import_call_alias_hash_1: 0,
+        import_call_alias_hash_2: 0,
+        import_call_alias_hash_3: 0,
+        import_call_target_hash_0: 0,
+        import_call_target_hash_1: 0,
+        import_call_target_hash_2: 0,
+        import_call_target_hash_3: 0,
+        current_return_type_hash: 0,
+        last_expression_type_hash: 0
     }
 
     return state
+}
+
+function is_print_name(self: CompileState, hash: i32) -> bool {
+    if hash == identifier_hash_print() {
+        return true
+    }
+
+    if self.print_alias_hash == hash {
+        return true
+    }
+
+    return false
+}
+
+function is_len_name(self: CompileState, hash: i32) -> bool {
+    if hash == identifier_hash_len() {
+        return true
+    }
+
+    if self.len_alias_hash == hash {
+        return true
+    }
+
+    return false
+}
+
+function record_import_call_alias(self: CompileState, alias_hash: i32, target_hash: i32) -> i32 {
+    if alias_hash == target_hash {
+        return 0
+    }
+
+    if target_hash == identifier_hash_print() {
+        return 0
+    }
+
+    if target_hash == identifier_hash_len() {
+        return 0
+    }
+
+    if self.import_call_alias_hash_0 == alias_hash {
+        self.import_call_target_hash_0 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_1 == alias_hash {
+        self.import_call_target_hash_1 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_2 == alias_hash {
+        self.import_call_target_hash_2 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_3 == alias_hash {
+        self.import_call_target_hash_3 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_0 == 0 {
+        self.import_call_alias_hash_0 = alias_hash
+        self.import_call_target_hash_0 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_1 == 0 {
+        self.import_call_alias_hash_1 = alias_hash
+        self.import_call_target_hash_1 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_2 == 0 {
+        self.import_call_alias_hash_2 = alias_hash
+        self.import_call_target_hash_2 = target_hash
+        return 0
+    }
+
+    if self.import_call_alias_hash_3 == 0 {
+        self.import_call_alias_hash_3 = alias_hash
+        self.import_call_target_hash_3 = target_hash
+        return 0
+    }
+
+    return -1
+}
+
+function resolve_import_call_hash(self: CompileState, hash: i32) -> i32 {
+    if self.import_call_alias_hash_0 == hash {
+        return self.import_call_target_hash_0
+    }
+
+    if self.import_call_alias_hash_1 == hash {
+        return self.import_call_target_hash_1
+    }
+
+    if self.import_call_alias_hash_2 == hash {
+        return self.import_call_target_hash_2
+    }
+
+    if self.import_call_alias_hash_3 == hash {
+        return self.import_call_target_hash_3
+    }
+
+    return hash
 }
 
 function allocate_label(self: CompileState) -> i32 {
@@ -4595,6 +4845,27 @@ function emit_declare_struct_storage(function_hash: i32, variable_hash: i32, fie
     emitc(10)
 }
 
+function emit_declare_array_storage(function_hash: i32, variable_hash: i32, length: i32) {
+    variable storage_length: i32 = length
+
+    if storage_length < 1 {
+        storage_length = 1
+    }
+
+    emit_variable_length_name(function_hash, variable_hash)
+    emits(" equ ")
+    emiti(length)
+    emitc(10)
+    emits("section .bss")
+    emitc(10)
+    emit_variable_name(function_hash, variable_hash)
+    emits(": resq ")
+    emiti(storage_length)
+    emitc(10)
+    emits("section .text")
+    emitc(10)
+}
+
 function emit_initialize_struct_storage_pointer(function_hash: i32, variable_hash: i32) {
     emits("    lea rax, [")
     emit_struct_storage_name(function_hash, variable_hash)
@@ -4619,6 +4890,28 @@ function emit_store_struct_field(function_hash: i32, variable_hash: i32, offset:
     emits("    mov [rbx + ")
     emiti(offset)
     emits("], rax")
+    emitc(10)
+}
+
+function emit_store_array_element(function_hash: i32, variable_hash: i32, index: i32) {
+    emits("    mov [")
+    emit_variable_name(function_hash, variable_hash)
+    if index > 0 {
+        emits(" + ")
+        emiti(index * 8)
+    }
+    emits("], rax")
+    emitc(10)
+}
+
+function emit_load_array_element(function_hash: i32, variable_hash: i32, index: i32) {
+    emits("    mov rax, [")
+    emit_variable_name(function_hash, variable_hash)
+    if index > 0 {
+        emits(" + ")
+        emiti(index * 8)
+    }
+    emits("]")
     emitc(10)
 }
 
@@ -4915,6 +5208,43 @@ function parse_type_name_hash(self: Lexer) -> i32 {
     }
 }
 
+function parse_optional_return_type_hash(self: Lexer) -> i32 {
+    variable kind: i32 = self.next_token()
+
+    if kind != token_symbol() {
+        self.push_token()
+        return 0
+    }
+
+    if self.token_value != 45 {
+        self.push_token()
+        return 0
+    }
+
+    if self.expect_symbol(62) != 0 {
+        return -1
+    }
+
+    return self.parse_type_name_hash()
+}
+
+function check_return_expression_type(state: CompileState) -> i32 {
+    if state.current_return_type_hash == 0 {
+        return 0
+    }
+
+    if state.last_expression_type_hash == 0 {
+        return 0
+    }
+
+    if state.current_return_type_hash == state.last_expression_type_hash {
+        return 0
+    }
+
+    emit_return_type_mismatch(state.current_return_type_hash, state.last_expression_type_hash)
+    return -1
+}
+
 function parse_member_name_hash(self: Lexer) -> i32 {
     variable kind: i32 = self.next_token()
 
@@ -4982,22 +5312,64 @@ function compile_struct_literal_into_variable(self: Lexer, state: CompileState, 
     }
 }
 
+function compile_array_literal_into_variable(self: Lexer, state: CompileState, function_hash: i32, variable_hash: i32) -> i32 {
+    variable kind: i32 = self.next_token()
+    variable element_index: i32 = 0
+
+    if kind == token_symbol() {
+        if self.token_value == 93 {
+            emit_declare_array_storage(function_hash, variable_hash, 0)
+            return 0
+        }
+    }
+
+    self.push_token()
+
+    loop {
+        if self.compile_expression(state, function_hash) != 0 {
+            return -2
+        }
+
+        emit_store_array_element(function_hash, variable_hash, element_index)
+        element_index += 1
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -3
+        }
+
+        if self.token_value == 93 {
+            break
+        }
+
+        if self.token_value != 44 {
+            return -4
+        }
+    }
+
+    emit_declare_array_storage(function_hash, variable_hash, element_index)
+    return 0
+}
+
 function compile_factor(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
     variable kind: i32 = self.next_token()
 
     if kind == token_number() {
         emit_load_number(self.token_value)
+        state.last_expression_type_hash = identifier_hash_i32()
         return 0
     }
 
     if kind == token_keyword() {
         if self.token_value == keyword_true() {
             emit_load_number(1)
+            state.last_expression_type_hash = identifier_hash_bool()
             return 0
         }
 
         if self.token_value == keyword_false() {
             emit_load_number(0)
+            state.last_expression_type_hash = identifier_hash_bool()
             return 0
         }
     }
@@ -5010,6 +5382,7 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
 
             emits("    neg rax")
             emitc(10)
+            state.last_expression_type_hash = identifier_hash_i32()
             return 0
         }
 
@@ -5033,7 +5406,7 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
         variable field_offset: i32 = 0
         variable arg_count: i32 = 0
         variable call_hash: i32 = 0
-
+        variable arg_hash: i32 = 0
         kind = self.next_token()
         if kind == token_symbol() {
             if self.token_value == 58 {
@@ -5049,6 +5422,7 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
                 if self.compile_enum_variant_expression(state, name_hash, member_hash, function_hash) != 0 {
                     return -6
                 }
+                state.last_expression_type_hash = 0
                 return 0
             }
 
@@ -5083,6 +5457,7 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
 
                         call_hash = state.pop_call_frame()
                         emit_call_function(call_hash)
+                        state.last_expression_type_hash = 0
                         return 0
                     }
                 }
@@ -5098,27 +5473,78 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
                 }
 
                 emit_load_struct_field(function_hash, name_hash, field_offset)
+                state.last_expression_type_hash = 0
+                return 0
+            }
+
+            if self.token_value == 91 {
+                if type_hash != identifier_hash_array_i32() {
+                    return -20
+                }
+
+                emits("    lea rax, [")
+                emit_variable_name(function_hash, name_hash)
+                emits("]")
+                emitc(10)
+                emit_push_rax()
+
+                if self.compile_expression(state, function_hash) != 0 {
+                    return -21
+                }
+
+                if self.expect_symbol(93) != 0 {
+                    return -22
+                }
+
+                emit_pop_rbx()
+                emits("    mov rax, [rbx + rax*8]")
+                emitc(10)
+                state.last_expression_type_hash = identifier_hash_i32()
                 return 0
             }
 
             if self.token_value == 40 {
-                if state.push_call_frame(name_hash) != 0 {
-                    return -18
+                if state.is_len_name(name_hash) == true {
+                    if self.expect_identifier() != 0 {
+                        return -23
+                    }
+
+                    arg_hash = self.token_hash
+                    if state.lookup_variable_type(function_hash, arg_hash) != identifier_hash_array_i32() {
+                        return -24
+                    }
+
+                    if self.expect_symbol(41) != 0 {
+                        return -25
+                    }
+
+                    emits("    mov rax, ")
+                    emit_variable_length_name(function_hash, arg_hash)
+                    emitc(10)
+                    state.last_expression_type_hash = identifier_hash_i32()
+                    return 0
+                }
+
+                call_hash = state.resolve_import_call_hash(name_hash)
+                if state.push_call_frame(call_hash) != 0 {
+                    return -26
                 }
 
                 arg_count = self.compile_call_arguments(state, function_hash)
                 if arg_count < 0 {
-                    return -19
+                    return -27
                 }
 
                 call_hash = state.pop_call_frame()
                 emit_call_function(call_hash)
+                state.last_expression_type_hash = 0
                 return 0
             }
         }
 
         self.push_token()
         emit_load_variable(function_hash, name_hash)
+        state.last_expression_type_hash = type_hash
         return 0
     }
 
@@ -5240,6 +5666,7 @@ function compile_term(self: Lexer, state: CompileState, function_hash: i32) -> i
         emit_pop_rbx()
         emits("    imul rax, rbx")
         emitc(10)
+        state.last_expression_type_hash = identifier_hash_i32()
     }
 }
 
@@ -5285,6 +5712,7 @@ function compile_expression(self: Lexer, state: CompileState, function_hash: i32
             emits("    mov rax, rbx")
             emitc(10)
         }
+        state.last_expression_type_hash = identifier_hash_i32()
     }
 }
 
@@ -5348,6 +5776,26 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
         }
     }
 
+    kind = self.next_token()
+    if kind == token_symbol() {
+        if self.token_value == 91 {
+            if type_hash != 0 {
+                return -7
+            }
+
+            if state.register_variable_type(function_hash, variable_hash, identifier_hash_array_i32()) != 0 {
+                return -8
+            }
+
+            if self.compile_array_literal_into_variable(state, function_hash, variable_hash) != 0 {
+                return -9
+            }
+
+            return 0
+        }
+    }
+    self.push_token()
+
     emit_declare_variable(function_hash, variable_hash)
 
     field_count = state.type_field_count(type_hash)
@@ -5358,11 +5806,11 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
         if kind == token_identifier() {
             if self.token_hash == type_hash {
                 if self.expect_symbol(123) != 0 {
-                    return -7
+                    return -10
                 }
 
                 if self.compile_struct_literal_into_variable(state, function_hash, variable_hash, type_hash) != 0 {
-                    return -8
+                    return -11
                 }
 
                 return 0
@@ -5377,7 +5825,7 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
 
         if kind == token_string() {
             if self.emit_load_current_string_literal(state) != 0 {
-                return -9
+                return -12
             }
 
             emit_store_variable(function_hash, variable_hash)
@@ -5397,7 +5845,7 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
     }
 
     if self.compile_expression(state, function_hash) != 0 {
-        return -10
+        return -13
     }
 
     emit_store_variable(function_hash, variable_hash)
@@ -5410,6 +5858,7 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     variable member_hash: i32 = 0
     variable field_offset: i32 = 0
     variable arg_count: i32 = 0
+    variable call_hash: i32 = 0
     variable string_hash: i32 = 0
 
     if kind != token_symbol() {
@@ -5417,7 +5866,7 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     }
 
     if self.token_value == 40 {
-        if name_hash == identifier_hash_print() {
+        if state.is_print_name(name_hash) == true {
             kind = self.next_token()
             if kind == token_symbol() {
                 if self.token_value == 41 {
@@ -5465,7 +5914,8 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
             return 0
         }
 
-        if state.push_call_frame(name_hash) != 0 {
+        call_hash = state.resolve_import_call_hash(name_hash)
+        if state.push_call_frame(call_hash) != 0 {
             return -8
         }
 
@@ -5587,6 +6037,116 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
         return -21
     }
 
+    if self.token_value == 91 {
+        variable op_value: i32 = 0
+
+        if type_hash != identifier_hash_array_i32() {
+            return -30
+        }
+
+        emits("    lea rax, [")
+        emit_variable_name(function_hash, name_hash)
+        emits("]")
+        emitc(10)
+        emit_push_rax()
+
+        if self.compile_expression(state, function_hash) != 0 {
+            return -31
+        }
+
+        if self.expect_symbol(93) != 0 {
+            return -32
+        }
+
+        emit_push_rax()
+
+        kind = self.next_token()
+        if kind != token_symbol() {
+            return -33
+        }
+
+        op_value = self.token_value
+
+        if op_value == 43 {
+            if self.expect_symbol(61) != 0 {
+                return -34
+            }
+
+            emit_pop_rbx()
+            emits("    pop rcx")
+            emitc(10)
+            emits("    mov rax, [rcx + rbx*8]")
+            emitc(10)
+            emits("    push rcx")
+            emitc(10)
+            emits("    push rbx")
+            emitc(10)
+            emit_push_rax()
+
+            if self.compile_expression(state, function_hash) != 0 {
+                return -35
+            }
+
+            emit_pop_rbx()
+            emits("    add rax, rbx")
+            emitc(10)
+            emit_pop_rbx()
+            emits("    pop rcx")
+            emitc(10)
+            emits("    mov [rcx + rbx*8], rax")
+            emitc(10)
+            return 0
+        }
+
+        if op_value == 45 {
+            if self.expect_symbol(61) != 0 {
+                return -36
+            }
+
+            emit_pop_rbx()
+            emits("    pop rcx")
+            emitc(10)
+            emits("    mov rax, [rcx + rbx*8]")
+            emitc(10)
+            emits("    push rcx")
+            emitc(10)
+            emits("    push rbx")
+            emitc(10)
+            emit_push_rax()
+
+            if self.compile_expression(state, function_hash) != 0 {
+                return -37
+            }
+
+            emit_pop_rbx()
+            emits("    sub rbx, rax")
+            emitc(10)
+            emits("    mov rax, rbx")
+            emitc(10)
+            emit_pop_rbx()
+            emits("    pop rcx")
+            emitc(10)
+            emits("    mov [rcx + rbx*8], rax")
+            emitc(10)
+            return 0
+        }
+
+        if op_value != 61 {
+            return -38
+        }
+
+        if self.compile_expression(state, function_hash) != 0 {
+            return -39
+        }
+
+        emit_pop_rbx()
+        emits("    pop rcx")
+        emitc(10)
+        emits("    mov [rcx + rbx*8], rax")
+        emitc(10)
+        return 0
+    }
+
     if self.token_value == 61 {
         kind = self.next_token()
 
@@ -5676,7 +6236,7 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
         return 0
     }
 
-    return -29
+    return -35
 }
 
 function compile_if_tail(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
@@ -6065,6 +6625,10 @@ function compile_statement(self: Lexer, state: CompileState, function_hash: i32)
                 return -1
             }
 
+            if check_return_expression_type(state) != 0 {
+                return -16
+            }
+
             emit_return_rax()
             return 0
         }
@@ -6203,6 +6767,7 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
     variable parameter_hash: i32 = 0
     variable parameter_type_hash: i32 = 0
     variable parameter_field_count: i32 = 0
+    variable return_type_hash: i32 = 0
 
     emit_function_label(function_hash)
 
@@ -6282,9 +6847,11 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
         }
     }
 
-    if self.parse_optional_return_type() != 0 {
+    return_type_hash = self.parse_optional_return_type_hash()
+    if return_type_hash < 0 {
         return -10
     }
+    state.current_return_type_hash = return_type_hash
 
     kind = self.next_token()
     if kind != token_symbol() {
@@ -6296,6 +6863,7 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
             return -12
         }
 
+        state.current_return_type_hash = 0
         emits("    mov rax, 0")
         emitc(10)
         emit_return_rax()
@@ -6311,10 +6879,16 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
             return -14
         }
 
+        if check_return_expression_type(state) != 0 {
+            return -16
+        }
+
+        state.current_return_type_hash = 0
         emit_return_rax()
         return 0
     }
 
+    state.current_return_type_hash = 0
     return -15
 }
 
@@ -6623,7 +7197,168 @@ function compile_implement_declaration_tail(self: Lexer, state: CompileState) ->
     }
 }
 
-function compile_skip_preamble(self: Lexer) -> i32 {
+function compile_import_member_list_semantic(self: Lexer, state: CompileState) -> i32 {
+    variable kind: i32 = self.next_token()
+    variable member_hash: i32 = 0
+    variable alias_hash: i32 = 0
+
+    if kind == token_symbol() {
+        if self.token_value == 125 {
+            return 0
+        }
+
+        self.push_token()
+    } else {
+        self.push_token()
+    }
+
+    loop {
+        if self.expect_identifier() != 0 {
+            return -1
+        }
+        member_hash = self.token_hash
+        alias_hash = member_hash
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_as() {
+                if self.expect_identifier() != 0 {
+                    return -2
+                }
+
+                alias_hash = self.token_hash
+                kind = self.next_token()
+            } else {
+                return -3
+            }
+        }
+
+        if member_hash == identifier_hash_print() {
+            state.print_alias_hash = alias_hash
+        }
+
+        if member_hash == identifier_hash_len() {
+            state.len_alias_hash = alias_hash
+        }
+
+        if state.record_import_call_alias(alias_hash, member_hash) != 0 {
+            return -6
+        }
+
+        if kind != token_symbol() {
+            return -4
+        }
+
+        if self.token_value == 125 {
+            return 0
+        }
+
+        if self.token_value != 44 {
+            return -5
+        }
+    }
+}
+
+function compile_import_declaration_semantic(self: Lexer, state: CompileState) -> i32 {
+    variable kind: i32 = 0
+
+    if self.expect_keyword(keyword_import()) != 0 {
+        return -1
+    }
+
+    if self.expect_identifier() != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 46 {
+            self.push_token()
+            return 0
+        }
+
+        kind = self.next_token()
+        if kind == token_symbol() {
+            if self.token_value == 123 {
+                return self.compile_import_member_list_semantic(state)
+            }
+        }
+
+        if kind != token_identifier() {
+            return -3
+        }
+    }
+}
+
+function compile_from_import_declaration_semantic(self: Lexer, state: CompileState) -> i32 {
+    variable member_hash: i32 = 0
+    variable alias_hash: i32 = 0
+    variable kind: i32 = 0
+
+    if self.expect_keyword(keyword_from()) != 0 {
+        return -1
+    }
+
+    if self.parse_dotted_name_tail() != 0 {
+        return -2
+    }
+
+    if self.expect_keyword(keyword_import()) != 0 {
+        return -3
+    }
+
+    loop {
+        if self.expect_identifier() != 0 {
+            return -4
+        }
+        member_hash = self.token_hash
+        alias_hash = member_hash
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_as() {
+                if self.expect_identifier() != 0 {
+                    return -5
+                }
+
+                alias_hash = self.token_hash
+                kind = self.next_token()
+            } else {
+                self.push_token()
+                return 0
+            }
+        }
+
+        if member_hash == identifier_hash_print() {
+            state.print_alias_hash = alias_hash
+        }
+
+        if member_hash == identifier_hash_len() {
+            state.len_alias_hash = alias_hash
+        }
+
+        if state.record_import_call_alias(alias_hash, member_hash) != 0 {
+            return -6
+        }
+
+        if kind != token_symbol() {
+            self.push_token()
+            return 0
+        }
+
+        if self.token_value != 44 {
+            self.push_token()
+            return 0
+        }
+    }
+}
+
+function compile_skip_preamble(self: Lexer, state: CompileState) -> i32 {
     variable kind: i32 = self.next_token()
 
     loop {
@@ -6656,7 +7391,7 @@ function compile_skip_preamble(self: Lexer) -> i32 {
 
         if self.token_value == keyword_import() {
             self.push_token()
-            if self.parse_import_declaration() != 0 {
+            if self.compile_import_declaration_semantic(state) != 0 {
                 return -3
             }
 
@@ -6666,7 +7401,7 @@ function compile_skip_preamble(self: Lexer) -> i32 {
 
         if self.token_value == keyword_from() {
             self.push_token()
-            if self.parse_from_import_declaration() != 0 {
+            if self.compile_from_import_declaration_semantic(state) != 0 {
                 return -4
             }
 
@@ -6677,6 +7412,44 @@ function compile_skip_preamble(self: Lexer) -> i32 {
         self.push_token()
         return 0
     }
+}
+
+function new_lexer() -> Lexer {
+    value lexer: Lexer = Lexer {
+        index: 0,
+        line: 1,
+        peeked_char: 0,
+        has_peeked: false,
+        token_kind: token_end(),
+        token_value: 0,
+        token_hash: 0,
+        token_line: 1,
+        token_length: 0,
+        string_char_0: 0,
+        string_char_1: 0,
+        string_char_2: 0,
+        string_char_3: 0,
+        string_char_4: 0,
+        string_char_5: 0,
+        string_char_6: 0,
+        string_char_7: 0,
+        string_char_8: 0,
+        string_char_9: 0,
+        string_char_10: 0,
+        string_char_11: 0,
+        string_char_12: 0,
+        string_char_13: 0,
+        string_char_14: 0,
+        string_char_15: 0,
+        pushed_kind: token_end(),
+        pushed_value: 0,
+        pushed_hash: 0,
+        pushed_line: 1,
+        pushed_length: 0,
+        has_pushed: false
+    }
+
+    return lexer
 }
 
 function compile_translation_unit() -> i32 {
@@ -6713,14 +7486,159 @@ function compile_translation_unit() -> i32 {
         pushed_length: 0,
         has_pushed: false
     }
-    variable state: CompileState = new_compile_state()
-
-    if lexer.compile_skip_preamble() != 0 {
+    variable state: CompileState = CompileState {
+        next_label: 1,
+        current_loop_start: -1,
+        current_loop_continue: -1,
+        current_loop_end: -1,
+        call_depth: 0,
+        call_hash_0: 0,
+        call_hash_1: 0,
+        call_hash_2: 0,
+        call_hash_3: 0,
+        call_arg_count_0: 0,
+        call_arg_count_1: 0,
+        call_arg_count_2: 0,
+        call_arg_count_3: 0,
+        type_hash_0: 0,
+        type_hash_1: 0,
+        type_hash_2: 0,
+        type_hash_3: 0,
+        type_hash_4: 0,
+        type_hash_5: 0,
+        type_hash_6: 0,
+        type_hash_7: 0,
+        type_field_0_0: 0,
+        type_field_0_1: 0,
+        type_field_0_2: 0,
+        type_field_0_3: 0,
+        type_field_1_0: 0,
+        type_field_1_1: 0,
+        type_field_1_2: 0,
+        type_field_1_3: 0,
+        type_field_2_0: 0,
+        type_field_2_1: 0,
+        type_field_2_2: 0,
+        type_field_2_3: 0,
+        type_field_3_0: 0,
+        type_field_3_1: 0,
+        type_field_3_2: 0,
+        type_field_3_3: 0,
+        type_field_4_0: 0,
+        type_field_4_1: 0,
+        type_field_4_2: 0,
+        type_field_4_3: 0,
+        type_field_5_0: 0,
+        type_field_5_1: 0,
+        type_field_5_2: 0,
+        type_field_5_3: 0,
+        type_field_6_0: 0,
+        type_field_6_1: 0,
+        type_field_6_2: 0,
+        type_field_6_3: 0,
+        type_field_7_0: 0,
+        type_field_7_1: 0,
+        type_field_7_2: 0,
+        type_field_7_3: 0,
+        enum_payload_0_0: 0,
+        enum_payload_0_1: 0,
+        enum_payload_0_2: 0,
+        enum_payload_0_3: 0,
+        enum_payload_1_0: 0,
+        enum_payload_1_1: 0,
+        enum_payload_1_2: 0,
+        enum_payload_1_3: 0,
+        enum_payload_2_0: 0,
+        enum_payload_2_1: 0,
+        enum_payload_2_2: 0,
+        enum_payload_2_3: 0,
+        enum_payload_3_0: 0,
+        enum_payload_3_1: 0,
+        enum_payload_3_2: 0,
+        enum_payload_3_3: 0,
+        enum_payload_4_0: 0,
+        enum_payload_4_1: 0,
+        enum_payload_4_2: 0,
+        enum_payload_4_3: 0,
+        enum_payload_5_0: 0,
+        enum_payload_5_1: 0,
+        enum_payload_5_2: 0,
+        enum_payload_5_3: 0,
+        enum_payload_6_0: 0,
+        enum_payload_6_1: 0,
+        enum_payload_6_2: 0,
+        enum_payload_6_3: 0,
+        enum_payload_7_0: 0,
+        enum_payload_7_1: 0,
+        enum_payload_7_2: 0,
+        enum_payload_7_3: 0,
+        var_owner_0: 0,
+        var_owner_1: 0,
+        var_owner_2: 0,
+        var_owner_3: 0,
+        var_owner_4: 0,
+        var_owner_5: 0,
+        var_owner_6: 0,
+        var_owner_7: 0,
+        var_owner_8: 0,
+        var_owner_9: 0,
+        var_owner_10: 0,
+        var_owner_11: 0,
+        var_owner_12: 0,
+        var_owner_13: 0,
+        var_owner_14: 0,
+        var_owner_15: 0,
+        var_hash_0: 0,
+        var_hash_1: 0,
+        var_hash_2: 0,
+        var_hash_3: 0,
+        var_hash_4: 0,
+        var_hash_5: 0,
+        var_hash_6: 0,
+        var_hash_7: 0,
+        var_hash_8: 0,
+        var_hash_9: 0,
+        var_hash_10: 0,
+        var_hash_11: 0,
+        var_hash_12: 0,
+        var_hash_13: 0,
+        var_hash_14: 0,
+        var_hash_15: 0,
+        var_type_0: 0,
+        var_type_1: 0,
+        var_type_2: 0,
+        var_type_3: 0,
+        var_type_4: 0,
+        var_type_5: 0,
+        var_type_6: 0,
+        var_type_7: 0,
+        var_type_8: 0,
+        var_type_9: 0,
+        var_type_10: 0,
+        var_type_11: 0,
+        var_type_12: 0,
+        var_type_13: 0,
+        var_type_14: 0,
+        var_type_15: 0,
+        print_alias_hash: 0,
+        len_alias_hash: 0,
+        import_call_alias_hash_0: 0,
+        import_call_alias_hash_1: 0,
+        import_call_alias_hash_2: 0,
+        import_call_alias_hash_3: 0,
+        import_call_target_hash_0: 0,
+        import_call_target_hash_1: 0,
+        import_call_target_hash_2: 0,
+        import_call_target_hash_3: 0,
+        current_return_type_hash: 0,
+        last_expression_type_hash: 0
+    }
+    if compile_skip_preamble(lexer, state) != 0 {
         return 1
     }
 
     loop {
-        variable kind: i32 = lexer.next_token()
+        variable kind: i32 = next_token(lexer)
 
         if kind == token_end() {
             break
@@ -6728,8 +7646,8 @@ function compile_translation_unit() -> i32 {
 
         if kind == token_symbol() {
             if lexer.token_value == 64 {
-                lexer.push_token()
-                if lexer.parse_annotation() != 0 {
+                push_token(lexer)
+                if parse_annotation(lexer) != 0 {
                     return 2
                 }
                 continue
@@ -6741,86 +7659,86 @@ function compile_translation_unit() -> i32 {
         }
 
         if lexer.token_value == keyword_function() {
-            if lexer.compile_function_definition_tail(state, 0) != 0 {
+            if compile_function_definition_tail(lexer, state, 0) != 0 {
                 return 4
             }
             continue
         }
 
         if lexer.token_value == keyword_fn() {
-            if lexer.compile_function_definition_tail(state, 0) != 0 {
+            if compile_function_definition_tail(lexer, state, 0) != 0 {
                 return 5
             }
             continue
         }
 
         if lexer.token_value == keyword_module() {
-            lexer.push_token()
-            if lexer.parse_module_declaration() != 0 {
+            push_token(lexer)
+            if parse_module_declaration(lexer) != 0 {
                 return 28
             }
             continue
         }
 
         if lexer.token_value == keyword_import() {
-            lexer.push_token()
-            if lexer.parse_import_declaration() != 0 {
+            push_token(lexer)
+            if compile_import_declaration_semantic(lexer, state) != 0 {
                 return 29
             }
             continue
         }
 
         if lexer.token_value == keyword_from() {
-            lexer.push_token()
-            if lexer.parse_from_import_declaration() != 0 {
+            push_token(lexer)
+            if compile_from_import_declaration_semantic(lexer, state) != 0 {
                 return 30
             }
             continue
         }
 
         if lexer.token_value == keyword_public() {
-            kind = lexer.next_token()
+            kind = next_token(lexer)
             if kind != token_keyword() {
                 return 6
             }
 
             if lexer.token_value == keyword_function() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 7
                 }
                 continue
             }
 
             if lexer.token_value == keyword_fn() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 8
                 }
                 continue
             }
 
             if lexer.token_value == keyword_struct() {
-                if lexer.compile_struct_declaration_tail(state) != 0 {
+                if compile_struct_declaration_tail(lexer, state) != 0 {
                     return 20
                 }
                 continue
             }
 
             if lexer.token_value == keyword_class() {
-                if lexer.compile_class_declaration_tail(state) != 0 {
+                if compile_class_declaration_tail(lexer, state) != 0 {
                     return 21
                 }
                 continue
             }
 
             if lexer.token_value == keyword_enum() {
-                if lexer.compile_enum_declaration_tail(state) != 0 {
+                if compile_enum_declaration_tail(lexer, state) != 0 {
                     return 24
                 }
                 continue
             }
 
             if lexer.token_value == keyword_interface() {
-                if lexer.parse_interface_declaration_tail() != 0 {
+                if parse_interface_declaration_tail(lexer) != 0 {
                     return 25
                 }
                 continue
@@ -6830,48 +7748,48 @@ function compile_translation_unit() -> i32 {
         }
 
         if lexer.token_value == keyword_private() {
-            kind = lexer.next_token()
+            kind = next_token(lexer)
             if kind != token_keyword() {
                 return 31
             }
 
             if lexer.token_value == keyword_function() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 32
                 }
                 continue
             }
 
             if lexer.token_value == keyword_fn() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 33
                 }
                 continue
             }
 
             if lexer.token_value == keyword_struct() {
-                if lexer.compile_struct_declaration_tail(state) != 0 {
+                if compile_struct_declaration_tail(lexer, state) != 0 {
                     return 34
                 }
                 continue
             }
 
             if lexer.token_value == keyword_class() {
-                if lexer.compile_class_declaration_tail(state) != 0 {
+                if compile_class_declaration_tail(lexer, state) != 0 {
                     return 35
                 }
                 continue
             }
 
             if lexer.token_value == keyword_enum() {
-                if lexer.compile_enum_declaration_tail(state) != 0 {
+                if compile_enum_declaration_tail(lexer, state) != 0 {
                     return 36
                 }
                 continue
             }
 
             if lexer.token_value == keyword_interface() {
-                if lexer.parse_interface_declaration_tail() != 0 {
+                if parse_interface_declaration_tail(lexer) != 0 {
                     return 37
                 }
                 continue
@@ -6881,48 +7799,48 @@ function compile_translation_unit() -> i32 {
         }
 
         if lexer.token_value == keyword_pub() {
-            kind = lexer.next_token()
+            kind = next_token(lexer)
             if kind != token_keyword() {
                 return 10
             }
 
             if lexer.token_value == keyword_function() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 11
                 }
                 continue
             }
 
             if lexer.token_value == keyword_fn() {
-                if lexer.compile_function_definition_tail(state, 0) != 0 {
+                if compile_function_definition_tail(lexer, state, 0) != 0 {
                     return 12
                 }
                 continue
             }
 
             if lexer.token_value == keyword_struct() {
-                if lexer.compile_struct_declaration_tail(state) != 0 {
+                if compile_struct_declaration_tail(lexer, state) != 0 {
                     return 22
                 }
                 continue
             }
 
             if lexer.token_value == keyword_class() {
-                if lexer.compile_class_declaration_tail(state) != 0 {
+                if compile_class_declaration_tail(lexer, state) != 0 {
                     return 23
                 }
                 continue
             }
 
             if lexer.token_value == keyword_enum() {
-                if lexer.compile_enum_declaration_tail(state) != 0 {
+                if compile_enum_declaration_tail(lexer, state) != 0 {
                     return 26
                 }
                 continue
             }
 
             if lexer.token_value == keyword_interface() {
-                if lexer.parse_interface_declaration_tail() != 0 {
+                if parse_interface_declaration_tail(lexer) != 0 {
                     return 27
                 }
                 continue
@@ -6932,35 +7850,35 @@ function compile_translation_unit() -> i32 {
         }
 
         if lexer.token_value == keyword_struct() {
-            if lexer.compile_struct_declaration_tail(state) != 0 {
+            if compile_struct_declaration_tail(lexer, state) != 0 {
                 return 14
             }
             continue
         }
 
         if lexer.token_value == keyword_enum() {
-            if lexer.compile_enum_declaration_tail(state) != 0 {
+            if compile_enum_declaration_tail(lexer, state) != 0 {
                 return 15
             }
             continue
         }
 
         if lexer.token_value == keyword_class() {
-            if lexer.compile_class_declaration_tail(state) != 0 {
+            if compile_class_declaration_tail(lexer, state) != 0 {
                 return 16
             }
             continue
         }
 
         if lexer.token_value == keyword_interface() {
-            if lexer.parse_interface_declaration_tail() != 0 {
+            if parse_interface_declaration_tail(lexer) != 0 {
                 return 17
             }
             continue
         }
 
         if lexer.token_value == keyword_implement() {
-            if lexer.compile_implement_declaration_tail(state) != 0 {
+            if compile_implement_declaration_tail(lexer, state) != 0 {
                 return 18
             }
             continue
@@ -6977,7 +7895,7 @@ function compile_program() -> i32 {
 
     variable status: i32 = compile_translation_unit()
     if status != 0 {
-        return status
+        return 1
     }
 
     emit_program_footer()

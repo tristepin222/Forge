@@ -1,0 +1,11 @@
+module app.main
+
+from app.main import helper as say
+
+function helper() {
+    print(9)
+}
+
+function main() {
+    say()
+}

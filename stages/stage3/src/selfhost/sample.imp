@@ -33,7 +33,7 @@ ensures a + b == a + b
 {
     return a + b
 }
-function is_space(code: i32) -> i32 {
+function is_space(code: i32) -> bool {
     if code == 32 {
         return true
     }
@@ -45,7 +45,7 @@ function is_space(code: i32) -> i32 {
     }
     return false
 }
-function is_digit(code: i32) -> i32 {
+function is_digit(code: i32) -> bool {
     if code < 48 {
         return false
     }
@@ -54,7 +54,7 @@ function is_digit(code: i32) -> i32 {
     }
     return true
 }
-function is_alpha(code: i32) -> i32 {
+function is_alpha(code: i32) -> bool {
     if code == 95 {
         return true
     }

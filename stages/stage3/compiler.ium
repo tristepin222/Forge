@@ -106,12 +106,28 @@ VAR saved_call_param_start_tbl
 VAR saved_call_arg_index_tbl
 VAR import_line
 VAR import_resume_state
+VAR import_print_alias_hash
+VAR import_print_alias_valid
+VAR import_capture_print_alias
+VAR import_len_alias_hash
+VAR import_len_alias_valid
+VAR import_capture_len_alias
+VAR import_stmt_mode
+VAR import_member_zone
+VAR import_func_alias_capture
+VAR import_func_alias_target_hash
+VAR import_func_alias_count
+VAR import_func_alias_hash_tbl
+VAR import_func_alias_target_tbl
 VAR header_emitted
+VAR current_return_type_hash
 VAR expr_target
 VAR expr_end_mode
 VAR expr_pending_add
 VAR expr_mul_pending
 VAR expr_line
+VAR expr_type_hash
+VAR expr_numeric_flag
 VAR expr_group_depth
 VAR expr_group_add_tbl
 VAR expr_group_mul_tbl
@@ -147,11 +163,20 @@ VAR current_struct_index
 VAR current_struct_field_start
 VAR current_struct_field_count
 VAR struct_literal_base_off
+VAR current_array_base_off
+VAR current_array_length
+VAR current_array_index
+VAR array_saved_expr_target
+VAR array_saved_expr_end_mode
+VAR array_saved_expr_pending_add
+VAR array_saved_expr_mul_pending
+VAR array_saved_expr_line
 VAR current_struct_base_off
 VAR current_struct_base_mode
 VAR pending_struct_base_off
 VAR pending_struct_field_mode
 VAR pending_struct_field_off
+VAR pending_array_element_off
 VAR current_field_hash
 VAR current_field_index
 VAR current_field_off
@@ -191,10 +216,10 @@ ALLOC struct_hash_tbl 512
 ALLOC struct_field_start_tbl 512
 ALLOC struct_field_count_tbl 512
 ALLOC struct_field_hash_tbl 2048
-ALLOC func_hash_tbl 512
-ALLOC func_param_count_tbl 512
-ALLOC func_param_start_tbl 512
-ALLOC func_param_slot_tbl 2048
+ALLOC func_hash_tbl 4096
+ALLOC func_param_count_tbl 4096
+ALLOC func_param_start_tbl 4096
+ALLOC func_param_slot_tbl 32768
 ALLOC saved_expr_target_tbl 16
 ALLOC saved_expr_end_mode_tbl 16
 ALLOC saved_expr_pending_add_tbl 16
@@ -211,6 +236,8 @@ ALLOC expr_group_mul_tbl 16
 ALLOC block_kind_tbl 512
 ALLOC block_label_tbl 512
 ALLOC block_aux_tbl 512
+ALLOC import_func_alias_hash_tbl 64
+ALLOC import_func_alias_target_tbl 64
 
 LET tok_ptr token_buf
 LET tok_len 0
@@ -252,7 +279,21 @@ LET active_class_hash 0
 LET active_class_index 0
 LET generic_resume_state 0
 LET skip_resume_state 0
+LET import_print_alias_hash 0
+LET import_print_alias_valid 0
+LET import_capture_print_alias 0
+LET import_len_alias_hash 0
+LET import_len_alias_valid 0
+LET import_capture_len_alias 0
+LET import_stmt_mode 0
+LET import_member_zone 0
+LET import_func_alias_capture 0
+LET import_func_alias_target_hash 0
+LET import_func_alias_count 0
 LET header_emitted 0
+LET current_return_type_hash 0
+LET expr_type_hash 0
+LET expr_numeric_flag 0
 LET expr_group_depth 0
 LET current_struct_base_mode 0
 LET pending_struct_base_off 0
@@ -276,6 +317,15 @@ LET enum_saved_expr_pending_add 0
 LET enum_saved_expr_mul_pending 0
 LET current_enum_tag 0
 LET current_enum_type_hash 0
+LET current_array_base_off 0
+LET current_array_length 0
+LET current_array_index 0
+LET array_saved_expr_target 0
+LET array_saved_expr_end_mode 0
+LET array_saved_expr_pending_add 0
+LET array_saved_expr_mul_pending 0
+LET array_saved_expr_line 0
+LET pending_array_element_off 0
 
 WHILE 1 == 1
     LET emit_requested 0
@@ -361,6 +411,48 @@ WHILE 1 == 1
         END
 
         IF emit_requested == 0
+            IF ch == 92
+                LET lex_state 4
+                LET need_read 1
+            END
+        END
+
+        IF emit_requested == 0
+            IF lex_state == 3
+                IF ch == 0
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "invalid char"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_requested == 0
+            IF lex_state == 3
+                IF ch == 10
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "invalid char"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_requested == 0
+            IF lex_state == 3
+                POKE tok_ptr ch
+                ADD tok_ptr 8
+                ADD tok_len 1
+                LET need_read 1
+            END
+        END
+    END
+
+    IF need_read == 0
+        IF lex_state == 4
             IF ch == 0
                 WRITE_STR "parse error"
                 WRITE_CHAR 10
@@ -368,9 +460,7 @@ WHILE 1 == 1
                 WRITE_CHAR 10
                 EXIT
             END
-        END
 
-        IF emit_requested == 0
             IF ch == 10
                 WRITE_STR "parse error"
                 WRITE_CHAR 10
@@ -378,12 +468,42 @@ WHILE 1 == 1
                 WRITE_CHAR 10
                 EXIT
             END
-        END
 
-        IF emit_requested == 0
-            POKE tok_ptr ch
+            LET temp ch
+            LET temp2 0
+
+            IF ch == 110
+                LET temp 10
+                LET temp2 1
+            END
+            IF ch == 116
+                LET temp 9
+                LET temp2 1
+            END
+            IF ch == 114
+                LET temp 13
+                LET temp2 1
+            END
+
+            IF ch == 34
+                LET temp2 1
+            END
+
+            IF ch == 92
+                LET temp2 1
+            END
+
+            IF temp2 == 0
+                POKE tok_ptr 92
+                ADD tok_ptr 8
+                ADD tok_len 1
+            END
+
+            POKE tok_ptr temp
             ADD tok_ptr 8
             ADD tok_len 1
+
+            LET lex_state 3
             LET need_read 1
         END
     END
@@ -576,13 +696,25 @@ WHILE 1 == 1
                 END
                 IF tok_hash == 4083200610857
                     LET import_line tok_line
-                    LET import_resume_state 0
+                    LET import_resume_state 141
+                    LET import_capture_print_alias 0
+                    LET import_capture_len_alias 0
+                    LET import_stmt_mode 1
+                    LET import_member_zone 0
+                    LET import_func_alias_capture 0
+                    LET import_func_alias_target_hash 0
                     LET parser_state 54
                     LET emit_handled 1
                 END
                 IF tok_hash == 231276286
                     LET import_line tok_line
-                    LET import_resume_state 0
+                    LET import_resume_state 141
+                    LET import_capture_print_alias 0
+                    LET import_capture_len_alias 0
+                    LET import_stmt_mode 2
+                    LET import_member_zone 0
+                    LET import_func_alias_capture 0
+                    LET import_func_alias_target_hash 0
                     LET parser_state 54
                     LET emit_handled 1
                 END
@@ -659,13 +791,25 @@ WHILE 1 == 1
                     IF tok_type == 1
                         IF tok_hash == 4083200610857
                             LET import_line tok_line
-                            LET import_resume_state 0
+                            LET import_resume_state 141
+                            LET import_capture_print_alias 0
+                            LET import_capture_len_alias 0
+                            LET import_stmt_mode 1
+                            LET import_member_zone 0
+                            LET import_func_alias_capture 0
+                            LET import_func_alias_target_hash 0
                             LET parser_state 54
                             LET emit_handled 1
                         END
                         IF tok_hash == 231276286
                             LET import_line tok_line
-                            LET import_resume_state 0
+                            LET import_resume_state 141
+                            LET import_capture_print_alias 0
+                            LET import_capture_len_alias 0
+                            LET import_stmt_mode 2
+                            LET import_member_zone 0
+                            LET import_func_alias_capture 0
+                            LET import_func_alias_target_hash 0
                             LET parser_state 54
                             LET emit_handled 1
                         END
@@ -1686,6 +1830,7 @@ WHILE 1 == 1
                 IF tok_type == 2
                     PEEK temp token_buf
                     IF temp == 123
+                        LET current_return_type_hash 0
                         LET parser_state 53
                         LET emit_handled 1
                     END
@@ -1699,6 +1844,7 @@ WHILE 1 == 1
 
                     IF emit_handled == 0
                         IF temp == 61
+                            LET current_return_type_hash 0
                             LET parser_state 80
                             LET emit_handled 1
                         END
@@ -1708,14 +1854,17 @@ WHILE 1 == 1
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 35281040359
+                            LET current_return_type_hash 0
                             LET parser_state 130
                             LET emit_handled 1
                         END
                         IF tok_hash == 75989978301105410
+                            LET current_return_type_hash 0
                             LET parser_state 130
                             LET emit_handled 1
                         END
                         IF tok_hash == 514723103921253
+                            LET current_return_type_hash 0
                             LET parser_state 130
                             LET emit_handled 1
                         END
@@ -1739,6 +1888,7 @@ WHILE 1 == 1
         IF emit_handled == 0
             IF parser_state == 50
                 IF tok_type == 1
+                    LET current_return_type_hash tok_hash
                     LET parser_state 51
                     LET emit_handled 1
                 END
@@ -1884,19 +2034,263 @@ _start:
         IF emit_handled == 0
             IF parser_state == 54
                 IF tok_type == 3
-                    LET parser_state 40
+                    LET import_capture_print_alias 0
+                    LET import_capture_len_alias 0
+                    LET import_member_zone 0
+                    LET import_func_alias_capture 0
+                    LET import_func_alias_target_hash 0
+                    LET parser_state import_resume_state
                     LET emit_handled 1
                 END
 
                 IF emit_handled == 0
                     IF tok_line > import_line
-                        LET parser_state 40
+                        LET import_capture_print_alias 0
+                        LET import_capture_len_alias 0
+                        LET import_member_zone 0
+                        LET import_func_alias_capture 0
+                        LET import_func_alias_target_hash 0
+                        LET parser_state import_resume_state
                     END
                 END
 
                 IF emit_handled == 0
                     IF tok_line == import_line
+                        IF tok_type == 1
+                            LET found_flag 0
+
+                            IF import_stmt_mode == 2
+                                IF tok_hash == 4083200610857
+                                    LET import_member_zone 1
+                                    LET import_func_alias_capture 0
+                                    LET import_func_alias_target_hash 0
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF import_capture_print_alias == 2
+                                LET import_print_alias_hash tok_hash
+                                LET import_print_alias_valid 1
+                                LET import_capture_print_alias 0
+                            END
+
+                            IF import_capture_len_alias == 2
+                                LET import_len_alias_hash tok_hash
+                                LET import_len_alias_valid 1
+                                LET import_capture_len_alias 0
+                            END
+
+                            IF import_capture_print_alias == 1
+                                IF tok_hash == 12822
+                                    LET import_capture_print_alias 2
+                                END
+                            END
+
+                            IF import_capture_len_alias == 1
+                                IF tok_hash == 12822
+                                    LET import_capture_len_alias 2
+                                END
+                            END
+
+                            IF import_capture_print_alias == 0
+                                IF tok_hash == 33242089957
+                                    LET import_capture_print_alias 1
+                                END
+                            END
+
+                            IF import_capture_len_alias == 0
+                                IF tok_hash == 1866729
+                                    LET import_capture_len_alias 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                IF import_func_alias_capture == 2
+                                    LET temp2 0
+                                    IF import_func_alias_target_hash == 33242089957
+                                        LET temp2 1
+                                    END
+                                    IF import_func_alias_target_hash == 1866729
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 0
+                                            LET temp 0
+                                            LET found_flag 0
+                                            WHILE temp < import_func_alias_count
+                                                LET temp2 temp
+                                                MUL temp2 8
+                                                ADD temp2 import_func_alias_hash_tbl
+                                                PEEK found_off temp2
+                                                IF found_off == tok_hash
+                                                    LET temp2 temp
+                                                    MUL temp2 8
+                                                    ADD temp2 import_func_alias_target_tbl
+                                                    POKE temp2 import_func_alias_target_hash
+                                                    LET found_flag 1
+                                                    LET temp import_func_alias_count
+                                                END
+                                                ADD temp 1
+                                            END
+
+                                            IF found_flag == 0
+                                                IF import_func_alias_count < 8
+                                                    LET temp import_func_alias_count
+                                                    MUL temp 8
+                                                    ADD temp import_func_alias_hash_tbl
+                                                    POKE temp tok_hash
+
+                                                    LET temp import_func_alias_count
+                                                    MUL temp 8
+                                                    ADD temp import_func_alias_target_tbl
+                                                    POKE temp import_func_alias_target_hash
+
+                                                    ADD import_func_alias_count 1
+                                                END
+                                            END
+                                    END
+
+                                    LET import_func_alias_capture 0
+                                    LET import_func_alias_target_hash 0
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                IF tok_hash == 12822
+                                    IF import_func_alias_capture == 1
+                                        LET import_func_alias_capture 2
+                                        LET found_flag 1
+                                    END
+                                END
+                            END
+
+                            IF found_flag == 0
+                                IF import_member_zone == 1
+                                    LET import_func_alias_target_hash tok_hash
+                                    LET import_func_alias_capture 1
+                                END
+                            END
+                        END
+
+                        IF tok_type == 2
+                            IF import_stmt_mode == 1
+                                IF tok_value == 123
+                                    LET import_member_zone 1
+                                    LET import_func_alias_capture 0
+                                    LET import_func_alias_target_hash 0
+                                END
+                            END
+
+                            IF tok_value == 125
+                                LET import_member_zone 0
+                                LET import_func_alias_capture 0
+                                LET import_func_alias_target_hash 0
+                            END
+
+                            IF tok_value == 44
+                                LET import_func_alias_capture 0
+                                LET import_func_alias_target_hash 0
+                            END
+
+                            IF import_capture_print_alias == 1
+                                LET import_capture_print_alias 0
+                            END
+                            IF import_capture_print_alias == 2
+                                LET import_capture_print_alias 0
+                            END
+                            IF import_capture_len_alias == 1
+                                LET import_capture_len_alias 0
+                            END
+                            IF import_capture_len_alias == 2
+                                LET import_capture_len_alias 0
+                            END
+                        END
+
                         LET emit_handled 1
+                    END
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 141
+                IF tok_type == 2
+                    IF tok_value == 64
+                        LET parser_state 126
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
+                        IF tok_hash == 4083200610857
+                            LET import_line tok_line
+                            LET import_resume_state 141
+                            LET import_capture_print_alias 0
+                            LET import_capture_len_alias 0
+                            LET import_stmt_mode 1
+                            LET import_member_zone 0
+                            LET import_func_alias_capture 0
+                            LET import_func_alias_target_hash 0
+                            LET parser_state 54
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 231276286
+                            LET import_line tok_line
+                            LET import_resume_state 141
+                            LET import_capture_print_alias 0
+                            LET import_capture_len_alias 0
+                            LET import_stmt_mode 2
+                            LET import_member_zone 0
+                            LET import_func_alias_capture 0
+                            LET import_func_alias_target_hash 0
+                            LET parser_state 54
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 4355581511829
+                            LET parser_state 52
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 1937457
+                            LET parser_state 52
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 570467523426043
+                            LET parser_state 52
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 68125968433712500
+                            LET parser_state 3
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 13472
+                            LET parser_state 3
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 29399965804
+                            LET parser_state 120
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 9180088436911909825
+                            LET parser_state 109
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 9179406424881167211
+                            LET parser_state 105
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 4471061603997
+                            LET parser_state 83
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 228960337
+                            LET parser_state 95
+                            LET emit_handled 1
+                        END
+                        IF tok_hash == 28827113792
+                            LET parser_state 129
+                            LET emit_handled 1
+                        END
                     END
                 END
             END
@@ -2609,6 +3003,17 @@ _start:
                         IF tok_hash == 33242089957
                             LET parser_state 16
                             LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
+                        IF import_print_alias_valid == 1
+                            IF tok_hash == import_print_alias_hash
+                                LET parser_state 16
+                                LET emit_handled 1
+                            END
                         END
                     END
                 END
@@ -3462,6 +3867,8 @@ _start:
                 LET expr_pending_add 0
                 LET expr_mul_pending 0
                 LET expr_line 0
+                LET expr_type_hash 0
+                LET expr_numeric_flag 0
                 LET parser_state 30
             END
         END
@@ -3530,6 +3937,18 @@ _start:
                                 END
                             END
 
+                            IF temp2 == 3
+                                LET struct_literal_base_off current_target_off
+                                IF current_struct_field_count > 0
+                                    LET temp current_struct_field_count
+                                    SUB temp 1
+                                    WHILE temp > 0
+                                        ADD next_off 8
+                                        SUB temp 1
+                                    END
+                                END
+                            END
+
                             IF temp2 == 2
                                 LET struct_literal_base_off next_off
                                 LET temp current_struct_field_count
@@ -3580,6 +3999,17 @@ _start:
                             LET parser_state 100
                             LET emit_handled 1
                         END
+                    END
+
+                    IF emit_handled == 0
+                    IF tok_type == 2
+                        IF tok_value == 40
+                            IF current_hash == 1866729
+                                LET parser_state 148
+                                LET emit_handled 1
+                            END
+                        END
+                    END
                     END
 
                     IF emit_handled == 0
@@ -3639,6 +4069,21 @@ _start:
                             ADD saved_call_depth 1
 
                             LET call_hash current_hash
+                            LET temp 0
+                            WHILE temp < import_func_alias_count
+                                LET temp2 temp
+                                MUL temp2 8
+                                ADD temp2 import_func_alias_hash_tbl
+                                PEEK found_off temp2
+                                IF found_off == call_hash
+                                    LET temp2 temp
+                                    MUL temp2 8
+                                    ADD temp2 import_func_alias_target_tbl
+                                    PEEK call_hash temp2
+                                    LET temp import_func_alias_count
+                                END
+                                ADD temp 1
+                            END
                             LET call_context 2
                             LET call_param_count 0
                             LET call_param_start 0
@@ -3733,6 +4178,78 @@ _start:
 
                             LET parser_state 48
                             LET emit_handled 1
+                        END
+                    END
+
+                    IF emit_handled == 0
+                        IF tok_type == 2
+                            IF tok_value == 91
+                                LET found_flag 0
+                                IF cached_symbol_valid == 1
+                                    IF current_hash == cached_symbol_hash
+                                        LET found_index cached_symbol_index
+                                        LET temp found_index
+                                        MUL temp 8
+                                        ADD temp symbol_off_tbl
+                                        PEEK found_off temp
+                                        LET found_flag 1
+                                    END
+                                END
+
+                                IF found_flag == 0
+                                    LET sym_scan sym_count
+
+                                    WHILE sym_scan > 0
+                                        SUB sym_scan 1
+                                        LET temp sym_scan
+                                        MUL temp 8
+                                        ADD temp symbol_hash_tbl
+                                        PEEK temp2 temp
+
+                                        IF temp2 == current_hash
+                                            LET found_index sym_scan
+                                            LET temp sym_scan
+                                            MUL temp 8
+                                            ADD temp symbol_off_tbl
+                                            PEEK found_off temp
+                                            LET found_flag 1
+                                            LET sym_scan 0
+                                        END
+                                    END
+
+                                    IF found_flag == 1
+                                        LET cached_symbol_valid 1
+                                        LET cached_symbol_hash current_hash
+                                        LET cached_symbol_index found_index
+                                    END
+                                END
+
+                                IF found_flag == 1
+                                    LET temp found_index
+                                    MUL temp 8
+                                    ADD temp symbol_kind_tbl
+                                    PEEK temp2 temp
+
+                                    IF temp2 == 5
+                                        LET array_saved_expr_target expr_target
+                                        LET array_saved_expr_end_mode expr_end_mode
+                                        LET array_saved_expr_pending_add expr_pending_add
+                                        LET array_saved_expr_mul_pending expr_mul_pending
+                                        LET array_saved_expr_line expr_line
+                                        LET current_array_base_off found_off
+                                        LET parser_state 143
+                                        LET emit_handled 1
+                                    END
+                                END
+
+                                IF emit_handled == 0
+                                    WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "array index target"
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+                            END
                         END
                     END
 
@@ -3913,10 +4430,23 @@ _start:
                         IF emit_handled == 0
                         IF found_flag == 1
                             LET current_enum_type_hash 0
-                            WRITE_STR "    mov rax, [vars + "
-                            WRITE_INT found_off
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
+                            IF temp2 == 2
+                                WRITE_STR "    mov rax, "
+                                WRITE_INT found_off
+                                WRITE_CHAR 10
+                            END
+                            IF temp2 < 2
+                                WRITE_STR "    mov rax, [vars + "
+                                WRITE_INT found_off
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                            IF temp2 > 2
+                                WRITE_STR "    mov rax, [vars + "
+                                WRITE_INT found_off
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
                             IF expr_mul_pending == 1
                                 WRITE_STR "    pop rbx"
                                 WRITE_CHAR 10
@@ -4347,6 +4877,50 @@ _start:
         IF emit_handled == 0
             IF parser_state == 12
                 IF tok_type == 1
+                    LET found_flag 0
+                    IF cached_struct_valid == 1
+                        IF tok_hash == cached_struct_hash
+                            LET current_struct_index cached_struct_index
+                            LET found_flag 1
+                        END
+                    END
+
+                    IF found_flag == 0
+                        LET sym_scan struct_count
+
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
+                            LET temp sym_scan
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK temp2 temp
+
+                            IF temp2 == tok_hash
+                                LET current_struct_index sym_scan
+                                LET found_flag 1
+                                LET sym_scan 0
+                            END
+                        END
+
+                        IF found_flag == 1
+                            LET cached_struct_valid 1
+                            LET cached_struct_hash tok_hash
+                            LET cached_struct_index current_struct_index
+                        END
+                    END
+
+                    IF found_flag == 1
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_kind_tbl
+                        POKE temp 3
+
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_str_label_tbl
+                        POKE temp current_struct_index
+                    END
+
                     LET parser_state 14
                     LET emit_handled 1
                 END
@@ -4455,6 +5029,91 @@ _start:
                                 WRITE_STR "field assignment target"
                                 WRITE_CHAR 10
                                 EXIT
+                            END
+                        END
+                    END
+
+                    IF emit_handled == 0
+                        IF temp == 91
+                            LET found_flag 0
+                            IF cached_symbol_valid == 1
+                                IF current_hash == cached_symbol_hash
+                                    LET current_symbol_index cached_symbol_index
+                                    LET temp current_symbol_index
+                                    MUL temp 8
+                                    ADD temp symbol_off_tbl
+                                    PEEK current_target_off temp
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                LET sym_scan sym_count
+
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
+                                    LET temp sym_scan
+                                    MUL temp 8
+                                    ADD temp symbol_hash_tbl
+                                    PEEK temp2 temp
+
+                                    IF temp2 == current_hash
+                                        LET temp sym_scan
+                                        MUL temp 8
+                                        ADD temp symbol_off_tbl
+                                        PEEK current_target_off temp
+                                        LET current_symbol_index sym_scan
+                                        LET found_flag 1
+                                        LET sym_scan 0
+                                    END
+                                END
+
+                                IF found_flag == 1
+                                    LET cached_symbol_valid 1
+                                    LET cached_symbol_hash current_hash
+                                    LET cached_symbol_index current_symbol_index
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET temp current_symbol_index
+                                MUL temp 8
+                                ADD temp symbol_mut_tbl
+                                PEEK temp2 temp
+
+                                LET found_off current_symbol_index
+                                MUL found_off 8
+                                ADD found_off symbol_kind_tbl
+                                PEEK temp found_off
+
+                                IF temp == 5
+                                    IF temp2 == 1
+                                        LET current_array_base_off current_target_off
+                                        LET expr_target 16
+                                        LET expr_end_mode 16
+                                        LET expr_pending_add 0
+                                        LET expr_mul_pending 0
+                                        LET expr_line 0
+                                        LET parser_state 30
+                                        LET emit_handled 1
+                                    END
+
+                                    IF emit_handled == 0
+                                        WRITE_STR "parse error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "immutable binding"
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+
+                                IF emit_handled == 0
+                                    WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "array assignment target"
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
                             END
                         END
                     END
@@ -4659,6 +5318,21 @@ _start:
                     IF emit_handled == 0
                         IF temp == 40
                             LET call_hash current_hash
+                            LET temp 0
+                            WHILE temp < import_func_alias_count
+                                LET temp2 temp
+                                MUL temp2 8
+                                ADD temp2 import_func_alias_hash_tbl
+                                PEEK found_off temp2
+                                IF found_off == call_hash
+                                    LET temp2 temp
+                                    MUL temp2 8
+                                    ADD temp2 import_func_alias_target_tbl
+                                    PEEK call_hash temp2
+                                    LET temp import_func_alias_count
+                                END
+                                ADD temp 1
+                            END
                             LET call_context 1
                             LET call_param_count 0
                             LET call_param_start 0
@@ -5759,6 +6433,17 @@ _start:
 
                 IF emit_handled == 0
                     IF tok_type == 1
+                        IF import_print_alias_valid == 1
+                            IF tok_hash == import_print_alias_hash
+                                LET parser_state 16
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
                         IF tok_hash == 4428069113672
                             LET parser_state 19
                             LET emit_handled 1
@@ -5813,6 +6498,8 @@ _start:
                 LET expr_pending_add 0
                 LET expr_mul_pending 0
                 LET expr_line 0
+                LET expr_type_hash 0
+                LET expr_numeric_flag 0
                 LET parser_state 30
             END
         END
@@ -6161,6 +6848,26 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 15
+                IF tok_type == 2
+                    IF tok_value == 91
+                        IF assign_target_kind == 1
+                            LET current_array_base_off current_target_off
+                            LET current_array_length 0
+                            LET parser_state 142
+                            LET emit_handled 1
+                        END
+
+                        IF emit_handled == 0
+                            WRITE_STR "parse error"
+                            WRITE_CHAR 10
+                            WRITE_STR "array assignment target"
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
                 IF tok_type == 1
                     IF tok_hash == 28835693654
                         LET expr_target assign_target_kind
@@ -6171,6 +6878,7 @@ _start:
                         LET parser_state 30
                         LET emit_handled 1
                     END
+                END
                 END
 
                 IF emit_handled == 0
@@ -6297,6 +7005,236 @@ _start:
         END
 
         IF emit_handled == 0
+            IF parser_state == 142
+                IF tok_type == 2
+                    IF tok_value == 93
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_kind_tbl
+                        POKE temp 5
+
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_str_label_tbl
+                        POKE temp 0
+
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_str_len_tbl
+                        POKE temp 0
+
+                        LET expr_line 0
+                        LET parser_state 33
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF current_array_length == 0
+                        LET pending_array_element_off current_array_base_off
+                    END
+
+                    IF current_array_length > 0
+                        LET pending_array_element_off next_off
+                        ADD next_off 8
+                    END
+
+                    ADD current_array_length 1
+                    LET expr_target 14
+                    LET expr_end_mode 14
+                    LET expr_pending_add 0
+                    LET expr_mul_pending 0
+                    LET expr_line 0
+                    LET parser_state 30
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 143
+                IF tok_type == 2
+                    IF tok_value == 93
+                        WRITE_STR "parse error"
+                        WRITE_CHAR 10
+                        WRITE_STR "array index expression"
+                        WRITE_CHAR 10
+                        EXIT
+                    END
+                END
+
+                IF emit_handled == 0
+                    LET expr_target 15
+                    LET expr_end_mode 15
+                    LET expr_pending_add 0
+                    LET expr_mul_pending 0
+                    LET expr_line 0
+                    LET parser_state 30
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 146
+                IF tok_type == 2
+                    IF tok_value == 61
+                        LET assign_target_kind 16
+                        LET parser_state 15
+                        LET emit_handled 1
+                    END
+                    IF tok_value == 43
+                        LET assign_op 1
+                        LET parser_state 147
+                        LET emit_handled 1
+                    END
+                    IF tok_value == 45
+                        LET assign_op 2
+                        LET parser_state 147
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "array target operator"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 147
+                IF tok_type == 2
+                    IF tok_value == 61
+                        WRITE_STR "    pop rbx"
+                        WRITE_CHAR 10
+                        WRITE_STR "    mov rax, [vars + rbx*8"
+                        IF current_array_base_off > 0
+                            WRITE_STR " + "
+                            WRITE_INT current_array_base_off
+                        END
+                        WRITE_STR "]"
+                        WRITE_CHAR 10
+                        WRITE_STR "    push rbx"
+                        WRITE_CHAR 10
+                        WRITE_STR "    push rax"
+                        WRITE_CHAR 10
+                        LET expr_target 16
+                        LET expr_end_mode 1
+                        LET expr_pending_add assign_op
+                        LET expr_mul_pending 0
+                        LET expr_line 0
+                        LET parser_state 30
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "array target operator"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 148
+                IF tok_type == 1
+                    LET current_hash tok_hash
+                    LET found_flag 0
+                    IF cached_symbol_valid == 1
+                        IF current_hash == cached_symbol_hash
+                            LET found_index cached_symbol_index
+                            LET found_flag 1
+                        END
+                    END
+
+                    IF found_flag == 0
+                        LET sym_scan sym_count
+
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
+                            LET temp sym_scan
+                            MUL temp 8
+                            ADD temp symbol_hash_tbl
+                            PEEK temp2 temp
+
+                            IF temp2 == current_hash
+                                LET found_index sym_scan
+                                LET found_flag 1
+                                LET sym_scan 0
+                            END
+                        END
+
+                        IF found_flag == 1
+                            LET cached_symbol_valid 1
+                            LET cached_symbol_hash current_hash
+                            LET cached_symbol_index found_index
+                        END
+                    END
+
+                    IF found_flag == 1
+                        LET temp found_index
+                        MUL temp 8
+                        ADD temp symbol_kind_tbl
+                        PEEK temp2 temp
+
+                        IF temp2 == 5
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_len_tbl
+                            PEEK temp2 temp
+                            LET expr_type_hash 1808636
+                            LET current_enum_type_hash 0
+                            WRITE_STR "    mov rax, "
+                            WRITE_INT temp2
+                            WRITE_CHAR 10
+                            IF expr_mul_pending == 1
+                                WRITE_STR "    pop rbx"
+                                WRITE_CHAR 10
+                                WRITE_STR "    imul rax, rbx"
+                                WRITE_CHAR 10
+                                LET expr_mul_pending 0
+                            END
+                            LET parser_state 149
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "len target"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 149
+                IF tok_type == 2
+                    IF tok_value == 41
+                        LET parser_state 31
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "len close"
+                    WRITE_CHAR 10
+                    EXIT
+                END
+            END
+        END
+
+        IF emit_handled == 0
             IF parser_state == 30
                 IF expr_line == 0
                     LET expr_line tok_line
@@ -6305,6 +7243,7 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 2
                         IF tok_value == 45
+                            LET expr_numeric_flag 1
                             WRITE_STR "    mov rax, 0"
                             WRITE_CHAR 10
                             WRITE_STR "    push rax"
@@ -6337,6 +7276,7 @@ _start:
                 END
 
                 IF tok_type == 4
+                    LET expr_type_hash 1808636
                     LET current_enum_type_hash 0
                     WRITE_STR "    mov rax, "
                     WRITE_INT tok_value
@@ -6355,6 +7295,7 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 2477826978740163167
+                            LET expr_type_hash 1808636
                             LET current_enum_type_hash 0
                             WRITE_STR "    call read_char_rax"
                             WRITE_CHAR 10
@@ -6382,6 +7323,7 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 262750338
+                            LET expr_type_hash 222232438
                             LET current_enum_type_hash 0
                             WRITE_STR "    mov rax, 1"
                             WRITE_CHAR 10
@@ -6401,6 +7343,7 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 30258925323
+                            LET expr_type_hash 222232438
                             LET current_enum_type_hash 0
                             WRITE_STR "    mov rax, 0"
                             WRITE_CHAR 10
@@ -6513,6 +7456,23 @@ _start:
                 IF emit_handled == 0
                 IF tok_type == 2
                     IF tok_value == 40
+                        IF current_hash == 1866729
+                            LET parser_state 148
+                            LET emit_handled 1
+                        END
+                        IF import_len_alias_valid == 1
+                            IF current_hash == import_len_alias_hash
+                                LET parser_state 148
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+                END
+
+                IF emit_handled == 0
+                IF tok_type == 2
+                    IF tok_value == 40
                         LET temp saved_call_depth
                         MUL temp 8
 
@@ -6563,6 +7523,21 @@ _start:
                         ADD saved_call_depth 1
 
                         LET call_hash current_hash
+                        LET temp 0
+                        WHILE temp < import_func_alias_count
+                            LET temp2 temp
+                            MUL temp2 8
+                            ADD temp2 import_func_alias_hash_tbl
+                            PEEK found_off temp2
+                            IF found_off == call_hash
+                                LET temp2 temp
+                                MUL temp2 8
+                                ADD temp2 import_func_alias_target_tbl
+                                PEEK call_hash temp2
+                                LET temp import_func_alias_count
+                            END
+                            ADD temp 1
+                        END
                         LET call_context 2
                         LET call_param_count 0
                         LET call_param_start 0
@@ -6661,6 +7636,78 @@ _start:
                 END
 
                 IF emit_handled == 0
+                IF tok_type == 2
+                    IF tok_value == 91
+                        LET found_flag 0
+                        IF cached_symbol_valid == 1
+                            IF current_hash == cached_symbol_hash
+                                LET found_index cached_symbol_index
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_off_tbl
+                                PEEK found_off temp
+                                LET found_flag 1
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET sym_scan sym_count
+
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
+                                LET temp sym_scan
+                                MUL temp 8
+                                ADD temp symbol_hash_tbl
+                                PEEK temp2 temp
+
+                                IF temp2 == current_hash
+                                    LET found_index sym_scan
+                                    LET temp sym_scan
+                                    MUL temp 8
+                                    ADD temp symbol_off_tbl
+                                    PEEK found_off temp
+                                    LET found_flag 1
+                                    LET sym_scan 0
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET cached_symbol_valid 1
+                                LET cached_symbol_hash current_hash
+                                LET cached_symbol_index found_index
+                            END
+                        END
+
+                        IF found_flag == 1
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_kind_tbl
+                            PEEK temp2 temp
+
+                            IF temp2 == 5
+                                LET array_saved_expr_target expr_target
+                                LET array_saved_expr_end_mode expr_end_mode
+                                LET array_saved_expr_pending_add expr_pending_add
+                                LET array_saved_expr_mul_pending expr_mul_pending
+                                LET array_saved_expr_line expr_line
+                                LET current_array_base_off found_off
+                                LET parser_state 143
+                                LET emit_handled 1
+                            END
+                        END
+
+                        IF emit_handled == 0
+                            WRITE_STR "parse error"
+                            WRITE_CHAR 10
+                            WRITE_STR "array index target"
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+                    END
+                END
+                END
+
+                IF emit_handled == 0
                     LET found_flag 0
                     IF cached_symbol_valid == 1
                         IF current_hash == cached_symbol_hash
@@ -6708,6 +7755,7 @@ _start:
                         PEEK temp2 temp
 
                         IF temp2 == 4
+                            LET expr_type_hash 0
                             LET temp found_index
                             MUL temp 8
                             ADD temp symbol_str_label_tbl
@@ -6739,11 +7787,28 @@ _start:
 
                     IF emit_handled == 0
                     IF found_flag == 1
+                        LET expr_type_hash 0
+                        IF temp2 == 1
+                            LET expr_type_hash 1988825
+                        END
                         LET current_enum_type_hash 0
-                        WRITE_STR "    mov rax, [vars + "
-                        WRITE_INT found_off
-                        WRITE_STR "]"
-                        WRITE_CHAR 10
+                        IF temp2 == 2
+                            WRITE_STR "    mov rax, "
+                            WRITE_INT found_off
+                            WRITE_CHAR 10
+                        END
+                        IF temp2 < 2
+                            WRITE_STR "    mov rax, [vars + "
+                            WRITE_INT found_off
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
+                        IF temp2 > 2
+                            WRITE_STR "    mov rax, [vars + "
+                            WRITE_INT found_off
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                        END
                         IF expr_mul_pending == 1
                             WRITE_STR "    pop rbx"
                             WRITE_CHAR 10
@@ -6757,6 +7822,56 @@ _start:
             END
         END
         END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 144
+                IF tok_type == 2
+                    IF tok_value == 93
+                        WRITE_STR "parse error"
+                        WRITE_CHAR 10
+                        WRITE_STR "array index expression"
+                        WRITE_CHAR 10
+                        EXIT
+                    END
+                END
+
+                IF emit_handled == 0
+                    LET expr_target 15
+                    LET expr_end_mode 15
+                    LET expr_pending_add 0
+                    LET expr_mul_pending 0
+                    LET expr_line 0
+                    LET parser_state 30
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 145
+                IF tok_type == 2
+                    IF tok_value == 93
+                        LET temp current_array_index
+                        MUL temp 8
+                        ADD temp current_array_base_off
+                        LET expr_type_hash 1808636
+                        LET current_enum_type_hash 0
+                        WRITE_STR "    mov rax, [vars + "
+                        WRITE_INT temp
+                        WRITE_STR "]"
+                        WRITE_CHAR 10
+                        IF expr_mul_pending == 1
+                            WRITE_STR "    pop rbx"
+                            WRITE_CHAR 10
+                            WRITE_STR "    imul rax, rbx"
+                            WRITE_CHAR 10
+                            LET expr_mul_pending 0
+                        END
+                        LET parser_state 31
+                        LET emit_handled 1
+                    END
+                END
+            END
         END
 
         IF emit_handled == 0
@@ -7109,7 +8224,17 @@ _start:
                                 END
                             END
 
+                            IF temp == 0
+                                IF expr_end_mode == 15
+                                    LET temp 1
+                                END
+                                IF expr_end_mode == 16
+                                    LET temp 1
+                                END
+                            END
+
                             IF temp == 1
+                                LET expr_numeric_flag 1
                                 WRITE_STR "    push rax"
                                 WRITE_CHAR 10
                                 LET expr_mul_pending 1
@@ -7195,7 +8320,17 @@ _start:
                                 END
                             END
 
+                            IF temp2 == 0
+                                IF expr_end_mode == 15
+                                    LET temp2 1
+                                END
+                                IF expr_end_mode == 16
+                                    LET temp2 1
+                                END
+                            END
+
                             IF temp2 == 1
+                                LET expr_numeric_flag 1
                                 WRITE_STR "    push rax"
                                 WRITE_CHAR 10
                                 LET expr_pending_add temp
@@ -7316,6 +8451,17 @@ _start:
                                         WRITE_CHAR 10
                                     END
                                 END
+                                IF expr_target == 16
+                                    WRITE_STR "    pop rbx"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov [vars + rbx*8"
+                                    IF current_array_base_off > 0
+                                        WRITE_STR " + "
+                                        WRITE_INT current_array_base_off
+                                    END
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+                                END
                                 IF expr_target == 2
                                     WRITE_STR "    call print_rax"
                                     WRITE_CHAR 10
@@ -7329,6 +8475,60 @@ _start:
                                     WRITE_CHAR 10
                                 END
                                 IF expr_target == 3
+                                    IF expr_numeric_flag == 1
+                                        LET expr_type_hash 1808636
+                                    END
+                                    IF current_return_type_hash > 0
+                                        IF expr_type_hash > 0
+                                            LET found_flag 0
+                                            IF expr_type_hash == current_return_type_hash
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "type error"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "return type mismatch"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "expected: "
+                                                LET found_flag 0
+                                                IF current_return_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF current_return_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF current_return_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                WRITE_STR "got: "
+                                                LET found_flag 0
+                                                IF expr_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                EXIT
+                                            END
+                                        END
+                                    END
                                     WRITE_STR "    ret"
                                     WRITE_CHAR 10
                                 END
@@ -7427,6 +8627,17 @@ _start:
                                     WRITE_CHAR 10
                                 END
                             END
+                            IF expr_target == 16
+                                WRITE_STR "    pop rbx"
+                                WRITE_CHAR 10
+                                WRITE_STR "    mov [vars + rbx*8"
+                                IF current_array_base_off > 0
+                                    WRITE_STR " + "
+                                    WRITE_INT current_array_base_off
+                                END
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                            END
                             IF expr_target == 2
                                 WRITE_STR "    call print_rax"
                                 WRITE_CHAR 10
@@ -7440,6 +8651,60 @@ _start:
                                 WRITE_CHAR 10
                             END
                             IF expr_target == 3
+                                IF expr_numeric_flag == 1
+                                    LET expr_type_hash 1808636
+                                END
+                                IF current_return_type_hash > 0
+                                    IF expr_type_hash > 0
+                                        LET found_flag 0
+                                        IF expr_type_hash == current_return_type_hash
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "return type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF current_return_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
                                 WRITE_STR "    ret"
                                 WRITE_CHAR 10
                             END
@@ -7634,6 +8899,108 @@ _start:
                                     LET parser_state 33
                                     LET emit_handled 1
                                 END
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF expr_end_mode == 14
+                        IF tok_type == 2
+                            IF tok_value == 44
+                                WRITE_STR "    mov [vars + "
+                                WRITE_INT pending_array_element_off
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                                LET expr_line 0
+                                LET parser_state 142
+                                LET emit_handled 1
+                            END
+
+                            IF emit_handled == 0
+                                IF tok_value == 93
+                                    WRITE_STR "    mov [vars + "
+                                    WRITE_INT pending_array_element_off
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+                                    LET temp current_symbol_index
+                                    MUL temp 8
+                                    ADD temp symbol_kind_tbl
+                                    POKE temp 5
+
+                                    LET temp current_symbol_index
+                                    MUL temp 8
+                                    ADD temp symbol_str_label_tbl
+                                    POKE temp 0
+
+                                    LET temp current_symbol_index
+                                    MUL temp 8
+                                    ADD temp symbol_str_len_tbl
+                                    POKE temp current_array_length
+
+                                    LET expr_line 0
+                                    LET parser_state 33
+                                    LET emit_handled 1
+                                END
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF expr_end_mode == 15
+                        IF tok_type == 2
+                            IF tok_value == 93
+                                LET current_enum_type_hash 0
+                                LET expr_type_hash 1808636
+                                WRITE_STR "    mov rax, [vars + rax*8"
+                                IF current_array_base_off > 0
+                                    WRITE_STR " + "
+                                    WRITE_INT current_array_base_off
+                                END
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                                IF expr_mul_pending == 1
+                                    WRITE_STR "    pop rbx"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    imul rax, rbx"
+                                    WRITE_CHAR 10
+                                    LET expr_mul_pending 0
+                                END
+                                IF array_saved_expr_mul_pending == 1
+                                    WRITE_STR "    pop rbx"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    imul rax, rbx"
+                                    WRITE_CHAR 10
+                                    LET array_saved_expr_mul_pending 0
+                                END
+                                LET expr_target array_saved_expr_target
+                                LET expr_end_mode array_saved_expr_end_mode
+                                LET expr_pending_add array_saved_expr_pending_add
+                                LET expr_mul_pending array_saved_expr_mul_pending
+                                LET expr_line array_saved_expr_line
+                                LET parser_state 31
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF expr_end_mode == 16
+                        IF tok_type == 2
+                            IF tok_value == 93
+                                IF expr_mul_pending == 1
+                                    WRITE_STR "    pop rbx"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    imul rax, rbx"
+                                    WRITE_CHAR 10
+                                    LET expr_mul_pending 0
+                                END
+                                WRITE_STR "    push rax"
+                                WRITE_CHAR 10
+                                LET parser_state 146
+                                LET emit_handled 1
                             END
                         END
                     END
@@ -7840,7 +9207,7 @@ _start:
                                             WRITE_CHAR 10
                                         END
 
-                                        IF temp < 4
+                                        IF temp == 0
                                             LET found_off current_symbol_index
                                             MUL found_off 8
                                             ADD found_off symbol_kind_tbl
@@ -7873,6 +9240,17 @@ _start:
                                         WRITE_CHAR 10
                                     END
                                 END
+                                IF expr_target == 16
+                                    WRITE_STR "    pop rbx"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov [vars + rbx*8"
+                                    IF current_array_base_off > 0
+                                        WRITE_STR " + "
+                                        WRITE_INT current_array_base_off
+                                    END
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+                                END
                                 IF expr_target == 2
                                     WRITE_STR "    call print_rax"
                                     WRITE_CHAR 10
@@ -7886,6 +9264,60 @@ _start:
                                     WRITE_CHAR 10
                                 END
                                 IF expr_target == 3
+                                    IF expr_numeric_flag == 1
+                                        LET expr_type_hash 1808636
+                                    END
+                                    IF current_return_type_hash > 0
+                                        IF expr_type_hash > 0
+                                            LET found_flag 0
+                                            IF expr_type_hash == current_return_type_hash
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "type error"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "return type mismatch"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "expected: "
+                                                LET found_flag 0
+                                                IF current_return_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF current_return_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF current_return_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                WRITE_STR "got: "
+                                                LET found_flag 0
+                                                IF expr_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                EXIT
+                                            END
+                                        END
+                                    END
                                     WRITE_STR "    ret"
                                     WRITE_CHAR 10
                                 END
@@ -7954,7 +9386,7 @@ _start:
                                         WRITE_CHAR 10
                                     END
 
-                                    IF temp < 4
+                                    IF temp == 0
                                         LET found_off current_symbol_index
                                         MUL found_off 8
                                         ADD found_off symbol_kind_tbl
@@ -7987,6 +9419,17 @@ _start:
                                     WRITE_CHAR 10
                                 END
                             END
+                            IF expr_target == 16
+                                WRITE_STR "    pop rbx"
+                                WRITE_CHAR 10
+                                WRITE_STR "    mov [vars + rbx*8"
+                                IF current_array_base_off > 0
+                                    WRITE_STR " + "
+                                    WRITE_INT current_array_base_off
+                                END
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                            END
                             IF expr_target == 2
                                 WRITE_STR "    call print_rax"
                                 WRITE_CHAR 10
@@ -8000,6 +9443,60 @@ _start:
                                 WRITE_CHAR 10
                             END
                             IF expr_target == 3
+                                IF expr_numeric_flag == 1
+                                    LET expr_type_hash 1808636
+                                END
+                                IF current_return_type_hash > 0
+                                    IF expr_type_hash > 0
+                                        LET found_flag 0
+                                        IF expr_type_hash == current_return_type_hash
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "return type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF current_return_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
                                 WRITE_STR "    ret"
                                 WRITE_CHAR 10
                             END
@@ -8019,6 +9516,9 @@ _start:
                             IF expr_target == 11
                                 LET parser_state 33
                             END
+                            IF expr_target == 16
+                                LET parser_state 33
+                            END
                             IF expr_target == 3
                                 LET parser_state 33
                             END
@@ -8029,6 +9529,60 @@ _start:
                 IF emit_handled == 0
                     IF expr_end_mode == 9
                         IF tok_type == 3
+                            IF expr_numeric_flag == 1
+                                LET expr_type_hash 1808636
+                            END
+                            IF current_return_type_hash > 0
+                                IF expr_type_hash > 0
+                                    LET found_flag 0
+                                    IF expr_type_hash == current_return_type_hash
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "return type mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: "
+                                        LET found_flag 0
+                                        IF current_return_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF current_return_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF current_return_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET found_flag 0
+                                        IF expr_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+                            END
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
                             LET expr_line 0
@@ -8040,6 +9594,60 @@ _start:
                 IF emit_handled == 0
                     IF expr_end_mode == 9
                         IF tok_line > expr_line
+                            IF expr_numeric_flag == 1
+                                LET expr_type_hash 1808636
+                            END
+                            IF current_return_type_hash > 0
+                                IF expr_type_hash > 0
+                                    LET found_flag 0
+                                    IF expr_type_hash == current_return_type_hash
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "return type mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: "
+                                        LET found_flag 0
+                                        IF current_return_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF current_return_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF current_return_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET found_flag 0
+                                        IF expr_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+                            END
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
                             LET expr_line 0
@@ -8636,7 +10244,18 @@ _start:
 
                 IF emit_handled == 0
                     IF tok_type == 1
-                        IF tok_hash == 4428069113672
+                        IF import_print_alias_valid == 1
+                            IF tok_hash == import_print_alias_hash
+                                LET parser_state 16
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                IF tok_type == 1
+                    IF tok_hash == 4428069113672
                             LET parser_state 19
                             LET emit_handled 1
                         END
@@ -8757,12 +10376,24 @@ _start:
                     IF tok_hash == 4083200610857
                         LET import_line tok_line
                         LET import_resume_state 40
+                        LET import_capture_print_alias 0
+                        LET import_capture_len_alias 0
+                        LET import_stmt_mode 1
+                        LET import_member_zone 0
+                        LET import_func_alias_capture 0
+                        LET import_func_alias_target_hash 0
                         LET parser_state 54
                         LET emit_handled 1
                     END
                     IF tok_hash == 231276286
                         LET import_line tok_line
                         LET import_resume_state 40
+                        LET import_capture_print_alias 0
+                        LET import_capture_len_alias 0
+                        LET import_stmt_mode 2
+                        LET import_member_zone 0
+                        LET import_func_alias_capture 0
+                        LET import_func_alias_target_hash 0
                         LET parser_state 54
                         LET emit_handled 1
                     END

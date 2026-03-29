@@ -1,4 +1,52 @@
 function identifier_hash_print() -> i32 => 137038061
+function identifier_hash_len() -> i32 => 121055
+
+function emit_type_name(hash: i32) {
+    variable emitted: bool = false
+
+    if hash == identifier_hash_i32() {
+        emits("i32")
+        emitted = true
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_bool() {
+            emits("bool")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_str() {
+            emits("str")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        if hash == identifier_hash_array_i32() {
+            emits("array_i32")
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        emits("unknown")
+    }
+}
+
+function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
+    emits("type error")
+    emitc(10)
+    emits("return type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
 
 function emit_hash_suffix(hash: i32) {
     if hash < 0 {
@@ -24,6 +72,11 @@ function emit_variable_name(function_hash: i32, variable_hash: i32) {
     emit_hash_suffix(function_hash)
     emitc(95)
     emit_hash_suffix(variable_hash)
+}
+
+function emit_variable_length_name(function_hash: i32, variable_hash: i32) {
+    emit_variable_name(function_hash, variable_hash)
+    emits("_LEN")
 }
 
 function emit_internal_label_name(label: i32) {

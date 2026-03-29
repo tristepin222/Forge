@@ -1,0 +1,8 @@
+module app.main
+
+function main() {
+    variable xs = [10, 20, 30]
+    variable ys = []
+    print(len(xs))
+    print(len(ys))
+}

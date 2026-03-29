@@ -445,6 +445,7 @@ function scan_string(self: Lexer) -> i32 {
 
     loop {
         variable ch: i32 = self.next_char()
+        variable escaped: i32 = 0
 
         if ch == 0 {
             break
@@ -456,6 +457,48 @@ function scan_string(self: Lexer) -> i32 {
 
         if ch == 34 {
             break
+        }
+
+        if ch == 92 {
+            ch = self.next_char()
+            if ch == 0 {
+                break
+            }
+
+            if ch == 10 {
+                break
+            }
+
+            if ch == 110 {
+                ch = 10
+                escaped = 1
+            } else {
+                if ch == 116 {
+                    ch = 9
+                    escaped = 1
+                } else {
+                    if ch == 114 {
+                        ch = 13
+                        escaped = 1
+                    } else {
+                        if ch == 34 {
+                            escaped = 1
+                        } else {
+                            if ch == 92 {
+                                escaped = 1
+                            }
+                        }
+                    }
+                }
+            }
+
+            if escaped == 0 {
+                if length < 16 {
+                    self.set_string_char(length, 92)
+                }
+
+                length += 1
+            }
         }
 
         if length < 16 {

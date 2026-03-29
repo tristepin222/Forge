@@ -1,0 +1,7 @@
+module app.main
+
+function bad() -> bool => 1
+
+function main() {
+    print(0)
+}

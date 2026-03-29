@@ -108,4 +108,7 @@ function keyword_hash_where() -> i32 => 144975899
 function keyword_hash_requires() -> i32 => 4993505717392
 function keyword_hash_ensures() -> i32 => 134883871237
 function identifier_hash_main() -> i32 => 4026341
+function identifier_hash_i32() -> i32 => 116078
+function identifier_hash_bool() -> i32 => 3646476
 function identifier_hash_str() -> i32 => 129177
+function identifier_hash_array_i32() -> i32 => 2109876543

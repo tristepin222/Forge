@@ -1,0 +1,9 @@
+module app.main
+
+function bad() -> i32 {
+    return true
+}
+
+function main() {
+    print(0)
+}

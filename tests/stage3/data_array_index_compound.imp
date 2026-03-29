@@ -1,0 +1,9 @@
+module app.main
+
+function main() {
+    variable xs = [10, 20, 30]
+    xs[1] += 5
+    xs[2] -= 7
+    print(xs[1])
+    print(xs[2])
+}

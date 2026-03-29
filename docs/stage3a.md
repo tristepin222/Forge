@@ -41,7 +41,12 @@ These are the features to implement first:
 
 - `module app.main`
 - `import std.io.{print}`
+- `import std.io.{print as p}`
+- `import std.builtins.{print as p, len as count}`
+- `import app.main.{helper as h}`
 - `from std.io import print as p`
+- `from std.builtins import print as p, len as count`
+- `from app.main import helper as h`
 - `public function main() { ... }`
 - `private function helper() { ... }`
 - top-level `struct Name { ... }`
@@ -72,7 +77,11 @@ These are the features to implement first:
 - `print("text")`
 - `value name = "text"`
 - `value ok: bool = true`
+- `value xs = [1, 2, 3]`
+- `variable xs = []`
+- `print(len(xs))`
 - `value p: Point = Point { x: 1, y: 2 }`
+- `print(xs[i + 1])`
 - `print(p.x)`
 - `p.sum()` lowered to `sum(self: Point)`
 - arithmetic expressions and function calls
@@ -139,8 +148,9 @@ Its runtime path is still intentionally narrow: the current `compile_program()` 
 It currently supports:
 
 - optional `module ...`
-- `import ...` parsed and ignored semantically for now
-- `from ... import ... as ...` parsed and ignored semantically for now
+- `import ...` remains mostly syntax-only, except builtin aliases like `import ... { print as alias }`, `import ... { len as alias }`, and grouped builtin aliases like `import ... { print as p, len as count }`
+- `import ...` remains mostly syntax-only, except builtin aliases like `import ... { print as alias }`, `import ... { len as alias }`, grouped builtin aliases like `import ... { print as p, len as count }`, and narrow non-builtin function-call aliases like `import app.main.{helper as h}`
+- `from ... import ...` remains mostly syntax-only, except builtin aliases like `from ... import print as alias`, `from ... import len as alias`, comma-separated builtin aliases like `from ... import print as p, len as count`, and narrow non-builtin function-call aliases like `from app.main import helper as h`
 - `public function ...`
 - `private function ...`
 - top-level `struct ... { ... }` with stored field layouts
@@ -156,8 +166,13 @@ It currently supports:
 - string-literal assignment to variables
 - `true` / `false`
 - struct literals assigned to variables
+- array literals assigned to variables, including `[]`
+- `len(array_variable)` for compile-time array length
+- array index reads like `xs[i + 1]`
+- array element assignment with `=` / `+=` / `-=`
 - enum constants like `State::Idle`
 - enum payload construction like `State::Done(5)`
+- array index reads in expressions like `xs[i + 1]`
 - struct field reads in expressions
 - struct field assignment with `=` / `+=` / `-=`
 - method-call syntax on struct values, lowered to normal function calls through a typed `self: StructName` first parameter
@@ -182,7 +197,7 @@ It currently supports:
 - multiple `function name(...) { ... }` definitions
 - expression-bodied functions with `=> expr`
 - optional typed parameters in function definitions
-- optional return-type syntax in function definitions
+- optional return-type syntax in function definitions, with first-cut semantic checks for inferable `i32` and `bool` return expressions
 - function calls with zero or more arithmetic-expression arguments
 - forward references for function calls
 - call expressions like `value x = add(1, 2)` or `print(helper())`
@@ -191,16 +206,20 @@ It currently supports:
 - identifier, integer-literal, and function-call factors in expressions
 
 Current limitation:
-- return types are parsed and ignored semantically for now
-- imports are parsed and ignored semantically for now
+- return types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, and arithmetic expressions
+- return-flow completeness and arbitrary call-return inference are not checked yet
+- imports are still mostly syntax-only; only builtin `print` and `len` aliases currently have semantics, including grouped aliases tracked independently
+- non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls, and the module path is still ignored in favor of same-translation-unit function names
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`
 - `implement` currently checks that the named interface exists and stores interface method names, but method/signature checking is not enforced yet
 - `default =>` is the canonical fallback arm in `match`; `_ =>` remains accepted as an alias for now
-- string literals are currently supported only in `print(...)`
-- string escapes are not supported yet
+- string literals are currently supported in `print(...)` and string-variable assignment
+- string literals currently support `\\`, `\"`, `\n`, `\t`, and `\r`
 - string variables are currently compile-time string bindings intended for `print(name)`
 - booleans currently lower to `1` and `0`
 - enum payload support is currently limited to a single payload slot per variant
+- arrays are currently limited to literal-backed storage plus indexing and element assignment with `=`, `+=`, and `-=`
+- `len(...)` is currently limited to array variables
 
 It does **not** represent a self-hosted Stage 3 compiler yet.
 

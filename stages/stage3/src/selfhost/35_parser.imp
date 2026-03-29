@@ -111,18 +111,28 @@ function parse_postfix_tail(self: Lexer) -> i32 {
                 return -1
             }
         } else {
-            if self.token_value == 46 {
-                if self.expect_identifier() != 0 {
-                    return -2
+            if self.token_value == 91 {
+                if self.parse_expression() != 0 {
+                    return -4
+                }
+
+                if self.expect_symbol(93) != 0 {
+                    return -5
                 }
             } else {
-                if self.token_value == 123 {
-                    if self.parse_struct_literal_tail() != 0 {
-                        return -3
+                if self.token_value == 46 {
+                    if self.expect_identifier() != 0 {
+                        return -2
                     }
                 } else {
-                    self.push_token()
-                    return 0
+                    if self.token_value == 123 {
+                        if self.parse_struct_literal_tail() != 0 {
+                            return -3
+                        }
+                    } else {
+                        self.push_token()
+                        return 0
+                    }
                 }
             }
         }
@@ -1579,6 +1589,8 @@ function parse_import_declaration(self: Lexer) -> i32 {
 }
 
 function parse_from_import_declaration(self: Lexer) -> i32 {
+    variable kind: i32 = 0
+
     if self.expect_keyword(keyword_from()) != 0 {
         return -1
     }
@@ -1591,24 +1603,35 @@ function parse_from_import_declaration(self: Lexer) -> i32 {
         return -3
     }
 
-    if self.expect_identifier() != 0 {
-        return -4
-    }
+    loop {
+        if self.expect_identifier() != 0 {
+            return -4
+        }
 
-    if self.next_token() == token_keyword() {
-        if self.token_value == keyword_as() {
-            if self.expect_identifier() != 0 {
-                return -5
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_as() {
+                if self.expect_identifier() != 0 {
+                    return -5
+                }
+
+                kind = self.next_token()
+            } else {
+                self.push_token()
+                return 0
             }
+        }
+
+        if kind != token_symbol() {
+            self.push_token()
             return 0
         }
 
-        self.push_token()
-        return 0
+        if self.token_value != 44 {
+            self.push_token()
+            return 0
+        }
     }
-
-    self.push_token()
-    return 0
 }
 
 function parse_top_level() -> i32 {

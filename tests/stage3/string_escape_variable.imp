@@ -1,0 +1,6 @@
+module app.main
+
+public function main() {
+    variable msg: str = "a\tb\nc"
+    print(msg)
+}
