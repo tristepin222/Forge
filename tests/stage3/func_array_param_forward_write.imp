@@ -1,0 +1,15 @@
+module app.main
+
+function bump(xs: array_i32, i: i32) {
+    xs[i] += 4
+}
+
+function forward(xs: array_i32) {
+    bump(xs, 1)
+}
+
+function main() {
+    variable xs = [10, 20, 30]
+    forward(xs)
+    print(xs[1])
+}

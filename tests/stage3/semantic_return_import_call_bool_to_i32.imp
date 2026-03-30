@@ -1,0 +1,11 @@
+module app.main
+
+from app.main import truth as alias
+
+function truth() -> bool => true
+
+function bad() -> i32 => alias()
+
+function main() {
+    print(0)
+}

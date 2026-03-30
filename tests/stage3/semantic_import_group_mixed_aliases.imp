@@ -1,0 +1,10 @@
+module app.main
+
+import app.main.{helper as h, print as p, len as count}
+
+function helper() -> i32 => 7
+
+function main() {
+    value xs = [1, 2, 3]
+    p(h() + count(xs))
+}

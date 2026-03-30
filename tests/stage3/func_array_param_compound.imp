@@ -1,0 +1,13 @@
+module app.main
+
+function tweak(xs: array_i32) {
+    xs[1] += 5
+    xs[2] -= 7
+}
+
+function main() {
+    variable xs = [10, 20, 30]
+    tweak(xs)
+    print(xs[1])
+    print(xs[2])
+}

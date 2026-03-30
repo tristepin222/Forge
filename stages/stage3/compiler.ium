@@ -76,6 +76,7 @@ VAR func_hash_tbl
 VAR func_param_count_tbl
 VAR func_param_start_tbl
 VAR func_param_slot_tbl
+VAR func_return_type_tbl
 VAR func_count
 VAR param_slot_count
 VAR current_param_count
@@ -127,6 +128,8 @@ VAR expr_pending_add
 VAR expr_mul_pending
 VAR expr_line
 VAR expr_type_hash
+VAR call_array_length_mode
+VAR call_array_length_value
 VAR expr_numeric_flag
 VAR expr_group_depth
 VAR expr_group_add_tbl
@@ -164,6 +167,7 @@ VAR current_struct_field_start
 VAR current_struct_field_count
 VAR struct_literal_base_off
 VAR current_array_base_off
+VAR current_array_base_mode
 VAR current_array_length
 VAR current_array_index
 VAR array_saved_expr_target
@@ -220,6 +224,7 @@ ALLOC func_hash_tbl 4096
 ALLOC func_param_count_tbl 4096
 ALLOC func_param_start_tbl 4096
 ALLOC func_param_slot_tbl 32768
+ALLOC func_return_type_tbl 4096
 ALLOC saved_expr_target_tbl 16
 ALLOC saved_expr_end_mode_tbl 16
 ALLOC saved_expr_pending_add_tbl 16
@@ -318,6 +323,7 @@ LET enum_saved_expr_mul_pending 0
 LET current_enum_tag 0
 LET current_enum_type_hash 0
 LET current_array_base_off 0
+LET current_array_base_mode 0
 LET current_array_length 0
 LET current_array_index 0
 LET array_saved_expr_target 0
@@ -1986,6 +1992,11 @@ WHILE 1 == 1
                 ADD temp func_param_start_tbl
                 POKE temp current_param_start
 
+                LET temp current_func_index
+                MUL temp 8
+                ADD temp func_return_type_tbl
+                POKE temp current_return_type_hash
+
                 IF header_emitted == 0
                     WRITE_STR "BITS 64
 section .text
@@ -2504,6 +2515,26 @@ _start:
         IF emit_handled == 0
             IF parser_state == 46
                 IF tok_type == 1
+                    IF tok_hash == 8488884799549109734
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_kind_tbl
+                        POKE temp 6
+
+                        LET temp current_param_start
+                        ADD temp current_param_count
+                        MUL temp 8
+                        ADD temp func_param_slot_tbl
+                        PEEK temp2 temp
+
+                        LET temp current_symbol_index
+                        MUL temp 8
+                        ADD temp symbol_str_len_tbl
+                        POKE temp temp2
+
+                        ADD current_param_count 1
+                    END
+
                     LET found_flag 0
                     IF cached_struct_valid == 1
                         IF tok_hash == cached_struct_hash
@@ -3820,6 +3851,11 @@ _start:
                 ADD temp func_param_start_tbl
                 POKE temp current_param_start
 
+                LET temp current_func_index
+                MUL temp 8
+                ADD temp func_return_type_tbl
+                POKE temp current_return_type_hash
+
                 IF header_emitted == 0
                     WRITE_STR "BITS 64
 section .text
@@ -3864,11 +3900,13 @@ _start:
 
                 LET expr_target 3
                 LET expr_end_mode 9
-                LET expr_pending_add 0
-                LET expr_mul_pending 0
-                LET expr_line 0
-                LET expr_type_hash 0
-                LET expr_numeric_flag 0
+LET expr_pending_add 0
+LET expr_mul_pending 0
+LET expr_line 0
+LET expr_type_hash 0
+LET call_array_length_mode 0
+LET call_array_length_value 0
+LET expr_numeric_flag 0
                 LET parser_state 30
             END
         END
@@ -4231,6 +4269,19 @@ _start:
                                     PEEK temp2 temp
 
                                     IF temp2 == 5
+                                        LET current_array_base_mode 0
+                                        LET array_saved_expr_target expr_target
+                                        LET array_saved_expr_end_mode expr_end_mode
+                                        LET array_saved_expr_pending_add expr_pending_add
+                                        LET array_saved_expr_mul_pending expr_mul_pending
+                                        LET array_saved_expr_line expr_line
+                                        LET current_array_base_off found_off
+                                        LET parser_state 143
+                                        LET emit_handled 1
+                                    END
+
+                                    IF temp2 == 6
+                                        LET current_array_base_mode 1
                                         LET array_saved_expr_target expr_target
                                         LET array_saved_expr_end_mode expr_end_mode
                                         LET array_saved_expr_pending_add expr_pending_add
@@ -4624,6 +4675,21 @@ _start:
                 IF tok_type == 2
                     IF tok_value == 40
                         LET call_hash current_field_hash
+                        LET temp 0
+                        WHILE temp < import_func_alias_count
+                            LET temp2 temp
+                            MUL temp2 8
+                            ADD temp2 import_func_alias_hash_tbl
+                            PEEK found_off temp2
+                            IF found_off == call_hash
+                                LET temp2 temp
+                                MUL temp2 8
+                                ADD temp2 import_func_alias_target_tbl
+                                PEEK call_hash temp2
+                                LET temp import_func_alias_count
+                            END
+                            ADD temp 1
+                        END
                         LET call_context 1
                         LET call_param_count 0
                         LET call_param_start 0
@@ -5086,13 +5152,14 @@ _start:
                                 ADD found_off symbol_kind_tbl
                                 PEEK temp found_off
 
-                                IF temp == 5
-                                    IF temp2 == 1
-                                        LET current_array_base_off current_target_off
-                                        LET expr_target 16
-                                        LET expr_end_mode 16
-                                        LET expr_pending_add 0
-                                        LET expr_mul_pending 0
+                                  IF temp == 5
+                                      IF temp2 == 1
+                                         LET current_array_base_mode 0
+                                          LET current_array_base_off current_target_off
+                                          LET expr_target 16
+                                          LET expr_end_mode 16
+                                          LET expr_pending_add 0
+                                          LET expr_mul_pending 0
                                         LET expr_line 0
                                         LET parser_state 30
                                         LET emit_handled 1
@@ -5105,6 +5172,18 @@ _start:
                                         WRITE_CHAR 10
                                         EXIT
                                     END
+                                END
+
+                                IF temp == 6
+                                    LET current_array_base_mode 1
+                                    LET current_array_base_off current_target_off
+                                    LET expr_target 16
+                                    LET expr_end_mode 16
+                                    LET expr_pending_add 0
+                                    LET expr_mul_pending 0
+                                    LET expr_line 0
+                                    LET parser_state 30
+                                    LET emit_handled 1
                                 END
 
                                 IF emit_handled == 0
@@ -5556,6 +5635,10 @@ _start:
                             END
 
                             IF call_context == 2
+                                LET temp call_func_index
+                                MUL temp 8
+                                ADD temp func_return_type_tbl
+                                PEEK expr_type_hash temp
                                 SUB saved_call_depth 1
                                 LET temp saved_call_depth
                                 MUL temp 8
@@ -5605,6 +5688,8 @@ _start:
                                 PEEK call_arg_index temp2
 
                                 LET current_enum_type_hash 0
+                                LET call_array_length_mode 0
+                                LET call_array_length_value 0
                                 IF expr_mul_pending == 1
                                     WRITE_STR "    pop rbx"
                                     WRITE_CHAR 10
@@ -6849,13 +6934,22 @@ _start:
         IF emit_handled == 0
             IF parser_state == 15
                 IF tok_type == 2
-                    IF tok_value == 91
-                        IF assign_target_kind == 1
-                            LET current_array_base_off current_target_off
-                            LET current_array_length 0
-                            LET parser_state 142
-                            LET emit_handled 1
-                        END
+                        IF tok_value == 91
+                          IF assign_target_kind == 1
+                             LET current_array_base_mode 0
+                             LET current_array_base_off current_target_off
+                             LET current_array_length 0
+                             LET parser_state 142
+                             LET emit_handled 1
+                          END
+
+                          IF assign_target_kind == 6
+                             LET current_array_base_mode 1
+                             LET current_array_base_off current_target_off
+                             LET current_array_length 0
+                             LET parser_state 142
+                             LET emit_handled 1
+                          END
 
                         IF emit_handled == 0
                             WRITE_STR "parse error"
@@ -7109,13 +7203,23 @@ _start:
                     IF tok_value == 61
                         WRITE_STR "    pop rbx"
                         WRITE_CHAR 10
-                        WRITE_STR "    mov rax, [vars + rbx*8"
-                        IF current_array_base_off > 0
-                            WRITE_STR " + "
-                            WRITE_INT current_array_base_off
+                        IF current_array_base_mode == 0
+                            WRITE_STR "    mov rax, [vars + rbx*8"
+                            IF current_array_base_off > 0
+                                WRITE_STR " + "
+                                WRITE_INT current_array_base_off
+                            END
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
                         END
-                        WRITE_STR "]"
-                        WRITE_CHAR 10
+                        IF current_array_base_mode == 1
+                            WRITE_STR "    mov rcx, [vars + "
+                            WRITE_INT current_array_base_off
+                            WRITE_STR "]"
+                            WRITE_CHAR 10
+                            WRITE_STR "    mov rax, [vars + rcx + rbx*8]"
+                            WRITE_CHAR 10
+                        END
                         WRITE_STR "    push rbx"
                         WRITE_CHAR 10
                         WRITE_STR "    push rax"
@@ -7191,6 +7295,28 @@ _start:
                             LET current_enum_type_hash 0
                             WRITE_STR "    mov rax, "
                             WRITE_INT temp2
+                            WRITE_CHAR 10
+                            IF expr_mul_pending == 1
+                                WRITE_STR "    pop rbx"
+                                WRITE_CHAR 10
+                                WRITE_STR "    imul rax, rbx"
+                                WRITE_CHAR 10
+                                LET expr_mul_pending 0
+                            END
+                            LET parser_state 149
+                            LET emit_handled 1
+                        END
+
+                        IF temp2 == 6
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_len_tbl
+                            PEEK temp2 temp
+                            LET expr_type_hash 1808636
+                            LET current_enum_type_hash 0
+                            WRITE_STR "    mov rax, [vars + "
+                            WRITE_INT temp2
+                            WRITE_STR "]"
                             WRITE_CHAR 10
                             IF expr_mul_pending == 1
                                 WRITE_STR "    pop rbx"
@@ -7685,6 +7811,19 @@ _start:
                             PEEK temp2 temp
 
                             IF temp2 == 5
+                                LET current_array_base_mode 0
+                                LET array_saved_expr_target expr_target
+                                LET array_saved_expr_end_mode expr_end_mode
+                                LET array_saved_expr_pending_add expr_pending_add
+                                LET array_saved_expr_mul_pending expr_mul_pending
+                                LET array_saved_expr_line expr_line
+                                LET current_array_base_off found_off
+                                LET parser_state 143
+                                LET emit_handled 1
+                            END
+
+                            IF temp2 == 6
+                                LET current_array_base_mode 1
                                 LET array_saved_expr_target expr_target
                                 LET array_saved_expr_end_mode expr_end_mode
                                 LET array_saved_expr_pending_add expr_pending_add
@@ -7788,13 +7927,42 @@ _start:
                     IF emit_handled == 0
                     IF found_flag == 1
                         LET expr_type_hash 0
+                        LET call_array_length_mode 0
+                        LET call_array_length_value 0
                         IF temp2 == 1
                             LET expr_type_hash 1988825
+                        END
+                        IF temp2 == 5
+                            LET expr_type_hash 8488884799549109734
+                            LET call_array_length_mode 1
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_len_tbl
+                            PEEK call_array_length_value temp
+                        END
+                        IF temp2 == 6
+                            LET expr_type_hash 8488884799549109734
+                            LET call_array_length_mode 2
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_len_tbl
+                            PEEK call_array_length_value temp
                         END
                         LET current_enum_type_hash 0
                         IF temp2 == 2
                             WRITE_STR "    mov rax, "
                             WRITE_INT found_off
+                            WRITE_CHAR 10
+                        END
+                        IF temp2 == 5
+                            WRITE_STR "    mov rax, "
+                            WRITE_INT found_off
+                            WRITE_CHAR 10
+                        END
+                        IF temp2 == 6
+                            WRITE_STR "    mov rax, [vars + "
+                            WRITE_INT found_off
+                            WRITE_STR "]"
                             WRITE_CHAR 10
                         END
                         IF temp2 < 2
@@ -7804,10 +7972,18 @@ _start:
                             WRITE_CHAR 10
                         END
                         IF temp2 > 2
-                            WRITE_STR "    mov rax, [vars + "
-                            WRITE_INT found_off
-                            WRITE_STR "]"
-                            WRITE_CHAR 10
+                            IF temp2 < 5
+                                WRITE_STR "    mov rax, [vars + "
+                                WRITE_INT found_off
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
+                            IF temp2 > 6
+                                WRITE_STR "    mov rax, [vars + "
+                                WRITE_INT found_off
+                                WRITE_STR "]"
+                                WRITE_CHAR 10
+                            END
                         END
                         IF expr_mul_pending == 1
                             WRITE_STR "    pop rbx"
@@ -7996,6 +8172,21 @@ _start:
                         ADD saved_call_depth 1
 
                         LET call_hash current_field_hash
+                        LET temp 0
+                        WHILE temp < import_func_alias_count
+                            LET temp2 temp
+                            MUL temp2 8
+                            ADD temp2 import_func_alias_hash_tbl
+                            PEEK found_off temp2
+                            IF found_off == call_hash
+                                LET temp2 temp
+                                MUL temp2 8
+                                ADD temp2 import_func_alias_target_tbl
+                                PEEK call_hash temp2
+                                LET temp import_func_alias_count
+                            END
+                            ADD temp 1
+                        END
                         LET call_context 2
                         LET call_param_count 0
                         LET call_param_start 0
@@ -8454,13 +8645,23 @@ _start:
                                 IF expr_target == 16
                                     WRITE_STR "    pop rbx"
                                     WRITE_CHAR 10
-                                    WRITE_STR "    mov [vars + rbx*8"
-                                    IF current_array_base_off > 0
-                                        WRITE_STR " + "
-                                        WRITE_INT current_array_base_off
+                                    IF current_array_base_mode == 0
+                                        WRITE_STR "    mov [vars + rbx*8"
+                                        IF current_array_base_off > 0
+                                            WRITE_STR " + "
+                                            WRITE_INT current_array_base_off
+                                        END
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
                                     END
-                                    WRITE_STR "], rax"
-                                    WRITE_CHAR 10
+                                    IF current_array_base_mode == 1
+                                        WRITE_STR "    mov rcx, [vars + "
+                                        WRITE_INT current_array_base_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [vars + rcx + rbx*8], rax"
+                                        WRITE_CHAR 10
+                                    END
                                 END
                                 IF expr_target == 2
                                     WRITE_STR "    call print_rax"
@@ -8630,13 +8831,23 @@ _start:
                             IF expr_target == 16
                                 WRITE_STR "    pop rbx"
                                 WRITE_CHAR 10
-                                WRITE_STR "    mov [vars + rbx*8"
-                                IF current_array_base_off > 0
-                                    WRITE_STR " + "
-                                    WRITE_INT current_array_base_off
+                                IF current_array_base_mode == 0
+                                    WRITE_STR "    mov [vars + rbx*8"
+                                    IF current_array_base_off > 0
+                                        WRITE_STR " + "
+                                        WRITE_INT current_array_base_off
+                                    END
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
                                 END
-                                WRITE_STR "], rax"
-                                WRITE_CHAR 10
+                                IF current_array_base_mode == 1
+                                    WRITE_STR "    mov rcx, [vars + "
+                                    WRITE_INT current_array_base_off
+                                    WRITE_STR "]"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov [vars + rcx + rbx*8], rax"
+                                    WRITE_CHAR 10
+                                END
                             END
                             IF expr_target == 2
                                 WRITE_STR "    call print_rax"
@@ -8953,13 +9164,23 @@ _start:
                             IF tok_value == 93
                                 LET current_enum_type_hash 0
                                 LET expr_type_hash 1808636
-                                WRITE_STR "    mov rax, [vars + rax*8"
-                                IF current_array_base_off > 0
-                                    WRITE_STR " + "
-                                    WRITE_INT current_array_base_off
+                                IF current_array_base_mode == 0
+                                    WRITE_STR "    mov rax, [vars + rax*8"
+                                    IF current_array_base_off > 0
+                                        WRITE_STR " + "
+                                        WRITE_INT current_array_base_off
+                                    END
+                                    WRITE_STR "]"
+                                    WRITE_CHAR 10
                                 END
-                                WRITE_STR "]"
-                                WRITE_CHAR 10
+                                IF current_array_base_mode == 1
+                                    WRITE_STR "    mov rcx, [vars + "
+                                    WRITE_INT current_array_base_off
+                                    WRITE_STR "]"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov rax, [vars + rcx + rax*8]"
+                                    WRITE_CHAR 10
+                                END
                                 IF expr_mul_pending == 1
                                     WRITE_STR "    pop rbx"
                                     WRITE_CHAR 10
@@ -9022,6 +9243,35 @@ _start:
                                 WRITE_CHAR 10
 
                                 ADD call_arg_index 1
+
+                                IF expr_type_hash == 8488884799549109734
+                                    IF call_array_length_mode == 1
+                                        WRITE_STR "    mov rax, "
+                                        WRITE_INT call_array_length_value
+                                        WRITE_CHAR 10
+                                    END
+
+                                    IF call_array_length_mode == 2
+                                        WRITE_STR "    mov rax, [vars + "
+                                        WRITE_INT call_array_length_value
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                    END
+
+                                    LET temp call_param_start
+                                    ADD temp call_arg_index
+                                    MUL temp 8
+                                    ADD temp func_param_slot_tbl
+                                    PEEK temp2 temp
+
+                                    WRITE_STR "    mov [vars + "
+                                    WRITE_INT temp2
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+
+                                    ADD call_arg_index 1
+                                END
+
                                 LET expr_line 0
                                 LET parser_state 48
                                 LET emit_handled 1
@@ -9041,6 +9291,35 @@ _start:
                                     WRITE_CHAR 10
 
                                     ADD call_arg_index 1
+
+                                    IF expr_type_hash == 8488884799549109734
+                                        IF call_array_length_mode == 1
+                                            WRITE_STR "    mov rax, "
+                                            WRITE_INT call_array_length_value
+                                            WRITE_CHAR 10
+                                        END
+
+                                        IF call_array_length_mode == 2
+                                            WRITE_STR "    mov rax, [vars + "
+                                            WRITE_INT call_array_length_value
+                                            WRITE_STR "]"
+                                            WRITE_CHAR 10
+                                        END
+
+                                        LET temp call_param_start
+                                        ADD temp call_arg_index
+                                        MUL temp 8
+                                        ADD temp func_param_slot_tbl
+                                        PEEK temp2 temp
+
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT temp2
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+
+                                        ADD call_arg_index 1
+                                    END
+
                                     LET expr_line 0
 
                                     IF call_param_count < 0
@@ -9081,6 +9360,10 @@ _start:
                                         END
 
                                         IF call_context == 2
+                                            LET temp call_func_index
+                                            MUL temp 8
+                                            ADD temp func_return_type_tbl
+                                            PEEK expr_type_hash temp
                                             SUB saved_call_depth 1
                                             LET temp saved_call_depth
                                             MUL temp 8
@@ -9130,6 +9413,8 @@ _start:
                                             PEEK call_arg_index temp2
 
                                             LET current_enum_type_hash 0
+                                            LET call_array_length_mode 0
+                                            LET call_array_length_value 0
                                             IF expr_mul_pending == 1
                                                 WRITE_STR "    pop rbx"
                                                 WRITE_CHAR 10
@@ -9243,13 +9528,23 @@ _start:
                                 IF expr_target == 16
                                     WRITE_STR "    pop rbx"
                                     WRITE_CHAR 10
-                                    WRITE_STR "    mov [vars + rbx*8"
-                                    IF current_array_base_off > 0
-                                        WRITE_STR " + "
-                                        WRITE_INT current_array_base_off
+                                    IF current_array_base_mode == 0
+                                        WRITE_STR "    mov [vars + rbx*8"
+                                        IF current_array_base_off > 0
+                                            WRITE_STR " + "
+                                            WRITE_INT current_array_base_off
+                                        END
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
                                     END
-                                    WRITE_STR "], rax"
-                                    WRITE_CHAR 10
+                                    IF current_array_base_mode == 1
+                                        WRITE_STR "    mov rcx, [vars + "
+                                        WRITE_INT current_array_base_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [vars + rcx + rbx*8], rax"
+                                        WRITE_CHAR 10
+                                    END
                                 END
                                 IF expr_target == 2
                                     WRITE_STR "    call print_rax"
@@ -9321,7 +9616,7 @@ _start:
                                     WRITE_STR "    ret"
                                     WRITE_CHAR 10
                                 END
-                                LET expr_line 0
+                                LET expr_line tok_line
                                 LET parser_state 33
                             END
                         END
@@ -9422,13 +9717,23 @@ _start:
                             IF expr_target == 16
                                 WRITE_STR "    pop rbx"
                                 WRITE_CHAR 10
-                                WRITE_STR "    mov [vars + rbx*8"
-                                IF current_array_base_off > 0
-                                    WRITE_STR " + "
-                                    WRITE_INT current_array_base_off
+                                IF current_array_base_mode == 0
+                                    WRITE_STR "    mov [vars + rbx*8"
+                                    IF current_array_base_off > 0
+                                        WRITE_STR " + "
+                                        WRITE_INT current_array_base_off
+                                    END
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
                                 END
-                                WRITE_STR "], rax"
-                                WRITE_CHAR 10
+                                IF current_array_base_mode == 1
+                                    WRITE_STR "    mov rcx, [vars + "
+                                    WRITE_INT current_array_base_off
+                                    WRITE_STR "]"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov [vars + rcx + rbx*8], rax"
+                                    WRITE_CHAR 10
+                                END
                             END
                             IF expr_target == 2
                                 WRITE_STR "    call print_rax"

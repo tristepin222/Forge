@@ -1,0 +1,9 @@
+module app.main
+
+function one() -> i32 => 1
+
+function forward() -> i32 => one()
+
+function main() {
+    print(forward())
+}

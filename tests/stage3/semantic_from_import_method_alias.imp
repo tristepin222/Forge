@@ -1,0 +1,15 @@
+module app.main
+
+struct Point {
+    x: i32
+    y: i32
+}
+
+from app.main import sum as total
+
+function sum(self: Point) -> i32 => self.x + self.y
+
+function main() {
+    value p: Point = Point { x: 4, y: 3 }
+    print(p.total())
+}

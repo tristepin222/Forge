@@ -1,0 +1,10 @@
+module app.main
+
+function count_plus(xs: array_i32, n: i32) -> i32 {
+    return len(xs) + n
+}
+
+function main() {
+    value xs = [10, 20, 30]
+    print(count_plus(xs, 2))
+}

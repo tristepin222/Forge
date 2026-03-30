@@ -1,0 +1,12 @@
+module app.main
+
+function set_mid(xs: array_i32) -> i32 {
+    xs[1] = 7
+    return xs[1]
+}
+
+function main() {
+    variable xs = [10, 20, 30]
+    print(set_mid(xs))
+    print(xs[1])
+}

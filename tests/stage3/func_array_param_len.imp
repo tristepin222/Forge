@@ -1,0 +1,8 @@
+module app.main
+
+function count(xs: array_i32) -> i32 => len(xs)
+
+function main() {
+    value xs = [10, 20, 30]
+    print(count(xs))
+}

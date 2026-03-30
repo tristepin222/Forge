@@ -1,0 +1,13 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+function truth(self: Box) -> bool => true
+
+function bad(box: Box) -> i32 => box.truth()
+
+function main() {
+    print(0)
+}

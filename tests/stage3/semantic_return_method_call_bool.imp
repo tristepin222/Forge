@@ -1,0 +1,14 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+function truth(self: Box) -> bool => true
+
+function forward(box: Box) -> bool => box.truth()
+
+function main() {
+    value box: Box = Box { value: 0 }
+    print(forward(box))
+}

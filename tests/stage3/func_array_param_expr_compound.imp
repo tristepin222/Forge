@@ -1,0 +1,13 @@
+module app.main
+
+function tweak(xs: array_i32, i: i32) {
+    xs[i] += 4
+    xs[i + 1] -= xs[i]
+}
+
+function main() {
+    variable xs = [10, 20, 30]
+    tweak(xs, 1)
+    print(xs[1])
+    print(xs[2])
+}

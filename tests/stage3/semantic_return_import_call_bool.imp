@@ -1,0 +1,11 @@
+module app.main
+
+import app.main.{truth as alias}
+
+function truth() -> bool => true
+
+function forward() -> bool => alias()
+
+function main() {
+    print(forward())
+}

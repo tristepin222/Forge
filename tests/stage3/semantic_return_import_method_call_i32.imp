@@ -1,0 +1,16 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+from app.main import one as alias
+
+function one(self: Box) -> i32 => 1
+
+function forward(box: Box) -> i32 => box.alias()
+
+function main() {
+    value box: Box = Box { value: 0 }
+    print(forward(box))
+}

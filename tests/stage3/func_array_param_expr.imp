@@ -1,0 +1,10 @@
+module app.main
+
+function pick(xs: array_i32, i: i32) -> i32 {
+    return xs[i + 1]
+}
+
+function main() {
+    value xs = [10, 20, 30]
+    print(pick(xs, 1))
+}

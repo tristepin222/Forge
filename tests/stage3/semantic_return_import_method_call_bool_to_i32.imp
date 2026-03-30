@@ -1,0 +1,15 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+import app.main.{truth as alias}
+
+function truth(self: Box) -> bool => true
+
+function bad(box: Box) -> i32 => box.alias()
+
+function main() {
+    print(0)
+}

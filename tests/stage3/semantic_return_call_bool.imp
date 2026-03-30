@@ -1,0 +1,9 @@
+module app.main
+
+function truth() -> bool => true
+
+function forward() -> bool => truth()
+
+function main() {
+    print(forward())
+}

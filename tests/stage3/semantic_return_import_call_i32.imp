@@ -1,0 +1,11 @@
+module app.main
+
+from app.main import one as alias
+
+function one() -> i32 => 1
+
+function forward() -> i32 => alias()
+
+function main() {
+    print(forward())
+}

@@ -1,0 +1,11 @@
+module app.main
+
+import app.main.{one as alias}
+
+function one() -> i32 => 1
+
+function bad() -> bool => alias()
+
+function main() {
+    print(0)
+}

@@ -1,0 +1,4 @@
+type error
+return type mismatch
+expected: bool
+got: i32

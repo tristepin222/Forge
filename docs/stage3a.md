@@ -44,9 +44,11 @@ These are the features to implement first:
 - `import std.io.{print as p}`
 - `import std.builtins.{print as p, len as count}`
 - `import app.main.{helper as h}`
+- `import app.main.{helper as h, print as p, len as count}`
 - `from std.io import print as p`
 - `from std.builtins import print as p, len as count`
 - `from app.main import helper as h`
+- `from app.main import helper as h, print as p, len as count`
 - `public function main() { ... }`
 - `private function helper() { ... }`
 - top-level `struct Name { ... }`
@@ -80,6 +82,7 @@ These are the features to implement first:
 - `value xs = [1, 2, 3]`
 - `variable xs = []`
 - `print(len(xs))`
+- `function pick(xs: array_i32) -> i32 => xs[1]`
 - `value p: Point = Point { x: 1, y: 2 }`
 - `print(xs[i + 1])`
 - `print(p.x)`
@@ -149,8 +152,8 @@ It currently supports:
 
 - optional `module ...`
 - `import ...` remains mostly syntax-only, except builtin aliases like `import ... { print as alias }`, `import ... { len as alias }`, and grouped builtin aliases like `import ... { print as p, len as count }`
-- `import ...` remains mostly syntax-only, except builtin aliases like `import ... { print as alias }`, `import ... { len as alias }`, grouped builtin aliases like `import ... { print as p, len as count }`, and narrow non-builtin function-call aliases like `import app.main.{helper as h}`
-- `from ... import ...` remains mostly syntax-only, except builtin aliases like `from ... import print as alias`, `from ... import len as alias`, comma-separated builtin aliases like `from ... import print as p, len as count`, and narrow non-builtin function-call aliases like `from app.main import helper as h`
+- `import ...` remains mostly syntax-only, except builtin aliases like `import ... { print as alias }`, `import ... { len as alias }`, grouped builtin aliases like `import ... { print as p, len as count }`, narrow non-builtin function-call aliases like `import app.main.{helper as h}`, narrow non-builtin method-call aliases like `import app.main.{sum as total}` used as `point.total()`, and mixed grouped aliases like `import app.main.{helper as h, print as p, len as count}`
+- `from ... import ...` remains mostly syntax-only, except builtin aliases like `from ... import print as alias`, `from ... import len as alias`, comma-separated builtin aliases like `from ... import print as p, len as count`, narrow non-builtin function-call aliases like `from app.main import helper as h`, narrow non-builtin method-call aliases like `from app.main import sum as total` used as `point.total()`, and mixed alias lists like `from app.main import helper as h, print as p, len as count`
 - `public function ...`
 - `private function ...`
 - top-level `struct ... { ... }` with stored field layouts
@@ -168,6 +171,10 @@ It currently supports:
 - struct literals assigned to variables
 - array literals assigned to variables, including `[]`
 - `len(array_variable)` for compile-time array length
+- direct array-variable arguments passed to `array_i32` parameters
+- `len(array_i32 parameter)` for the hidden length passed alongside direct array arguments
+- array element assignment through `array_i32` parameters with `=`, `+=`, and `-=`, including expression indices
+- forwarding an `array_i32` parameter into another direct `array_i32` function call
 - array index reads like `xs[i + 1]`
 - array element assignment with `=` / `+=` / `-=`
 - enum constants like `State::Idle`
@@ -197,7 +204,7 @@ It currently supports:
 - multiple `function name(...) { ... }` definitions
 - expression-bodied functions with `=> expr`
 - optional typed parameters in function definitions
-- optional return-type syntax in function definitions, with first-cut semantic checks for inferable `i32` and `bool` return expressions
+- optional return-type syntax in function definitions, with first-cut semantic checks for inferable `i32` and `bool` return expressions, including direct same-unit call expressions, method-call expressions, direct imported-function alias call expressions, and imported method-call alias expressions
 - function calls with zero or more arithmetic-expression arguments
 - forward references for function calls
 - call expressions like `value x = add(1, 2)` or `print(helper())`
@@ -206,10 +213,10 @@ It currently supports:
 - identifier, integer-literal, and function-call factors in expressions
 
 Current limitation:
-- return types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, and arithmetic expressions
+- return types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, arithmetic expressions, direct same-unit call expressions with declared return types, method-call expressions with declared return types, direct imported-function alias call expressions with declared return types, and imported method-call alias expressions with declared return types
 - return-flow completeness and arbitrary call-return inference are not checked yet
 - imports are still mostly syntax-only; only builtin `print` and `len` aliases currently have semantics, including grouped aliases tracked independently
-- non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls, and the module path is still ignored in favor of same-translation-unit function names
+- non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls and method-call member names, and the module path is still ignored in favor of same-translation-unit function names
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`
 - `implement` currently checks that the named interface exists and stores interface method names, but method/signature checking is not enforced yet
 - `default =>` is the canonical fallback arm in `match`; `_ =>` remains accepted as an alias for now
@@ -219,7 +226,8 @@ Current limitation:
 - booleans currently lower to `1` and `0`
 - enum payload support is currently limited to a single payload slot per variant
 - arrays are currently limited to literal-backed storage plus indexing and element assignment with `=`, `+=`, and `-=`
-- `len(...)` is currently limited to array variables
+- `len(...)` is currently limited to array variables and `array_i32` parameters
+- array parameter support is currently narrow: direct array-variable arguments and forwarded `array_i32` parameters only, with index reads, index writes, compound index writes, and `len(param)` inside the callee; richer array value semantics are still out
 
 It does **not** represent a self-hosted Stage 3 compiler yet.
 

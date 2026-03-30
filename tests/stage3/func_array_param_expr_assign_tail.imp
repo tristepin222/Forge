@@ -1,0 +1,11 @@
+module app.main
+
+function set_at(xs: array_i32, i: i32) {
+    xs[i + 1] = xs[i] + 5
+}
+
+function main() {
+    variable xs = [10, 20, 30]
+    set_at(xs, 1)
+    print(xs[2])
+}

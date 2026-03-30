@@ -75,6 +75,20 @@ TEST_NAMES=(
   syntax_return_type
   semantic_return_bool_to_i32
   semantic_return_i32_to_bool
+  semantic_return_call_i32
+  semantic_return_call_bool
+  semantic_return_call_bool_to_i32
+  semantic_return_call_i32_to_bool
+  semantic_return_import_call_i32
+  semantic_return_import_call_bool
+  semantic_return_import_call_bool_to_i32
+  semantic_return_import_call_i32_to_bool
+  semantic_return_import_method_call_i32
+  semantic_return_import_method_call_bool_to_i32
+  semantic_return_method_call_i32
+  semantic_return_method_call_bool
+  semantic_return_method_call_bool_to_i32
+  semantic_return_method_call_i32_to_bool
   syntax_public_import
   syntax_import_alias
   syntax_import_group_alias
@@ -84,6 +98,10 @@ TEST_NAMES=(
   semantic_from_import_builtin_aliases
   semantic_import_group_function_alias
   semantic_from_import_function_alias
+  semantic_import_group_mixed_aliases
+  semantic_from_import_mixed_aliases
+  semantic_import_group_method_alias
+  semantic_from_import_method_alias
   syntax_aliases
   syntax_private_from
   syntax_struct_enum
@@ -98,6 +116,18 @@ TEST_NAMES=(
   data_array_index_expr_compound
   data_array_empty_assign
   data_array_len
+  func_array_param
+  func_array_param_expr
+  func_array_param_len
+  func_array_param_len_mixed
+  func_array_param_assign
+  func_array_param_expr_assign
+  func_array_param_assign_tail
+  func_array_param_expr_assign_tail
+  func_array_param_compound
+  func_array_param_expr_compound
+  func_array_param_forward_len
+  func_array_param_forward_write
   string_print_literal
   string_escape_print
   string_variable_print

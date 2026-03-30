@@ -1,0 +1,14 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+function one(self: Box) -> i32 => 1
+
+function forward(box: Box) -> i32 => box.one()
+
+function main() {
+    value box: Box = Box { value: 0 }
+    print(forward(box))
+}
