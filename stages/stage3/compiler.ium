@@ -333,6 +333,56 @@ LET array_saved_expr_mul_pending 0
 LET array_saved_expr_line 0
 LET pending_array_element_off 0
 
+# Parser state codes:
+# 0: initial state, waiting for top-level declarations (module, import, function, etc.)
+# 1: expecting module name after 'module'
+# 2: inside module, expecting imports or functions
+# 3: expecting function name
+# 4: after function name, expecting parameters or generics
+# 5: after parameters, expecting function body or return type
+# 6: after '-', expecting '>' (to complete '->')
+# 40: top-level declarations
+# 50: after '->', expecting return type name
+# 51: after return type, expecting function body
+# 52: inside class/struct, expecting methods or fields
+# 53: inside function body
+# 54: inside import statement
+# 59: expecting import module name
+# 60: after import name, expecting '{'
+# 61: inside import block
+# 62: expecting '{'
+# 63: expecting '{'
+# 83: expecting struct name
+# 84: after struct name, expecting '{'
+# 85: inside struct, expecting fields or '}'
+# 86: after field name, expecting ':'
+# 87: after ':', expecting field type
+# 95: expecting enum name
+# 96: after enum name, expecting '{'
+# 97: inside enum, expecting variants or '}'
+# 98: after variant name, expecting ',' or '}' or '('
+# 99: inside variant payload
+# 105: expecting interface name for implements
+# 106: after interface name, expecting 'implements'
+# 107: after 'implements', expecting type
+# 108: after type, expecting '{'
+# 109: expecting interface name for definition
+# 110: after interface name, expecting '{'
+# 111: inside interface, expecting functions or '}'
+# 112: expecting function name in interface
+# 113: after function name, expecting '('
+# 114: inside function parameters in interface
+# 115: after parameters in interface
+# 120: expecting class name
+# 123: expecting method name
+# 125: skipping generic parameters
+# 126: expecting '@'
+# 127: after '@', expecting '('
+# 128: inside '@' parameters
+# 129: expecting function or struct
+# 130: after expression function, expecting '{'
+# 141: after import statement
+
 WHILE 1 == 1
     LET emit_requested 0
 
