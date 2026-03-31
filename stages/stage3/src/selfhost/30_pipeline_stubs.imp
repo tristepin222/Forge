@@ -96,7 +96,7 @@ function emit_program_header() {
     emitc(10)
     emits("    call main")
     emitc(10)
-    emits("    mov rdi, rax")
+    emits("    xor rdi, rdi")
     emitc(10)
     emits("    mov rax, 60")
     emitc(10)
