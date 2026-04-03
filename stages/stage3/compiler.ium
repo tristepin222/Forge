@@ -24,6 +24,10 @@ VAR enum_variant_enum_tbl
 VAR enum_variant_hash_tbl
 VAR enum_variant_value_tbl
 VAR enum_variant_payload_tbl
+VAR enum_variant_name_ptr_tbl
+VAR enum_variant_name_len_tbl
+VAR enum_variant_name_pool
+VAR enum_variant_name_pool_ptr
 VAR interface_hash_tbl
 VAR interface_method_start_tbl
 VAR interface_method_count_tbl
@@ -122,6 +126,28 @@ VAR import_func_alias_hash_tbl
 VAR import_func_alias_target_tbl
 VAR header_emitted
 VAR current_return_type_hash
+VAR current_return_seen
+VAR current_return_guaranteed
+VAR current_return_line
+VAR pending_if_return_seen
+VAR block_return_start_tbl
+VAR block_return_guaranteed_tbl
+VAR match_return_all_tbl
+VAR match_has_default_tbl
+VAR match_enum_type_tbl
+VAR match_enum_count_tbl
+VAR match_enum_seen_1_tbl
+VAR match_enum_seen_2_tbl
+VAR match_enum_seen_3_tbl
+VAR match_enum_seen_4_tbl
+VAR match_enum_invalid_tbl
+VAR missing_enum_active
+VAR missing_enum_type_hash
+VAR missing_enum_count
+VAR missing_enum_seen_1
+VAR missing_enum_seen_2
+VAR missing_enum_seen_3
+VAR missing_enum_seen_4
 VAR expr_target
 VAR expr_end_mode
 VAR expr_pending_add
@@ -144,10 +170,53 @@ VAR next_label
 VAR pending_if_label
 VAR match_case_value
 VAR match_case_payload_mode
+VAR match_case_emitted
+VAR match_case_has_guard
 VAR match_case_bind_hash
 VAR match_case_bind_off
 VAR match_end_label
 VAR match_next_label
+VAR match_enum_exhaustive
+VAR match_expr_mode
+VAR match_expr_target_kind
+VAR match_expr_symbol_index
+VAR match_expr_target_off
+VAR match_expr_type_hash
+VAR match_expr_type_set
+VAR match_expr_type_is_enum
+VAR match_prev_active
+VAR match_prev_expr_mode
+VAR match_prev_expr_target_kind
+VAR match_prev_expr_symbol_index
+VAR match_prev_expr_target_off
+VAR match_prev_expr_type_hash
+VAR match_prev_expr_type_set
+VAR match_prev_expr_type_is_enum
+VAR match_prev_saved_expr_target
+VAR match_prev_saved_expr_end_mode
+VAR match_prev_saved_expr_pending_add
+VAR match_prev_saved_expr_mul_pending
+VAR match_prev_saved_expr_line
+VAR match_prev_saved_expr_numeric_flag
+VAR match_prev_saved_call_array_length_mode
+VAR match_prev_saved_call_array_length_value
+VAR match_prev_case_value
+VAR match_prev_case_payload_mode
+VAR match_prev_case_emitted
+VAR match_prev_case_has_guard
+VAR match_prev_case_bind_hash
+VAR match_prev_case_bind_off
+VAR match_prev_end_label
+VAR match_prev_next_label
+VAR match_prev_enum_exhaustive
+VAR match_saved_expr_target
+VAR match_saved_expr_end_mode
+VAR match_saved_expr_pending_add
+VAR match_saved_expr_mul_pending
+VAR match_saved_expr_line
+VAR match_saved_expr_numeric_flag
+VAR match_saved_call_array_length_mode
+VAR match_saved_call_array_length_value
 VAR current_enum_variant_value
 VAR current_enum_variant_payload_flag
 VAR current_enum_construct_hash
@@ -212,6 +281,9 @@ ALLOC enum_variant_enum_tbl 1024
 ALLOC enum_variant_hash_tbl 1024
 ALLOC enum_variant_value_tbl 1024
 ALLOC enum_variant_payload_tbl 1024
+ALLOC enum_variant_name_ptr_tbl 1024
+ALLOC enum_variant_name_len_tbl 1024
+ALLOC enum_variant_name_pool 16384
 ALLOC interface_hash_tbl 512
 ALLOC interface_method_start_tbl 512
 ALLOC interface_method_count_tbl 512
@@ -241,6 +313,17 @@ ALLOC expr_group_mul_tbl 16
 ALLOC block_kind_tbl 512
 ALLOC block_label_tbl 512
 ALLOC block_aux_tbl 512
+ALLOC block_return_start_tbl 512
+ALLOC block_return_guaranteed_tbl 512
+ALLOC match_return_all_tbl 512
+ALLOC match_has_default_tbl 512
+ALLOC match_enum_type_tbl 512
+ALLOC match_enum_count_tbl 512
+ALLOC match_enum_seen_1_tbl 512
+ALLOC match_enum_seen_2_tbl 512
+ALLOC match_enum_seen_3_tbl 512
+ALLOC match_enum_seen_4_tbl 512
+ALLOC match_enum_invalid_tbl 512
 ALLOC import_func_alias_hash_tbl 64
 ALLOC import_func_alias_target_tbl 64
 
@@ -297,6 +380,18 @@ LET import_func_alias_target_hash 0
 LET import_func_alias_count 0
 LET header_emitted 0
 LET current_return_type_hash 0
+LET current_return_seen 0
+LET current_return_guaranteed 0
+LET current_return_line 0
+LET enum_variant_name_pool_ptr enum_variant_name_pool
+LET missing_enum_active 0
+LET missing_enum_type_hash 0
+LET missing_enum_count 0
+LET missing_enum_seen_1 0
+LET missing_enum_seen_2 0
+LET missing_enum_seen_3 0
+LET missing_enum_seen_4 0
+LET pending_if_return_seen 0
 LET expr_type_hash 0
 LET expr_numeric_flag 0
 LET expr_group_depth 0
@@ -314,6 +409,49 @@ LET impl_type_hash 0
 LET current_impl_interface_index 0
 LET interface_sig_line 0
 LET match_case_payload_mode 0
+LET match_case_emitted 0
+LET match_case_has_guard 0
+LET match_enum_exhaustive 0
+LET match_expr_mode 0
+LET match_expr_target_kind 0
+LET match_expr_symbol_index 0
+LET match_expr_target_off 0
+LET match_expr_type_hash 0
+LET match_expr_type_set 0
+LET match_expr_type_is_enum 0
+LET match_prev_active 0
+LET match_prev_expr_mode 0
+LET match_prev_expr_target_kind 0
+LET match_prev_expr_symbol_index 0
+LET match_prev_expr_target_off 0
+LET match_prev_expr_type_hash 0
+LET match_prev_expr_type_set 0
+LET match_prev_expr_type_is_enum 0
+LET match_prev_saved_expr_target 0
+LET match_prev_saved_expr_end_mode 0
+LET match_prev_saved_expr_pending_add 0
+LET match_prev_saved_expr_mul_pending 0
+LET match_prev_saved_expr_line 0
+LET match_prev_saved_expr_numeric_flag 0
+LET match_prev_saved_call_array_length_mode 0
+LET match_prev_saved_call_array_length_value 0
+LET match_prev_case_value 0
+LET match_prev_case_payload_mode 0
+LET match_prev_case_emitted 0
+LET match_prev_case_has_guard 0
+LET match_prev_case_bind_hash 0
+LET match_prev_case_bind_off 0
+LET match_prev_end_label 0
+LET match_prev_next_label 0
+LET match_prev_enum_exhaustive 0
+LET match_saved_expr_target 0
+LET match_saved_expr_end_mode 0
+LET match_saved_expr_pending_add 0
+LET match_saved_expr_mul_pending 0
+LET match_saved_expr_line 0
+LET match_saved_expr_numeric_flag 0
+LET match_saved_call_array_length_mode 0
+LET match_saved_call_array_length_value 0
 LET current_enum_variant_payload_flag 0
 LET current_enum_construct_hash 0
 LET enum_saved_expr_target 0
@@ -478,6 +616,12 @@ WHILE 1 == 1
                 IF ch == 0
                     WRITE_STR "parse error"
                     WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT line_no
+                    WRITE_CHAR 10
+                    WRITE_STR "char: "
+                    WRITE_INT ch
+                    WRITE_CHAR 10
                     WRITE_STR "invalid char"
                     WRITE_CHAR 10
                     EXIT
@@ -489,6 +633,12 @@ WHILE 1 == 1
             IF lex_state == 3
                 IF ch == 10
                     WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT line_no
+                    WRITE_CHAR 10
+                    WRITE_STR "char: "
+                    WRITE_INT ch
                     WRITE_CHAR 10
                     WRITE_STR "invalid char"
                     WRITE_CHAR 10
@@ -512,6 +662,12 @@ WHILE 1 == 1
             IF ch == 0
                 WRITE_STR "parse error"
                 WRITE_CHAR 10
+                WRITE_STR "line: "
+                WRITE_INT line_no
+                WRITE_CHAR 10
+                WRITE_STR "char: "
+                WRITE_INT ch
+                WRITE_CHAR 10
                 WRITE_STR "invalid char"
                 WRITE_CHAR 10
                 EXIT
@@ -519,6 +675,12 @@ WHILE 1 == 1
 
             IF ch == 10
                 WRITE_STR "parse error"
+                WRITE_CHAR 10
+                WRITE_STR "line: "
+                WRITE_INT line_no
+                WRITE_CHAR 10
+                WRITE_STR "char: "
+                WRITE_INT ch
                 WRITE_CHAR 10
                 WRITE_STR "invalid char"
                 WRITE_CHAR 10
@@ -726,6 +888,12 @@ WHILE 1 == 1
             IF need_read == 0
                 WRITE_STR "parse error"
                 WRITE_CHAR 10
+                WRITE_STR "line: "
+                WRITE_INT line_no
+                WRITE_CHAR 10
+                WRITE_STR "char: "
+                WRITE_INT ch
+                WRITE_CHAR 10
                 WRITE_STR "invalid char"
                 WRITE_CHAR 10
                 EXIT
@@ -928,6 +1096,13 @@ WHILE 1 == 1
             IF parser_state == 3
                 IF tok_type == 1
                     LET current_func_hash tok_hash
+                    LET missing_enum_active 0
+                    LET missing_enum_type_hash 0
+                    LET missing_enum_count 0
+                    LET missing_enum_seen_1 0
+                    LET missing_enum_seen_2 0
+                    LET missing_enum_seen_3 0
+                    LET missing_enum_seen_4 0
                     LET parser_state 4
                     LET emit_handled 1
                 END
@@ -1271,6 +1446,9 @@ WHILE 1 == 1
 
                     IF emit_handled == 0
                         WRITE_STR "parse error"
+                        WRITE_CHAR 10
+                        WRITE_STR "line: "
+                        WRITE_INT tok_line
                         WRITE_CHAR 10
                         WRITE_STR "unknown interface"
                         WRITE_CHAR 10
@@ -1636,6 +1814,26 @@ WHILE 1 == 1
                         ADD temp enum_variant_payload_tbl
                         POKE temp 0
 
+                        LET temp enum_variant_count
+                        MUL temp 8
+                        ADD temp enum_variant_name_ptr_tbl
+                        POKE temp enum_variant_name_pool_ptr
+
+                        LET temp enum_variant_count
+                        MUL temp 8
+                        ADD temp enum_variant_name_len_tbl
+                        POKE temp tok_len
+
+                        LET temp2 tok_len
+                        LET temp token_buf
+                        WHILE temp2 > 0
+                            PEEK found_off temp
+                            POKE enum_variant_name_pool_ptr found_off
+                            ADD temp 8
+                            ADD enum_variant_name_pool_ptr 8
+                            SUB temp2 1
+                        END
+
                         ADD enum_variant_count 1
                         LET cached_enum_lookup_valid 0
                         ADD current_enum_variant_value 1
@@ -1668,6 +1866,26 @@ WHILE 1 == 1
                     MUL temp 8
                     ADD temp enum_variant_payload_tbl
                     POKE temp 0
+
+                    LET temp enum_variant_count
+                    MUL temp 8
+                    ADD temp enum_variant_name_ptr_tbl
+                    POKE temp enum_variant_name_pool_ptr
+
+                    LET temp enum_variant_count
+                    MUL temp 8
+                    ADD temp enum_variant_name_len_tbl
+                    POKE temp tok_len
+
+                    LET temp2 tok_len
+                    LET temp token_buf
+                    WHILE temp2 > 0
+                        PEEK found_off temp
+                        POKE enum_variant_name_pool_ptr found_off
+                        ADD temp 8
+                        ADD enum_variant_name_pool_ptr 8
+                        SUB temp2 1
+                    END
 
                     ADD enum_variant_count 1
                     LET cached_enum_lookup_valid 0
@@ -1773,6 +1991,31 @@ WHILE 1 == 1
                         MUL temp 8
                         ADD temp block_label_tbl
                         POKE temp pending_if_label
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_start_tbl
+                        POKE temp current_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
 
                         ADD block_depth 1
                         LET parser_state 9
@@ -2046,6 +2289,10 @@ WHILE 1 == 1
                 MUL temp 8
                 ADD temp func_return_type_tbl
                 POKE temp current_return_type_hash
+                LET current_return_seen 0
+                LET current_return_guaranteed 0
+                LET pending_if_return_seen 0
+                LET pending_if_return_seen 0
 
                 IF header_emitted == 0
                     WRITE_STR "BITS 64
@@ -2695,6 +2942,12 @@ _start:
                                 LET temp block_depth
                                 SUB temp 1
                                 MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                PEEK pending_if_return_seen temp
+
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
                                 ADD temp block_label_tbl
                                 PEEK pending_if_label temp
                                 SUB block_depth 1
@@ -2707,9 +2960,51 @@ _start:
                                     LET temp block_depth
                                     SUB temp 1
                                     MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_aux_tbl
+                                    PEEK temp2 temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
                                     ADD temp block_label_tbl
                                     PEEK pending_if_label temp
                                     SUB block_depth 1
+                                    LET pending_if_return_seen 0
+                                    IF block_depth == 0
+                                        LET pending_if_return_seen 1
+                                    END
+                                    IF pending_if_return_seen == 0
+                                        IF block_depth == 1
+                                            LET temp block_depth
+                                            SUB temp 1
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            PEEK temp temp
+                                            IF temp == 9
+                                                LET pending_if_return_seen 1
+                                            END
+                                        END
+                                    END
+                                    IF temp2 == 1
+                                        IF found_flag == 1
+                                            IF block_depth > 0
+                                                LET temp block_depth
+                                                SUB temp 1
+                                                MUL temp 8
+                                                ADD temp block_return_guaranteed_tbl
+                                                POKE temp 1
+                                            END
+                                            IF pending_if_return_seen == 1
+                                                LET current_return_guaranteed 1
+                                            END
+                                        END
+                                    END
                                     WRITE_STR "IF_END_"
                                     WRITE_INT pending_if_label
                                     WRITE_STR ":"
@@ -2761,6 +3056,110 @@ _start:
 
                             IF emit_handled == 0
                                 IF temp2 == 9
+                                    IF current_return_type_hash > 0
+                                        IF current_return_guaranteed == 0
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            WRITE_INT tok_line
+                                            WRITE_CHAR 10
+                                            WRITE_STR "function: "
+                                            IF current_func_hash == 246720401
+                                                WRITE_STR "main"
+                                            END
+                                            IF current_func_hash < 246720401
+                                                IF current_func_hash < 0
+                                                    WRITE_STR "FN_N_"
+                                                    LET temp2 0
+                                                    SUB temp2 current_func_hash
+                                                    WRITE_INT temp2
+                                                END
+                                                IF current_func_hash > -1
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                            END
+                                            IF current_func_hash > 246720401
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "missing return"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF current_return_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            IF missing_enum_active == 1
+                                                WRITE_STR "missing variants:"
+                                                WRITE_CHAR 10
+                                                LET temp2 enum_variant_count
+                                                LET found_off 0
+                                                WHILE temp2 > 0
+                                                    LET found_index found_off
+                                                    MUL found_index 8
+                                                    ADD found_index enum_variant_enum_tbl
+                                                    PEEK found_index found_index
+                                                    IF found_index == missing_enum_type_hash
+                                                        LET found_flag found_off
+                                                        MUL found_flag 8
+                                                        ADD found_flag enum_variant_value_tbl
+                                                        PEEK found_flag found_flag
+                                                        LET temp 1
+                                                        IF found_flag == 0
+                                                            LET temp missing_enum_seen_1
+                                                        END
+                                                        IF found_flag == 1
+                                                            LET temp missing_enum_seen_2
+                                                        END
+                                                        IF found_flag == 2
+                                                            LET temp missing_enum_seen_3
+                                                        END
+                                                        IF found_flag == 3
+                                                            LET temp missing_enum_seen_4
+                                                        END
+                                                        IF temp == 0
+                                                            WRITE_STR "- "
+                                                            LET found_index found_off
+                                                            MUL found_index 8
+                                                            ADD found_index enum_variant_name_ptr_tbl
+                                                            PEEK found_index found_index
+                                                            LET found_flag found_off
+                                                            MUL found_flag 8
+                                                            ADD found_flag enum_variant_name_len_tbl
+                                                            PEEK found_flag found_flag
+                                                            WHILE found_flag > 0
+                                                                PEEK temp found_index
+                                                                WRITE_CHAR temp
+                                                                ADD found_index 8
+                                                                SUB found_flag 1
+                                                            END
+                                                            WRITE_CHAR 10
+                                                        END
+                                                    END
+                                                    ADD found_off 1
+                                                    SUB temp2 1
+                                                END
+                                            END
+                                            EXIT
+                                        END
+                                    END
+                                    LET current_return_seen 0
+                                    LET current_return_guaranteed 0
                                     SUB block_depth 1
                                     LET parser_state 9
                                     LET emit_handled 1
@@ -2809,6 +3208,20 @@ _start:
                                     LET temp block_depth
                                     SUB temp 1
                                     MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 2
+                                    MUL temp 8
+                                    ADD temp match_return_all_tbl
+                                    IF found_flag == 0
+                                        POKE temp 0
+                                    END
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
 
                                     LET temp2 temp
                                     ADD temp2 block_label_tbl
@@ -2833,6 +3246,20 @@ _start:
 
                             IF emit_handled == 0
                                 IF temp2 == 7
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 2
+                                    MUL temp 8
+                                    ADD temp match_return_all_tbl
+                                    IF found_flag == 0
+                                        POKE temp 0
+                                    END
+
                                     SUB block_depth 1
                                     LET parser_state 66
                                     LET emit_handled 1
@@ -2841,6 +3268,110 @@ _start:
                         END
 
                         IF emit_handled == 0
+                            IF current_return_type_hash > 0
+                                IF current_return_guaranteed == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "function: "
+                                    IF current_func_hash == 246720401
+                                        WRITE_STR "main"
+                                    END
+                                    IF current_func_hash < 246720401
+                                        IF current_func_hash < 0
+                                            WRITE_STR "FN_N_"
+                                            LET temp2 0
+                                            SUB temp2 current_func_hash
+                                            WRITE_INT temp2
+                                        END
+                                        IF current_func_hash > -1
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                    END
+                                    IF current_func_hash > 246720401
+                                        WRITE_STR "FN_P_"
+                                        WRITE_INT current_func_hash
+                                    END
+                                    WRITE_CHAR 10
+                                    WRITE_STR "missing return"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    LET found_flag 0
+                                    IF current_return_type_hash == 1808636
+                                        WRITE_STR "i32"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 222232438
+                                        WRITE_STR "bool"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 1988825
+                                        WRITE_STR "str"
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        WRITE_STR "unknown"
+                                    END
+                                    WRITE_CHAR 10
+                                    IF missing_enum_active == 1
+                                        WRITE_STR "missing variants:"
+                                        WRITE_CHAR 10
+                                        LET temp2 enum_variant_count
+                                        LET found_off 0
+                                        WHILE temp2 > 0
+                                            LET found_index found_off
+                                            MUL found_index 8
+                                            ADD found_index enum_variant_enum_tbl
+                                            PEEK found_index found_index
+                                            IF found_index == missing_enum_type_hash
+                                                LET found_flag found_off
+                                                MUL found_flag 8
+                                                ADD found_flag enum_variant_value_tbl
+                                                PEEK found_flag found_flag
+                                                LET temp 1
+                                                IF found_flag == 0
+                                                    LET temp missing_enum_seen_1
+                                                END
+                                                IF found_flag == 1
+                                                    LET temp missing_enum_seen_2
+                                                END
+                                                IF found_flag == 2
+                                                    LET temp missing_enum_seen_3
+                                                END
+                                                IF found_flag == 3
+                                                    LET temp missing_enum_seen_4
+                                                END
+                                                IF temp == 0
+                                                    WRITE_STR "- "
+                                                    LET found_index found_off
+                                                    MUL found_index 8
+                                                    ADD found_index enum_variant_name_ptr_tbl
+                                                    PEEK found_index found_index
+                                                    LET found_flag found_off
+                                                    MUL found_flag 8
+                                                    ADD found_flag enum_variant_name_len_tbl
+                                                    PEEK found_flag found_flag
+                                                    WHILE found_flag > 0
+                                                        PEEK temp found_index
+                                                        WRITE_CHAR temp
+                                                        ADD found_index 8
+                                                        SUB found_flag 1
+                                                    END
+                                                    WRITE_CHAR 10
+                                                END
+                                            END
+                                            ADD found_off 1
+                                            SUB temp2 1
+                                        END
+                                    END
+                                    EXIT
+                                END
+                            END
+                            LET current_return_seen 0
+                            LET current_return_guaranteed 0
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
                             LET parser_state 40
@@ -3102,6 +3633,7 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 4428069113672
+                            LET current_return_line tok_line
                             LET parser_state 19
                             LET emit_handled 1
                         END
@@ -3197,6 +3729,9 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 66
+                LET match_case_emitted 0
+                LET match_case_has_guard 0
+                LET match_next_label 0
                 IF tok_type == 2
                     IF tok_value == 125
                         IF block_depth > 0
@@ -3212,13 +3747,249 @@ _start:
                                 LET temp2 temp
                                 ADD temp2 block_label_tbl
                                 PEEK match_end_label temp2
+                                LET temp2 temp
+                                ADD temp2 match_return_all_tbl
+                                PEEK found_flag temp2
+                                LET temp2 temp
+                                ADD temp2 match_has_default_tbl
+                                PEEK temp2 temp2
+                                LET match_enum_exhaustive 0
+                                IF temp2 == 1
+                                    LET match_enum_exhaustive 1
+                                END
+                                IF match_enum_exhaustive == 0
+                                    LET temp2 temp
+                                    ADD temp2 match_enum_type_tbl
+                                    PEEK found_index temp2
+                                    IF found_index > 0
+                                        LET temp2 temp
+                                        ADD temp2 match_enum_count_tbl
+                                        PEEK found_off temp2
+                                        IF found_off == 1
+                                            LET temp2 temp
+                                            ADD temp2 match_enum_seen_1_tbl
+                                            PEEK temp2 temp2
+                                            IF temp2 == 1
+                                                LET match_enum_exhaustive 1
+                                            END
+                                        END
+                                        IF found_off == 2
+                                            LET temp2 temp
+                                            ADD temp2 match_enum_seen_1_tbl
+                                            PEEK temp2 temp2
+                                            IF temp2 == 1
+                                                LET temp2 temp
+                                                ADD temp2 match_enum_seen_2_tbl
+                                                PEEK temp2 temp2
+                                                IF temp2 == 1
+                                                    LET match_enum_exhaustive 1
+                                                END
+                                            END
+                                        END
+                                        IF found_off == 3
+                                            LET temp2 temp
+                                            ADD temp2 match_enum_seen_1_tbl
+                                            PEEK temp2 temp2
+                                            IF temp2 == 1
+                                                LET temp2 temp
+                                                ADD temp2 match_enum_seen_2_tbl
+                                                PEEK temp2 temp2
+                                                IF temp2 == 1
+                                                    LET temp2 temp
+                                                    ADD temp2 match_enum_seen_3_tbl
+                                                    PEEK temp2 temp2
+                                                    IF temp2 == 1
+                                                        LET match_enum_exhaustive 1
+                                                    END
+                                                END
+                                            END
+                                        END
+                                        IF found_off == 4
+                                            LET temp2 temp
+                                            ADD temp2 match_enum_seen_1_tbl
+                                            PEEK temp2 temp2
+                                            IF temp2 == 1
+                                                LET temp2 temp
+                                                ADD temp2 match_enum_seen_2_tbl
+                                                PEEK temp2 temp2
+                                                IF temp2 == 1
+                                                    LET temp2 temp
+                                                    ADD temp2 match_enum_seen_3_tbl
+                                                    PEEK temp2 temp2
+                                                    IF temp2 == 1
+                                                        LET temp2 temp
+                                                        ADD temp2 match_enum_seen_4_tbl
+                                                        PEEK temp2 temp2
+                                                        IF temp2 == 1
+                                                            LET match_enum_exhaustive 1
+                                                        END
+                                                    END
+                                                END
+                                            END
+                                        END
+                                    END
+                                END
+                                LET temp2 match_enum_exhaustive
+
+                                IF match_expr_mode > 0
+                                    IF match_enum_exhaustive == 0
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        WRITE_INT tok_line
+                                        WRITE_CHAR 10
+                                        WRITE_STR "non-exhaustive match expression"
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
 
                                 SUB block_depth 1
+                                LET pending_if_return_seen 0
+                                IF block_depth == 0
+                                    LET pending_if_return_seen 1
+                                END
+                                IF pending_if_return_seen == 0
+                                    IF block_depth == 1
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        PEEK temp temp
+                                        IF temp == 9
+                                            LET pending_if_return_seen 1
+                                        END
+                                    END
+                                END
+                                IF found_flag == 1
+                                    IF temp2 == 0
+                                        LET missing_enum_active 0
+                                        LET found_off temp
+                                        ADD found_off match_enum_invalid_tbl
+                                        PEEK found_off found_off
+                                        IF found_off == 0
+                                            LET found_index temp
+                                            ADD found_index match_enum_type_tbl
+                                            PEEK found_index found_index
+                                            IF found_index > 0
+                                                LET missing_enum_active 1
+                                                LET missing_enum_type_hash found_index
+                                                LET found_off temp
+                                                ADD found_off match_enum_count_tbl
+                                                PEEK missing_enum_count found_off
+                                                LET found_off temp
+                                                ADD found_off match_enum_seen_1_tbl
+                                                PEEK missing_enum_seen_1 found_off
+                                                LET found_off temp
+                                                ADD found_off match_enum_seen_2_tbl
+                                                PEEK missing_enum_seen_2 found_off
+                                                LET found_off temp
+                                                ADD found_off match_enum_seen_3_tbl
+                                                PEEK missing_enum_seen_3 found_off
+                                                LET found_off temp
+                                                ADD found_off match_enum_seen_4_tbl
+                                                PEEK missing_enum_seen_4 found_off
+                                            END
+                                        END
+                                    END
+                                    IF temp2 == 1
+                                        IF block_depth > 0
+                                            LET temp block_depth
+                                            SUB temp 1
+                                            MUL temp 8
+                                            ADD temp block_return_guaranteed_tbl
+                                            POKE temp 1
+                                        END
+                                        IF pending_if_return_seen == 1
+                                            LET current_return_guaranteed 1
+                                        END
+                                    END
+                                END
                                 WRITE_STR ".MATCH_END_"
                                 WRITE_INT match_end_label
                                 WRITE_STR ":"
                                 WRITE_CHAR 10
-                                LET parser_state 9
+                                LET found_flag 0
+                                IF match_expr_mode == 2
+                                    LET found_flag 1
+
+                                    LET expr_target match_saved_expr_target
+                                    LET expr_end_mode match_saved_expr_end_mode
+                                    LET expr_pending_add match_saved_expr_pending_add
+                                    LET expr_mul_pending match_saved_expr_mul_pending
+                                    LET expr_line match_saved_expr_line
+                                    LET expr_numeric_flag match_saved_expr_numeric_flag
+                                    LET call_array_length_mode match_saved_call_array_length_mode
+                                    LET call_array_length_value match_saved_call_array_length_value
+
+                                    WRITE_STR "    mov rax, [vars + "
+                                    WRITE_INT match_expr_target_off
+                                    WRITE_STR "]"
+                                    WRITE_CHAR 10
+                                    IF match_expr_type_is_enum == 1
+                                        WRITE_STR "    mov rbx, [vars + "
+                                        LET found_off match_expr_target_off
+                                        ADD found_off 8
+                                        WRITE_INT found_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [enum_expr_payload], rbx"
+                                        WRITE_CHAR 10
+                                        LET current_enum_type_hash match_expr_type_hash
+                                        LET expr_type_hash 0
+                                    END
+                                    IF match_expr_type_is_enum == 0
+                                        LET current_enum_type_hash 0
+                                        LET expr_type_hash match_expr_type_hash
+                                    END
+
+                                    IF expr_mul_pending == 1
+                                        WRITE_STR "    pop rbx"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    imul rax, rbx"
+                                        WRITE_CHAR 10
+                                        LET expr_mul_pending 0
+                                    END
+                                END
+                                IF match_expr_mode > 0
+                                    LET match_expr_mode 0
+                                    LET match_expr_type_hash 0
+                                    LET match_expr_type_set 0
+                                    LET match_expr_type_is_enum 0
+                                END
+                                IF match_prev_active == 1
+                                    LET match_expr_mode match_prev_expr_mode
+                                    LET match_expr_target_kind match_prev_expr_target_kind
+                                    LET match_expr_symbol_index match_prev_expr_symbol_index
+                                    LET match_expr_target_off match_prev_expr_target_off
+                                    LET match_expr_type_hash match_prev_expr_type_hash
+                                    LET match_expr_type_set match_prev_expr_type_set
+                                    LET match_expr_type_is_enum match_prev_expr_type_is_enum
+                                    LET match_saved_expr_target match_prev_saved_expr_target
+                                    LET match_saved_expr_end_mode match_prev_saved_expr_end_mode
+                                    LET match_saved_expr_pending_add match_prev_saved_expr_pending_add
+                                    LET match_saved_expr_mul_pending match_prev_saved_expr_mul_pending
+                                    LET match_saved_expr_line match_prev_saved_expr_line
+                                    LET match_saved_expr_numeric_flag match_prev_saved_expr_numeric_flag
+                                    LET match_saved_call_array_length_mode match_prev_saved_call_array_length_mode
+                                    LET match_saved_call_array_length_value match_prev_saved_call_array_length_value
+                                    LET match_case_value match_prev_case_value
+                                    LET match_case_payload_mode match_prev_case_payload_mode
+                                    LET match_case_emitted match_prev_case_emitted
+                                    LET match_case_has_guard match_prev_case_has_guard
+                                    LET match_case_bind_hash match_prev_case_bind_hash
+                                    LET match_case_bind_off match_prev_case_bind_off
+                                    LET match_end_label match_prev_end_label
+                                    LET match_next_label match_prev_next_label
+                                    LET match_enum_exhaustive match_prev_enum_exhaustive
+                                    LET match_prev_active 0
+                                END
+                                IF found_flag == 1
+                                    LET parser_state 31
+                                END
+                                IF found_flag == 0
+                                    LET parser_state 9
+                                END
                                 LET emit_handled 1
                             END
                         END
@@ -3228,6 +3999,19 @@ _start:
                 IF emit_handled == 0
                     IF tok_type == 4
                         LET match_case_value tok_value
+                        LET temp block_depth
+                        SUB temp 1
+                        MUL temp 8
+                        ADD temp match_enum_invalid_tbl
+                        POKE temp 1
+                        LET temp2 block_depth
+                        SUB temp2 1
+                        MUL temp2 8
+                        ADD temp2 match_enum_type_tbl
+                        PEEK found_index temp2
+                        IF found_index > 0
+                            POKE temp2 -1
+                        END
                         LET parser_state 67
                         LET emit_handled 1
                     END
@@ -3237,11 +4021,37 @@ _start:
                     IF tok_type == 1
                         IF tok_hash == 262750338
                             LET match_case_value 1
+                            LET temp block_depth
+                            SUB temp 1
+                            MUL temp 8
+                            ADD temp match_enum_invalid_tbl
+                            POKE temp 1
+                            LET temp2 block_depth
+                            SUB temp2 1
+                            MUL temp2 8
+                            ADD temp2 match_enum_type_tbl
+                            PEEK found_index temp2
+                            IF found_index > 0
+                                POKE temp2 -1
+                            END
                             LET parser_state 67
                             LET emit_handled 1
                         END
                         IF tok_hash == 30258925323
                             LET match_case_value 0
+                            LET temp block_depth
+                            SUB temp 1
+                            MUL temp 8
+                            ADD temp match_enum_invalid_tbl
+                            POKE temp 1
+                            LET temp2 block_depth
+                            SUB temp2 1
+                            MUL temp2 8
+                            ADD temp2 match_enum_type_tbl
+                            PEEK found_index temp2
+                            IF found_index > 0
+                                POKE temp2 -1
+                            END
                             LET parser_state 67
                             LET emit_handled 1
                         END
@@ -3266,6 +4076,37 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 67
+                IF tok_type == 1
+                    IF tok_hash == 13857
+                        LET match_case_has_guard 1
+                        ADD next_label 1
+                        LET match_next_label next_label
+
+                        WRITE_STR "    mov rax, [match_expr_value]"
+                        WRITE_CHAR 10
+                        WRITE_STR "    cmp rax, "
+                        WRITE_INT match_case_value
+                        WRITE_CHAR 10
+                        WRITE_STR "    jne .MATCH_NEXT_"
+                        WRITE_INT match_next_label
+                        WRITE_CHAR 10
+
+                        IF match_case_payload_mode == 1
+                            WRITE_STR "    mov rax, [match_expr_payload]"
+                            WRITE_CHAR 10
+                            WRITE_STR "    mov [vars + "
+                            WRITE_INT match_case_bind_off
+                            WRITE_STR "], rax"
+                            WRITE_CHAR 10
+                        END
+
+                        LET match_case_emitted 1
+                        LET cond_mode 3
+                        LET parser_state 20
+                        LET emit_handled 1
+                    END
+                END
+
                 IF tok_type == 2
                     IF tok_value == 61
                         LET parser_state 68
@@ -3288,22 +4129,22 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 69
-                IF tok_type == 2
-                    IF tok_value == 123
-                        IF block_depth > 0
-                            LET temp block_depth
-                            SUB temp 1
-                            MUL temp 8
+                IF match_expr_mode > 0
+                    IF block_depth > 0
+                        LET temp block_depth
+                        SUB temp 1
+                        MUL temp 8
 
+                        LET temp2 temp
+                        ADD temp2 block_kind_tbl
+                        PEEK current_target_off temp2
+
+                        IF current_target_off == 5
                             LET temp2 temp
-                            ADD temp2 block_kind_tbl
-                            PEEK current_target_off temp2
+                            ADD temp2 block_label_tbl
+                            PEEK match_end_label temp2
 
-                            IF current_target_off == 5
-                                LET temp2 temp
-                                ADD temp2 block_label_tbl
-                                PEEK match_end_label temp2
-
+                            IF match_case_emitted == 0
                                 ADD next_label 1
                                 LET match_next_label next_label
 
@@ -3324,25 +4165,109 @@ _start:
                                     WRITE_STR "], rax"
                                     WRITE_CHAR 10
                                 END
+                            END
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_kind_tbl
-                                POKE temp 6
+                            LET expr_target 6
+                            LET expr_end_mode 18
+                            LET expr_pending_add 0
+                            LET expr_mul_pending 0
+                            LET expr_line 0
+                            LET expr_type_hash 0
+                            LET expr_numeric_flag 0
+                            LET current_enum_type_hash 0
+                            LET call_array_length_mode 0
+                            LET call_array_length_value 0
+                            LET parser_state 30
+                        END
+                    END
+                END
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_label_tbl
-                                POKE temp match_end_label
+                IF emit_handled == 0
+                    IF match_expr_mode == 0
+                        IF tok_type == 2
+                            IF tok_value == 123
+                                IF block_depth > 0
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_aux_tbl
-                                POKE temp match_next_label
+                                    LET temp2 temp
+                                    ADD temp2 block_kind_tbl
+                                    PEEK current_target_off temp2
 
-                                ADD block_depth 1
-                                LET parser_state 9
-                                LET emit_handled 1
+                                    IF current_target_off == 5
+                                        LET temp2 temp
+                                        ADD temp2 block_label_tbl
+                                        PEEK match_end_label temp2
+
+                                        IF match_case_emitted == 0
+                                            ADD next_label 1
+                                            LET match_next_label next_label
+
+                                            WRITE_STR "    mov rax, [match_expr_value]"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "    cmp rax, "
+                                            WRITE_INT match_case_value
+                                            WRITE_CHAR 10
+                                            WRITE_STR "    jne .MATCH_NEXT_"
+                                            WRITE_INT match_next_label
+                                            WRITE_CHAR 10
+
+                                            IF match_case_payload_mode == 1
+                                                WRITE_STR "    mov rax, [match_expr_payload]"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "    mov [vars + "
+                                                WRITE_INT match_case_bind_off
+                                                WRITE_STR "], rax"
+                                                WRITE_CHAR 10
+                                            END
+                                        END
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        POKE temp 6
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_label_tbl
+                                        POKE temp match_end_label
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_aux_tbl
+                                        POKE temp match_next_label
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_start_tbl
+                                        POKE temp current_return_seen
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        ADD block_depth 1
+                                        LET parser_state 9
+                                        LET emit_handled 1
+                                    END
+                                END
                             END
                         END
                     END
@@ -3352,6 +4277,17 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 70
+                IF tok_type == 1
+                    IF tok_hash == 13857
+                        LET match_case_has_guard 1
+                        ADD next_label 1
+                        LET match_next_label next_label
+                        LET cond_mode 3
+                        LET parser_state 20
+                        LET emit_handled 1
+                    END
+                END
+
                 IF tok_type == 2
                     IF tok_value == 61
                         LET parser_state 71
@@ -3374,40 +4310,108 @@ _start:
 
         IF emit_handled == 0
             IF parser_state == 72
-                IF tok_type == 2
-                    IF tok_value == 123
-                        IF block_depth > 0
-                            LET temp block_depth
-                            SUB temp 1
-                            MUL temp 8
+                IF match_expr_mode > 0
+                    IF block_depth > 0
+                        LET temp block_depth
+                        SUB temp 1
+                        MUL temp 8
 
-                            LET temp2 temp
-                            ADD temp2 block_kind_tbl
-                            PEEK current_target_off temp2
+                        LET temp2 temp
+                        ADD temp2 block_kind_tbl
+                        PEEK current_target_off temp2
 
-                            IF current_target_off == 5
+                        IF current_target_off == 5
+                            IF match_case_has_guard == 0
                                 LET temp2 temp
-                                ADD temp2 block_label_tbl
-                                PEEK match_end_label temp2
+                                ADD temp2 match_has_default_tbl
+                                POKE temp2 1
+                            END
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_kind_tbl
-                                POKE temp 7
+                            LET expr_target 6
+                            LET expr_end_mode 18
+                            LET expr_pending_add 0
+                            LET expr_mul_pending 0
+                            LET expr_line 0
+                            LET expr_type_hash 0
+                            LET expr_numeric_flag 0
+                            LET current_enum_type_hash 0
+                            LET call_array_length_mode 0
+                            LET call_array_length_value 0
+                            LET parser_state 30
+                        END
+                    END
+                END
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_label_tbl
-                                POKE temp match_end_label
+                IF emit_handled == 0
+                    IF match_expr_mode == 0
+                        IF tok_type == 2
+                            IF tok_value == 123
+                                IF block_depth > 0
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
 
-                                LET temp block_depth
-                                MUL temp 8
-                                ADD temp block_aux_tbl
-                                POKE temp 0
+                                    LET temp2 temp
+                                    ADD temp2 block_kind_tbl
+                                    PEEK current_target_off temp2
 
-                                ADD block_depth 1
-                                LET parser_state 9
-                                LET emit_handled 1
+                                    IF current_target_off == 5
+                                        LET temp2 temp
+                                        ADD temp2 block_label_tbl
+                                        PEEK match_end_label temp2
+                                        IF match_case_has_guard == 1
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            POKE temp 6
+
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_label_tbl
+                                            POKE temp match_end_label
+
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_aux_tbl
+                                            POKE temp match_next_label
+                                        END
+
+                                        IF match_case_has_guard == 0
+                                            LET temp2 temp
+                                            ADD temp2 match_has_default_tbl
+                                            POKE temp2 1
+
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            POKE temp 7
+
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_label_tbl
+                                            POKE temp match_end_label
+
+                                            LET temp block_depth
+                                            MUL temp 8
+                                            ADD temp block_aux_tbl
+                                            POKE temp 0
+                                        END
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_start_tbl
+                                        POKE temp current_return_seen
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        ADD block_depth 1
+                                        LET parser_state 9
+                                        LET emit_handled 1
+                                    END
+                                END
                             END
                         END
                     END
@@ -3452,14 +4456,68 @@ _start:
         IF emit_handled == 0
             IF parser_state == 102
                 IF tok_type == 1
-                    LET found_flag 0
-                    LET current_enum_variant_payload_flag 0
-                    IF cached_enum_lookup_valid == 1
-                        IF current_hash == cached_enum_lookup_type_hash
-                            IF tok_hash == cached_enum_lookup_variant_hash
-                                LET found_off cached_enum_lookup_value
-                                LET current_enum_variant_payload_flag cached_enum_lookup_payload
-                                LET found_flag 1
+                    IF enum_resolve_mode == 2
+                        IF tok_hash == 95
+                            LET temp block_depth
+                            SUB temp 1
+                            MUL temp 8
+                            ADD temp match_enum_invalid_tbl
+                            PEEK found_index temp
+                            LET temp block_depth
+                            SUB temp 1
+                            MUL temp 8
+                            ADD temp match_enum_type_tbl
+                            PEEK temp2 temp
+                            IF found_index == 1
+                                POKE temp -1
+                            END
+                            IF found_index == 0
+                                IF temp2 == 0
+                                    POKE temp current_hash
+                                    LET sym_scan enum_variant_count
+                                    LET found_index 0
+                                    WHILE sym_scan > 0
+                                        SUB sym_scan 1
+                                        LET temp2 sym_scan
+                                        MUL temp2 8
+                                        ADD temp2 enum_variant_enum_tbl
+                                        PEEK temp2 temp2
+                                        IF temp2 == current_hash
+                                            ADD found_index 1
+                                        END
+                                    END
+                                    LET temp2 block_depth
+                                    SUB temp2 1
+                                    MUL temp2 8
+                                    ADD temp2 match_enum_count_tbl
+                                    POKE temp2 found_index
+                                END
+                                LET found_index 0
+                                IF temp2 == 0
+                                    LET found_index 1
+                                END
+                                IF temp2 == current_hash
+                                    LET found_index 1
+                                END
+                                IF found_index == 0
+                                    POKE temp -1
+                                END
+                            END
+                            LET parser_state 70
+                            LET emit_handled 1
+                        END
+                    END
+
+                    IF emit_handled == 0
+                        LET found_flag 0
+                        LET current_enum_variant_payload_flag 0
+                        IF cached_enum_lookup_valid == 1
+                            IF current_hash == cached_enum_lookup_type_hash
+                                IF tok_hash == cached_enum_lookup_variant_hash
+                                    LET found_off cached_enum_lookup_value
+                                    LET current_enum_variant_payload_flag cached_enum_lookup_payload
+                                    LET found_flag 1
+                                END
                             END
                         END
                     END
@@ -3506,30 +4564,41 @@ _start:
                     END
 
                     IF found_flag == 1
-                        IF enum_resolve_mode == 1
-                            LET current_enum_construct_hash current_hash
-                            LET current_enum_tag found_off
-                            IF current_enum_variant_payload_flag == 1
-                                LET parser_state 116
-                                LET emit_handled 1
-                            END
-
-                            IF emit_handled == 0
-                                LET current_enum_type_hash current_hash
-                                WRITE_STR "    mov qword [enum_expr_payload], 0"
-                                WRITE_CHAR 10
-                                WRITE_STR "    mov rax, "
-                                WRITE_INT found_off
-                                WRITE_CHAR 10
-                                IF expr_mul_pending == 1
-                                    WRITE_STR "    pop rbx"
-                                    WRITE_CHAR 10
-                                    WRITE_STR "    imul rax, rbx"
-                                    WRITE_CHAR 10
-                                    LET expr_mul_pending 0
+                        IF enum_resolve_mode == 2
+                            IF tok_hash == 95
+                                IF current_hash == cached_enum_lookup_type_hash
+                                    LET parser_state 70
+                                    LET emit_handled 1
                                 END
-                                LET parser_state 31
-                                LET emit_handled 1
+                            END
+                        END
+
+                        IF emit_handled == 0
+                            IF enum_resolve_mode == 1
+                                LET current_enum_construct_hash current_hash
+                                LET current_enum_tag found_off
+                                IF current_enum_variant_payload_flag == 1
+                                    LET parser_state 116
+                                    LET emit_handled 1
+                                END
+
+                                IF emit_handled == 0
+                                    LET current_enum_type_hash current_hash
+                                    WRITE_STR "    mov qword [enum_expr_payload], 0"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "    mov rax, "
+                                    WRITE_INT found_off
+                                    WRITE_CHAR 10
+                                    IF expr_mul_pending == 1
+                                        WRITE_STR "    pop rbx"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    imul rax, rbx"
+                                        WRITE_CHAR 10
+                                        LET expr_mul_pending 0
+                                    END
+                                    LET parser_state 31
+                                    LET emit_handled 1
+                                END
                             END
                         END
 
@@ -3537,6 +4606,87 @@ _start:
                             IF enum_resolve_mode == 2
                                 LET match_case_value found_off
                                 LET match_case_payload_mode 0
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp match_enum_invalid_tbl
+                                PEEK found_index temp
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp match_enum_type_tbl
+                                PEEK temp2 temp
+                                LET found_off temp2
+                                IF found_index == 1
+                                    POKE temp -1
+                                END
+                                IF found_index == 0
+                                    IF found_off == 0
+                                        POKE temp current_hash
+                                        LET sym_scan enum_variant_count
+                                        LET found_index 0
+                                        WHILE sym_scan > 0
+                                            SUB sym_scan 1
+                                            LET temp2 sym_scan
+                                            MUL temp2 8
+                                            ADD temp2 enum_variant_enum_tbl
+                                            PEEK temp2 temp2
+                                            IF temp2 == current_hash
+                                                ADD found_index 1
+                                            END
+                                        END
+                                        LET temp2 block_depth
+                                        SUB temp2 1
+                                        MUL temp2 8
+                                        ADD temp2 match_enum_count_tbl
+                                        POKE temp2 found_index
+                                    END
+                                    LET found_index 0
+                                    IF found_off == 0
+                                        LET found_index 1
+                                    END
+                                    IF found_off == current_hash
+                                        LET found_index 1
+                                    END
+                                    IF found_index == 0
+                                        POKE temp -1
+                                    END
+                                END
+                                LET temp2 block_depth
+                                SUB temp2 1
+                                MUL temp2 8
+                                ADD temp2 match_enum_type_tbl
+                                PEEK temp2 temp2
+                                IF temp2 > 0
+                                    IF match_case_value == 0
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp match_enum_seen_1_tbl
+                                        POKE temp 1
+                                    END
+                                    IF match_case_value == 1
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp match_enum_seen_2_tbl
+                                        POKE temp 1
+                                    END
+                                    IF match_case_value == 2
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp match_enum_seen_3_tbl
+                                        POKE temp 1
+                                    END
+                                    IF match_case_value == 3
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp match_enum_seen_4_tbl
+                                        POKE temp 1
+                                    END
+                                END
                                 IF current_enum_variant_payload_flag == 1
                                     LET parser_state 117
                                     LET emit_handled 1
@@ -3573,6 +4723,9 @@ _start:
 
                 IF emit_handled == 0
                     WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT tok_line
                     WRITE_CHAR 10
                     WRITE_STR "enum payload constructor"
                     WRITE_CHAR 10
@@ -3864,6 +5017,16 @@ _start:
                         ADD temp block_aux_tbl
                         POKE temp current_for_var_off
 
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_start_tbl
+                        POKE temp current_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
                         ADD block_depth 1
                         LET parser_state 9
                         LET emit_handled 1
@@ -3872,16 +5035,17 @@ _start:
             END
         END
 
-        IF emit_handled == 0
-            IF parser_state == 80
-                IF tok_type == 2
-                    PEEK temp token_buf
-                    IF temp == 62
-                        LET parser_state 82
-                        LET emit_handled 1
+                IF emit_handled == 0
+                    IF parser_state == 80
+                        IF tok_type == 2
+                            PEEK temp token_buf
+                            IF temp == 62
+                                LET current_return_line tok_line
+                                LET parser_state 82
+                                LET emit_handled 1
+                            END
+                        END
                     END
-                END
-            END
         END
 
         IF emit_handled == 0
@@ -3905,6 +5069,8 @@ _start:
                 MUL temp 8
                 ADD temp func_return_type_tbl
                 POKE temp current_return_type_hash
+                LET current_return_seen 0
+                LET current_return_guaranteed 0
 
                 IF header_emitted == 0
                     WRITE_STR "BITS 64
@@ -4346,6 +5512,9 @@ LET expr_numeric_flag 0
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
                                     WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
                                     WRITE_STR "array index target"
                                     WRITE_CHAR 10
                                     EXIT
@@ -4426,6 +5595,9 @@ LET expr_numeric_flag 0
 
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
                                     WRITE_CHAR 10
                                     WRITE_STR "field access target"
                                     WRITE_CHAR 10
@@ -4937,6 +6109,9 @@ LET expr_numeric_flag 0
                         IF found_flag == 0
                             WRITE_STR "parse error"
                             WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT tok_line
+                            WRITE_CHAR 10
                             WRITE_STR "unknown field target"
                             WRITE_CHAR 10
                             EXIT
@@ -4944,6 +6119,9 @@ LET expr_numeric_flag 0
 
                         IF found_flag == 1
                             WRITE_STR "parse error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT tok_line
                             WRITE_CHAR 10
                             IF temp == 61
                                 WRITE_STR "immutable field target"
@@ -5035,6 +6213,40 @@ LET expr_numeric_flag 0
                         MUL temp 8
                         ADD temp symbol_str_label_tbl
                         POKE temp current_struct_index
+                    END
+
+                    IF found_flag == 0
+                        LET sym_scan enum_variant_count
+                        WHILE sym_scan > 0
+                            SUB sym_scan 1
+                            LET temp sym_scan
+                            MUL temp 8
+                            ADD temp enum_variant_enum_tbl
+                            PEEK temp2 temp
+                            IF temp2 == tok_hash
+                                LET found_flag 1
+                                LET sym_scan 0
+                            END
+                        END
+
+                        IF found_flag == 1
+                            LET temp current_symbol_index
+                            MUL temp 8
+                            ADD temp symbol_kind_tbl
+                            POKE temp 4
+
+                            LET temp current_symbol_index
+                            MUL temp 8
+                            ADD temp symbol_str_label_tbl
+                            POKE temp tok_hash
+
+                            LET temp current_symbol_index
+                            MUL temp 8
+                            ADD temp symbol_str_len_tbl
+                            POKE temp 0
+
+                            ADD next_off 8
+                        END
                     END
 
                     LET parser_state 14
@@ -5142,6 +6354,9 @@ LET expr_numeric_flag 0
                             IF emit_handled == 0
                                 WRITE_STR "parse error"
                                 WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
                                 WRITE_STR "field assignment target"
                                 WRITE_CHAR 10
                                 EXIT
@@ -5218,6 +6433,9 @@ LET expr_numeric_flag 0
                                     IF emit_handled == 0
                                         WRITE_STR "parse error"
                                         WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        WRITE_INT tok_line
+                                        WRITE_CHAR 10
                                         WRITE_STR "immutable binding"
                                         WRITE_CHAR 10
                                         EXIT
@@ -5238,6 +6456,9 @@ LET expr_numeric_flag 0
 
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
                                     WRITE_CHAR 10
                                     WRITE_STR "array assignment target"
                                     WRITE_CHAR 10
@@ -5303,6 +6524,9 @@ LET expr_numeric_flag 0
 
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
                                     WRITE_CHAR 10
                                     WRITE_STR "immutable binding"
                                     WRITE_CHAR 10
@@ -5370,6 +6594,9 @@ LET expr_numeric_flag 0
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
                                     WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
                                     WRITE_STR "immutable binding"
                                     WRITE_CHAR 10
                                     EXIT
@@ -5435,6 +6662,9 @@ LET expr_numeric_flag 0
 
                                 IF emit_handled == 0
                                     WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
                                     WRITE_CHAR 10
                                     WRITE_STR "immutable binding"
                                     WRITE_CHAR 10
@@ -5738,6 +6968,20 @@ LET expr_numeric_flag 0
                                 PEEK call_arg_index temp2
 
                                 LET current_enum_type_hash 0
+                                IF expr_type_hash > 0
+                                    LET sym_scan enum_variant_count
+                                    WHILE sym_scan > 0
+                                        SUB sym_scan 1
+                                        LET temp sym_scan
+                                        MUL temp 8
+                                        ADD temp enum_variant_enum_tbl
+                                        PEEK temp2 temp
+                                        IF temp2 == expr_type_hash
+                                            LET current_enum_type_hash expr_type_hash
+                                            LET sym_scan 0
+                                        END
+                                    END
+                                END
                                 LET call_array_length_mode 0
                                 LET call_array_length_value 0
                                 IF expr_mul_pending == 1
@@ -5821,6 +7065,10 @@ LET expr_numeric_flag 0
                                 END
 
                                 IF call_context == 2
+                                    LET temp call_func_index
+                                    MUL temp 8
+                                    ADD temp func_return_type_tbl
+                                    PEEK expr_type_hash temp
                                     SUB saved_call_depth 1
                                     LET temp saved_call_depth
                                     MUL temp 8
@@ -5866,6 +7114,20 @@ LET expr_numeric_flag 0
                                     PEEK call_arg_index temp2
 
                                     LET current_enum_type_hash 0
+                                    IF expr_type_hash > 0
+                                        LET sym_scan enum_variant_count
+                                        WHILE sym_scan > 0
+                                            SUB sym_scan 1
+                                            LET temp sym_scan
+                                            MUL temp 8
+                                            ADD temp enum_variant_enum_tbl
+                                            PEEK temp2 temp
+                                            IF temp2 == expr_type_hash
+                                                LET current_enum_type_hash expr_type_hash
+                                                LET sym_scan 0
+                                            END
+                                        END
+                                    END
                                     IF expr_mul_pending == 1
                                         WRITE_STR "    pop rbx"
                                         WRITE_CHAR 10
@@ -5990,6 +7252,9 @@ LET expr_numeric_flag 0
             IF parser_state == 22
                 LET expr_target 5
                 LET expr_end_mode 4
+                IF cond_mode == 3
+                    LET expr_end_mode 17
+                END
                 LET expr_pending_add 0
                 LET expr_mul_pending 0
                 LET expr_line 0
@@ -6020,6 +7285,7 @@ LET expr_numeric_flag 0
                 END
 
                 IF emit_handled == 0
+                    LET pending_if_return_seen 0
                     WRITE_STR "IF_ELSE_"
                     WRITE_INT pending_if_label
                     WRITE_STR ":"
@@ -6042,6 +7308,21 @@ LET expr_numeric_flag 0
                         MUL temp 8
                         ADD temp block_label_tbl
                         POKE temp pending_if_label
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_aux_tbl
+                        POKE temp pending_if_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_start_tbl
+                        POKE temp current_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
 
                         ADD block_depth 1
                         LET parser_state 9
@@ -6066,6 +7347,12 @@ LET expr_numeric_flag 0
                                 LET temp block_depth
                                 SUB temp 1
                                 MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                PEEK pending_if_return_seen temp
+
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
                                 ADD temp block_label_tbl
                                 PEEK pending_if_label temp
                                 SUB block_depth 1
@@ -6078,9 +7365,51 @@ LET expr_numeric_flag 0
                                     LET temp block_depth
                                     SUB temp 1
                                     MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_aux_tbl
+                                    PEEK temp2 temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
                                     ADD temp block_label_tbl
                                     PEEK pending_if_label temp
                                     SUB block_depth 1
+                                    LET pending_if_return_seen 0
+                                    IF block_depth == 0
+                                        LET pending_if_return_seen 1
+                                    END
+                                    IF pending_if_return_seen == 0
+                                        IF block_depth == 1
+                                            LET temp block_depth
+                                            SUB temp 1
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            PEEK temp temp
+                                            IF temp == 9
+                                                LET pending_if_return_seen 1
+                                            END
+                                        END
+                                    END
+                                    IF temp2 == 1
+                                        IF found_flag == 1
+                                            IF block_depth > 0
+                                                LET temp block_depth
+                                                SUB temp 1
+                                                MUL temp 8
+                                                ADD temp block_return_guaranteed_tbl
+                                                POKE temp 1
+                                            END
+                                            IF pending_if_return_seen == 1
+                                                LET current_return_guaranteed 1
+                                            END
+                                        END
+                                    END
                                     WRITE_STR "IF_END_"
                                     WRITE_INT pending_if_label
                                     WRITE_STR ":"
@@ -6391,6 +7720,110 @@ LET expr_numeric_flag 0
                         END
 
                         IF emit_handled == 0
+                            IF current_return_type_hash > 0
+                                IF current_return_guaranteed == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "function: "
+                                    IF current_func_hash == 246720401
+                                        WRITE_STR "main"
+                                    END
+                                    IF current_func_hash < 246720401
+                                        IF current_func_hash < 0
+                                            WRITE_STR "FN_N_"
+                                            LET temp2 0
+                                            SUB temp2 current_func_hash
+                                            WRITE_INT temp2
+                                        END
+                                        IF current_func_hash > -1
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                    END
+                                    IF current_func_hash > 246720401
+                                        WRITE_STR "FN_P_"
+                                        WRITE_INT current_func_hash
+                                    END
+                                    WRITE_CHAR 10
+                                    WRITE_STR "missing return"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    LET found_flag 0
+                                    IF current_return_type_hash == 1808636
+                                        WRITE_STR "i32"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 222232438
+                                        WRITE_STR "bool"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 1988825
+                                        WRITE_STR "str"
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        WRITE_STR "unknown"
+                                    END
+                                    WRITE_CHAR 10
+                                    IF missing_enum_active == 1
+                                        WRITE_STR "missing variants:"
+                                        WRITE_CHAR 10
+                                        LET temp2 enum_variant_count
+                                        LET found_off 0
+                                        WHILE temp2 > 0
+                                            LET found_index found_off
+                                            MUL found_index 8
+                                            ADD found_index enum_variant_enum_tbl
+                                            PEEK found_index found_index
+                                            IF found_index == missing_enum_type_hash
+                                                LET found_flag found_off
+                                                MUL found_flag 8
+                                                ADD found_flag enum_variant_value_tbl
+                                                PEEK found_flag found_flag
+                                                LET temp 1
+                                                IF found_flag == 0
+                                                    LET temp missing_enum_seen_1
+                                                END
+                                                IF found_flag == 1
+                                                    LET temp missing_enum_seen_2
+                                                END
+                                                IF found_flag == 2
+                                                    LET temp missing_enum_seen_3
+                                                END
+                                                IF found_flag == 3
+                                                    LET temp missing_enum_seen_4
+                                                END
+                                                IF temp == 0
+                                                    WRITE_STR "- "
+                                                    LET found_index found_off
+                                                    MUL found_index 8
+                                                    ADD found_index enum_variant_name_ptr_tbl
+                                                    PEEK found_index found_index
+                                                    LET found_flag found_off
+                                                    MUL found_flag 8
+                                                    ADD found_flag enum_variant_name_len_tbl
+                                                    PEEK found_flag found_flag
+                                                    WHILE found_flag > 0
+                                                        PEEK temp found_index
+                                                        WRITE_CHAR temp
+                                                        ADD found_index 8
+                                                        SUB found_flag 1
+                                                    END
+                                                    WRITE_CHAR 10
+                                                END
+                                            END
+                                            ADD found_off 1
+                                            SUB temp2 1
+                                        END
+                                    END
+                                    EXIT
+                                END
+                            END
+                            LET current_return_seen 0
+                            LET current_return_guaranteed 0
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
                             LET parser_state 40
@@ -6580,6 +8013,7 @@ LET expr_numeric_flag 0
                 IF emit_handled == 0
                     IF tok_type == 1
                         IF tok_hash == 4428069113672
+                            LET current_return_line tok_line
                             LET parser_state 19
                             LET emit_handled 1
                         END
@@ -7004,11 +8438,93 @@ LET expr_numeric_flag 0
                         IF emit_handled == 0
                             WRITE_STR "parse error"
                             WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT tok_line
+                            WRITE_CHAR 10
                             WRITE_STR "array assignment target"
                             WRITE_CHAR 10
                             EXIT
                         END
                     END
+                END
+
+                IF emit_handled == 0
+                IF tok_type == 1
+                    IF tok_hash == 32320559965
+                        LET found_flag 0
+                        IF assign_target_kind == 1
+                            LET found_flag 1
+                        END
+                        IF found_flag == 0
+                            WRITE_STR "parse error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT tok_line
+                            WRITE_CHAR 10
+                            WRITE_STR "match assignment target unsupported"
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+                        LET match_prev_active 0
+                        LET found_flag 0
+                        IF match_expr_mode > 0
+                            LET found_flag 1
+                        END
+                        IF found_flag == 0
+                            IF block_depth > 0
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp block_kind_tbl
+                                PEEK temp temp
+                                IF temp == 5
+                                    LET found_flag 1
+                                END
+                            END
+                        END
+                        IF found_flag == 1
+                            LET match_prev_active 1
+                            LET match_prev_expr_mode match_expr_mode
+                            LET match_prev_expr_target_kind match_expr_target_kind
+                            LET match_prev_expr_symbol_index match_expr_symbol_index
+                            LET match_prev_expr_target_off match_expr_target_off
+                            LET match_prev_expr_type_hash match_expr_type_hash
+                            LET match_prev_expr_type_set match_expr_type_set
+                            LET match_prev_expr_type_is_enum match_expr_type_is_enum
+                            LET match_prev_saved_expr_target match_saved_expr_target
+                            LET match_prev_saved_expr_end_mode match_saved_expr_end_mode
+                            LET match_prev_saved_expr_pending_add match_saved_expr_pending_add
+                            LET match_prev_saved_expr_mul_pending match_saved_expr_mul_pending
+                            LET match_prev_saved_expr_line match_saved_expr_line
+                            LET match_prev_saved_expr_numeric_flag match_saved_expr_numeric_flag
+                            LET match_prev_saved_call_array_length_mode match_saved_call_array_length_mode
+                            LET match_prev_saved_call_array_length_value match_saved_call_array_length_value
+                            LET match_prev_case_value match_case_value
+                            LET match_prev_case_payload_mode match_case_payload_mode
+                            LET match_prev_case_emitted match_case_emitted
+                            LET match_prev_case_has_guard match_case_has_guard
+                            LET match_prev_case_bind_hash match_case_bind_hash
+                            LET match_prev_case_bind_off match_case_bind_off
+                            LET match_prev_end_label match_end_label
+                            LET match_prev_next_label match_next_label
+                            LET match_prev_enum_exhaustive match_enum_exhaustive
+                        END
+                        LET match_expr_mode 1
+                        LET match_expr_target_kind assign_target_kind
+                        LET match_expr_symbol_index current_symbol_index
+                        LET match_expr_target_off current_target_off
+                        LET match_expr_type_hash 0
+                        LET match_expr_type_set 0
+                        LET match_expr_type_is_enum 0
+                        LET expr_target 6
+                        LET expr_end_mode 6
+                        LET expr_pending_add 0
+                        LET expr_mul_pending 0
+                        LET expr_line 0
+                        LET parser_state 30
+                        LET emit_handled 1
+                    END
+                END
                 END
 
                 IF emit_handled == 0
@@ -7029,6 +8545,9 @@ LET expr_numeric_flag 0
                 IF tok_type == 5
                     IF assign_target_kind == 11
                         WRITE_STR "parse error"
+                        WRITE_CHAR 10
+                        WRITE_STR "line: "
+                        WRITE_INT tok_line
                         WRITE_CHAR 10
                         WRITE_STR "string field assignment unsupported"
                         WRITE_CHAR 10
@@ -7200,6 +8719,9 @@ LET expr_numeric_flag 0
                     IF tok_value == 93
                         WRITE_STR "parse error"
                         WRITE_CHAR 10
+                        WRITE_STR "line: "
+                        WRITE_INT tok_line
+                        WRITE_CHAR 10
                         WRITE_STR "array index expression"
                         WRITE_CHAR 10
                         EXIT
@@ -7239,6 +8761,9 @@ LET expr_numeric_flag 0
 
                 IF emit_handled == 0
                     WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT tok_line
                     WRITE_CHAR 10
                     WRITE_STR "array target operator"
                     WRITE_CHAR 10
@@ -7286,6 +8811,9 @@ LET expr_numeric_flag 0
 
                 IF emit_handled == 0
                     WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT tok_line
                     WRITE_CHAR 10
                     WRITE_STR "array target operator"
                     WRITE_CHAR 10
@@ -7384,6 +8912,9 @@ LET expr_numeric_flag 0
                 IF emit_handled == 0
                     WRITE_STR "parse error"
                     WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT tok_line
+                    WRITE_CHAR 10
                     WRITE_STR "len target"
                     WRITE_CHAR 10
                     EXIT
@@ -7402,6 +8933,9 @@ LET expr_numeric_flag 0
 
                 IF emit_handled == 0
                     WRITE_STR "parse error"
+                    WRITE_CHAR 10
+                    WRITE_STR "line: "
+                    WRITE_INT tok_line
                     WRITE_CHAR 10
                     WRITE_STR "len close"
                     WRITE_CHAR 10
@@ -7448,6 +8982,88 @@ LET expr_numeric_flag 0
                         LET expr_pending_add 0
                         LET expr_mul_pending 0
                         LET emit_handled 1
+                    END
+                END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
+                        IF tok_hash == 32320559965
+                        LET match_prev_active 0
+                        LET found_flag 0
+                        IF match_expr_mode > 0
+                            LET found_flag 1
+                        END
+                        IF found_flag == 0
+                            IF block_depth > 0
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp block_kind_tbl
+                                PEEK temp temp
+                                IF temp == 5
+                                    LET found_flag 1
+                                END
+                            END
+                        END
+                        IF found_flag == 1
+                            LET match_prev_active 1
+                            LET match_prev_expr_mode match_expr_mode
+                            LET match_prev_expr_target_kind match_expr_target_kind
+                            LET match_prev_expr_symbol_index match_expr_symbol_index
+                            LET match_prev_expr_target_off match_expr_target_off
+                            LET match_prev_expr_type_hash match_expr_type_hash
+                            LET match_prev_expr_type_set match_expr_type_set
+                            LET match_prev_expr_type_is_enum match_expr_type_is_enum
+                            LET match_prev_saved_expr_target match_saved_expr_target
+                            LET match_prev_saved_expr_end_mode match_saved_expr_end_mode
+                            LET match_prev_saved_expr_pending_add match_saved_expr_pending_add
+                            LET match_prev_saved_expr_mul_pending match_saved_expr_mul_pending
+                            LET match_prev_saved_expr_line match_saved_expr_line
+                            LET match_prev_saved_expr_numeric_flag match_saved_expr_numeric_flag
+                            LET match_prev_saved_call_array_length_mode match_saved_call_array_length_mode
+                            LET match_prev_saved_call_array_length_value match_saved_call_array_length_value
+                            LET match_prev_case_value match_case_value
+                            LET match_prev_case_payload_mode match_case_payload_mode
+                            LET match_prev_case_emitted match_case_emitted
+                            LET match_prev_case_has_guard match_case_has_guard
+                            LET match_prev_case_bind_hash match_case_bind_hash
+                            LET match_prev_case_bind_off match_case_bind_off
+                            LET match_prev_end_label match_end_label
+                            LET match_prev_next_label match_next_label
+                            LET match_prev_enum_exhaustive match_enum_exhaustive
+                        END
+                            LET match_expr_mode 2
+                            LET match_expr_target_kind 2
+                            LET match_expr_symbol_index 0
+                            LET match_expr_target_off next_off
+                            ADD next_off 16
+                            LET match_expr_type_hash 0
+                            LET match_expr_type_set 0
+                            LET match_expr_type_is_enum 0
+
+                            LET match_saved_expr_target expr_target
+                            LET match_saved_expr_end_mode expr_end_mode
+                            LET match_saved_expr_pending_add expr_pending_add
+                            LET match_saved_expr_mul_pending expr_mul_pending
+                            LET match_saved_expr_line expr_line
+                            LET match_saved_expr_numeric_flag expr_numeric_flag
+                            LET match_saved_call_array_length_mode call_array_length_mode
+                            LET match_saved_call_array_length_value call_array_length_value
+
+                            LET expr_target 6
+                            LET expr_end_mode 6
+                            LET expr_pending_add 0
+                            LET expr_mul_pending 0
+                            LET expr_line 0
+                            LET expr_type_hash 0
+                            LET expr_numeric_flag 0
+                            LET current_enum_type_hash 0
+                            LET call_array_length_mode 0
+                            LET call_array_length_value 0
+                            LET parser_state 30
+                            LET emit_handled 1
+                        END
                     END
                 END
 
@@ -7888,6 +9504,9 @@ LET expr_numeric_flag 0
                         IF emit_handled == 0
                             WRITE_STR "parse error"
                             WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT tok_line
+                            WRITE_CHAR 10
                             WRITE_STR "array index target"
                             WRITE_CHAR 10
                             EXIT
@@ -8055,6 +9674,9 @@ LET expr_numeric_flag 0
                 IF tok_type == 2
                     IF tok_value == 93
                         WRITE_STR "parse error"
+                        WRITE_CHAR 10
+                        WRITE_STR "line: "
+                        WRITE_INT tok_line
                         WRITE_CHAR 10
                         WRITE_STR "array index expression"
                         WRITE_CHAR 10
@@ -8393,6 +10015,9 @@ LET expr_numeric_flag 0
                     IF found_flag == 0
                         WRITE_STR "parse error"
                         WRITE_CHAR 10
+                        WRITE_STR "line: "
+                        WRITE_INT tok_line
+                        WRITE_CHAR 10
                         WRITE_STR "unknown member"
                         WRITE_CHAR 10
                         EXIT
@@ -8409,6 +10034,9 @@ LET expr_numeric_flag 0
                             IF tok_value == 42
                                 WRITE_STR "parse error"
                                 WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
                                 WRITE_STR "enum arithmetic unsupported"
                                 WRITE_CHAR 10
                                 EXIT
@@ -8416,12 +10044,18 @@ LET expr_numeric_flag 0
                             IF tok_value == 43
                                 WRITE_STR "parse error"
                                 WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
                                 WRITE_STR "enum arithmetic unsupported"
                                 WRITE_CHAR 10
                                 EXIT
                             END
                             IF tok_value == 45
                                 WRITE_STR "parse error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
                                 WRITE_CHAR 10
                                 WRITE_STR "enum arithmetic unsupported"
                                 WRITE_CHAR 10
@@ -8738,6 +10372,50 @@ LET expr_numeric_flag 0
                                             IF found_flag == 0
                                                 WRITE_STR "type error"
                                                 WRITE_CHAR 10
+                                                WRITE_STR "line: "
+                                                LET temp current_return_line
+                                                IF expr_line > 0
+                                                    IF temp == 0
+                                                        LET temp expr_line
+                                                    END
+                                                    IF expr_line < temp
+                                                        LET temp expr_line
+                                                    END
+                                                END
+                                                IF tok_type == 2
+                                                    IF tok_value == 125
+                                                        IF expr_line == tok_line
+                                                            IF temp == tok_line
+                                                                IF temp > 1
+                                                                    SUB temp 1
+                                                                END
+                                                            END
+                                                        END
+                                                    END
+                                                END
+                                                WRITE_INT temp
+                                                WRITE_CHAR 10
+                                                WRITE_STR "function: "
+                                                IF current_func_hash == 246720401
+                                                    WRITE_STR "main"
+                                                END
+                                                IF current_func_hash < 246720401
+                                                    IF current_func_hash < 0
+                                                        WRITE_STR "FN_N_"
+                                                        LET temp2 0
+                                                        SUB temp2 current_func_hash
+                                                        WRITE_INT temp2
+                                                    END
+                                                    IF current_func_hash > -1
+                                                        WRITE_STR "FN_P_"
+                                                        WRITE_INT current_func_hash
+                                                    END
+                                                END
+                                                IF current_func_hash > 246720401
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                                WRITE_CHAR 10
                                                 WRITE_STR "return type mismatch"
                                                 WRITE_CHAR 10
                                                 WRITE_STR "expected: "
@@ -8778,11 +10456,38 @@ LET expr_numeric_flag 0
                                                 WRITE_CHAR 10
                                                 EXIT
                                             END
+                                    END
+                                END
+                                ADD current_return_seen 1
+                                IF block_depth > 0
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    POKE temp 1
+                                END
+                                LET found_flag 0
+                                IF block_depth == 0
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    IF block_depth == 1
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        PEEK temp2 temp
+                                        IF temp2 == 9
+                                            LET found_flag 1
                                         END
                                     END
-                                    WRITE_STR "    ret"
-                                    WRITE_CHAR 10
                                 END
+                                IF found_flag == 1
+                                    LET current_return_guaranteed 1
+                                END
+                                WRITE_STR "    ret"
+                                WRITE_CHAR 10
+                            END
                                 LET expr_line 0
                                 LET parser_state 9
                                 LET emit_handled 1
@@ -8924,6 +10629,71 @@ LET expr_numeric_flag 0
                                         IF found_flag == 0
                                             WRITE_STR "type error"
                                             WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp current_return_line
+                                            IF expr_line > 0
+                                                IF temp == 0
+                                                    LET temp expr_line
+                                                END
+                                                IF expr_line < temp
+                                                    LET temp expr_line
+                                                END
+                                            END
+                                            IF tok_type == 2
+                                                IF tok_value == 125
+                                                    IF expr_line == tok_line
+                                                        IF temp == tok_line
+                                                            IF temp > 1
+                                                                SUB temp 1
+                                                            END
+                                                        END
+                                                    END
+                                                END
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "function: "
+                                            IF current_func_hash == 246720401
+                                                WRITE_STR "main"
+                                            END
+                                            IF current_func_hash < 246720401
+                                                IF current_func_hash < 0
+                                                    WRITE_STR "FN_N_"
+                                                    LET temp2 0
+                                                    SUB temp2 current_func_hash
+                                                    WRITE_INT temp2
+                                                END
+                                                IF current_func_hash > -1
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                            END
+                                            IF current_func_hash > 246720401
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "function: "
+                                            IF current_func_hash == 246720401
+                                                WRITE_STR "main"
+                                            END
+                                            IF current_func_hash < 246720401
+                                                IF current_func_hash < 0
+                                                    WRITE_STR "FN_N_"
+                                                    LET temp2 0
+                                                    SUB temp2 current_func_hash
+                                                    WRITE_INT temp2
+                                                END
+                                                IF current_func_hash > -1
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                            END
+                                            IF current_func_hash > 246720401
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                            WRITE_CHAR 10
                                             WRITE_STR "return type mismatch"
                                             WRITE_CHAR 10
                                             WRITE_STR "expected: "
@@ -8965,6 +10735,33 @@ LET expr_numeric_flag 0
                                             EXIT
                                         END
                                     END
+                                END
+                                ADD current_return_seen 1
+                                IF block_depth > 0
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    POKE temp 1
+                                END
+                                LET found_flag 0
+                                IF block_depth == 0
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    IF block_depth == 1
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        PEEK temp2 temp
+                                        IF temp2 == 9
+                                            LET found_flag 1
+                                        END
+                                    END
+                                END
+                                IF found_flag == 1
+                                    LET current_return_guaranteed 1
                                 END
                                 WRITE_STR "    ret"
                                 WRITE_CHAR 10
@@ -9026,6 +10823,266 @@ LET expr_numeric_flag 0
                 END
 
                 IF emit_handled == 0
+                    IF expr_end_mode == 17
+                        IF tok_type == 2
+                            IF tok_value == 61
+                                WRITE_STR "    mov [cond_expr_rhs], rax"
+                                WRITE_CHAR 10
+                                LET expr_line 0
+                                WRITE_STR "    mov rax, [cond_expr_lhs]"
+                                WRITE_CHAR 10
+                                WRITE_STR "    mov rbx, [cond_expr_rhs]"
+                                WRITE_CHAR 10
+                                WRITE_STR "    cmp rax, rbx"
+                                WRITE_CHAR 10
+                                IF cond_op == 1
+                                    WRITE_STR "    jge .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                IF cond_op == 2
+                                    WRITE_STR "    jle .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                IF cond_op == 3
+                                    WRITE_STR "    jne .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                IF cond_op == 4
+                                    WRITE_STR "    jg .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                IF cond_op == 5
+                                    WRITE_STR "    jl .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                IF cond_op == 6
+                                    WRITE_STR "    je .MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_CHAR 10
+                                END
+                                LET cond_mode 0
+                                LET parser_state 68
+                                IF match_case_has_guard == 1
+                                    IF match_case_emitted == 0
+                                        LET parser_state 71
+                                    END
+                                END
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF expr_end_mode == 18
+                        IF tok_type == 2
+                            IF tok_value == 44
+                                IF expr_numeric_flag == 1
+                                    LET expr_type_hash 1808636
+                                END
+                                LET temp2 0
+                                LET temp 0
+                                IF current_enum_type_hash > 0
+                                    LET temp 1
+                                    LET temp2 current_enum_type_hash
+                                END
+                                IF current_enum_type_hash == 0
+                                    LET temp2 expr_type_hash
+                                END
+                                IF match_expr_type_set == 0
+                                    IF temp2 > 0
+                                        LET match_expr_type_hash temp2
+                                        LET match_expr_type_is_enum temp
+                                        LET match_expr_type_set 1
+                                    END
+                                END
+                                IF match_expr_type_set == 1
+                                    IF temp2 > 0
+                                        LET found_flag 0
+                                        IF temp2 == match_expr_type_hash
+                                            IF temp == match_expr_type_is_enum
+                                                LET found_flag 1
+                                            END
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            WRITE_INT tok_line
+                                            WRITE_CHAR 10
+                                            WRITE_STR "match arm type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF match_expr_type_is_enum == 1
+                                                WRITE_STR "enum"
+                                                LET found_flag 1
+                                            END
+                                            IF match_expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF match_expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF match_expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF temp == 1
+                                                WRITE_STR "enum"
+                                                LET found_flag 1
+                                            END
+                                            IF temp2 == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF temp2 == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF temp2 == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
+
+                                IF match_expr_target_kind == 1
+                                    LET found_off match_expr_symbol_index
+                                    MUL found_off 8
+                                    ADD found_off symbol_kind_tbl
+                                    PEEK temp found_off
+
+                                    IF current_enum_type_hash > 0
+                                        IF temp < 4
+                                            LET current_target_off next_off
+                                            ADD next_off 16
+
+                                            LET found_off match_expr_symbol_index
+                                            MUL found_off 8
+                                            ADD found_off symbol_off_tbl
+                                            POKE found_off current_target_off
+
+                                            LET match_expr_target_off current_target_off
+
+                                            LET found_off match_expr_symbol_index
+                                            MUL found_off 8
+                                            ADD found_off symbol_kind_tbl
+                                            POKE found_off 4
+                                        END
+
+                                        LET found_off match_expr_symbol_index
+                                        MUL found_off 8
+                                        ADD found_off symbol_str_label_tbl
+                                        POKE found_off current_enum_type_hash
+
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT match_expr_target_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov rbx, [enum_expr_payload]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [vars + "
+                                        LET found_off match_expr_target_off
+                                        ADD found_off 8
+                                        WRITE_INT found_off
+                                        WRITE_STR "], rbx"
+                                        WRITE_CHAR 10
+                                    END
+
+                                    IF current_enum_type_hash == 0
+                                        IF temp == 4
+                                            WRITE_STR "    mov [vars + "
+                                            WRITE_INT match_expr_target_off
+                                            WRITE_STR "], rax"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "    mov qword [vars + "
+                                            LET found_off match_expr_target_off
+                                            ADD found_off 8
+                                            WRITE_INT found_off
+                                            WRITE_STR "], 0"
+                                            WRITE_CHAR 10
+                                        END
+
+                                        IF temp == 0
+                                            LET found_off match_expr_symbol_index
+                                            MUL found_off 8
+                                            ADD found_off symbol_kind_tbl
+                                            POKE found_off 0
+                                            WRITE_STR "    mov [vars + "
+                                            WRITE_INT match_expr_target_off
+                                            WRITE_STR "], rax"
+                                            WRITE_CHAR 10
+                                        END
+                                    END
+                                END
+                                IF match_expr_target_kind == 2
+                                    IF current_enum_type_hash > 0
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT match_expr_target_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov rbx, [enum_expr_payload]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [vars + "
+                                        LET found_off match_expr_target_off
+                                        ADD found_off 8
+                                        WRITE_INT found_off
+                                        WRITE_STR "], rbx"
+                                        WRITE_CHAR 10
+                                    END
+
+                                    IF current_enum_type_hash == 0
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT match_expr_target_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov qword [vars + "
+                                        LET found_off match_expr_target_off
+                                        ADD found_off 8
+                                        WRITE_INT found_off
+                                        WRITE_STR "], 0"
+                                        WRITE_CHAR 10
+                                    END
+                                END
+
+                                WRITE_STR "    jmp .MATCH_END_"
+                                WRITE_INT match_end_label
+                                WRITE_CHAR 10
+                                IF match_next_label > 0
+                                    WRITE_STR ".MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_STR ":"
+                                    WRITE_CHAR 10
+                                END
+                                LET expr_line 0
+                                LET parser_state 66
+                                LET emit_handled 1
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
                     IF expr_end_mode == 6
                         IF tok_type == 2
                             IF tok_value == 123
@@ -9058,6 +11115,54 @@ LET expr_numeric_flag 0
                                 LET temp block_depth
                                 MUL temp 8
                                 ADD temp block_aux_tbl
+                                POKE temp 0
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_return_all_tbl
+                                POKE temp 1
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_has_default_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_type_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_count_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_seen_1_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_seen_2_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_seen_3_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_seen_4_tbl
+                                POKE temp 0
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp match_enum_invalid_tbl
+                                POKE temp 0
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp block_return_start_tbl
+                                POKE temp current_return_seen
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
                                 POKE temp 0
 
                                 ADD block_depth 1
@@ -9123,6 +11228,16 @@ LET expr_numeric_flag 0
                                 MUL temp 8
                                 ADD temp block_aux_tbl
                                 POKE temp current_for_var_off
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp block_return_start_tbl
+                                POKE temp current_return_seen
+
+                                LET temp block_depth
+                                MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                POKE temp 0
 
                                 ADD block_depth 1
                                 LET expr_line 0
@@ -9463,6 +11578,20 @@ LET expr_numeric_flag 0
                                             PEEK call_arg_index temp2
 
                                             LET current_enum_type_hash 0
+                                            IF expr_type_hash > 0
+                                                LET sym_scan enum_variant_count
+                                                WHILE sym_scan > 0
+                                                    SUB sym_scan 1
+                                                    LET temp sym_scan
+                                                    MUL temp 8
+                                                    ADD temp enum_variant_enum_tbl
+                                                    PEEK temp2 temp
+                                                    IF temp2 == expr_type_hash
+                                                        LET current_enum_type_hash expr_type_hash
+                                                        LET sym_scan 0
+                                                    END
+                                                END
+                                            END
                                             LET call_array_length_mode 0
                                             LET call_array_length_value 0
                                             IF expr_mul_pending == 1
@@ -9621,6 +11750,50 @@ LET expr_numeric_flag 0
                                             IF found_flag == 0
                                                 WRITE_STR "type error"
                                                 WRITE_CHAR 10
+                                                WRITE_STR "line: "
+                                                LET temp current_return_line
+                                                IF expr_line > 0
+                                                    IF temp == 0
+                                                        LET temp expr_line
+                                                    END
+                                                    IF expr_line < temp
+                                                        LET temp expr_line
+                                                    END
+                                                END
+                                                IF tok_type == 2
+                                                    IF tok_value == 125
+                                                        IF expr_line == tok_line
+                                                            IF temp == tok_line
+                                                                IF temp > 1
+                                                                    SUB temp 1
+                                                                END
+                                                            END
+                                                        END
+                                                    END
+                                                END
+                                                WRITE_INT temp
+                                                WRITE_CHAR 10
+                                                WRITE_STR "function: "
+                                                IF current_func_hash == 246720401
+                                                    WRITE_STR "main"
+                                                END
+                                                IF current_func_hash < 246720401
+                                                    IF current_func_hash < 0
+                                                        WRITE_STR "FN_N_"
+                                                        LET temp2 0
+                                                        SUB temp2 current_func_hash
+                                                        WRITE_INT temp2
+                                                    END
+                                                    IF current_func_hash > -1
+                                                        WRITE_STR "FN_P_"
+                                                        WRITE_INT current_func_hash
+                                                    END
+                                                END
+                                                IF current_func_hash > 246720401
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                                WRITE_CHAR 10
                                                 WRITE_STR "return type mismatch"
                                                 WRITE_CHAR 10
                                                 WRITE_STR "expected: "
@@ -9662,6 +11835,33 @@ LET expr_numeric_flag 0
                                                 EXIT
                                             END
                                         END
+                                    END
+                                    ADD current_return_seen 1
+                                    IF block_depth > 0
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 1
+                                    END
+                                    LET found_flag 0
+                                    IF block_depth == 0
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        IF block_depth == 1
+                                            LET temp block_depth
+                                            SUB temp 1
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            PEEK temp2 temp
+                                            IF temp2 == 9
+                                                LET found_flag 1
+                                            END
+                                        END
+                                    END
+                                    IF found_flag == 1
+                                        LET current_return_guaranteed 1
                                     END
                                     WRITE_STR "    ret"
                                     WRITE_CHAR 10
@@ -9810,6 +12010,50 @@ LET expr_numeric_flag 0
                                         IF found_flag == 0
                                             WRITE_STR "type error"
                                             WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp current_return_line
+                                            IF expr_line > 0
+                                                IF temp == 0
+                                                    LET temp expr_line
+                                                END
+                                                IF expr_line < temp
+                                                    LET temp expr_line
+                                                END
+                                            END
+                                            IF tok_type == 2
+                                                IF tok_value == 125
+                                                    IF expr_line == tok_line
+                                                        IF temp == tok_line
+                                                            IF temp > 1
+                                                                SUB temp 1
+                                                            END
+                                                        END
+                                                    END
+                                                END
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "function: "
+                                            IF current_func_hash == 246720401
+                                                WRITE_STR "main"
+                                            END
+                                            IF current_func_hash < 246720401
+                                                IF current_func_hash < 0
+                                                    WRITE_STR "FN_N_"
+                                                    LET temp2 0
+                                                    SUB temp2 current_func_hash
+                                                    WRITE_INT temp2
+                                                END
+                                                IF current_func_hash > -1
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                            END
+                                            IF current_func_hash > 246720401
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                            WRITE_CHAR 10
                                             WRITE_STR "return type mismatch"
                                             WRITE_CHAR 10
                                             WRITE_STR "expected: "
@@ -9851,6 +12095,33 @@ LET expr_numeric_flag 0
                                             EXIT
                                         END
                                     END
+                                END
+                                ADD current_return_seen 1
+                                IF block_depth > 0
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    POKE temp 1
+                                END
+                                LET found_flag 0
+                                IF block_depth == 0
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    IF block_depth == 1
+                                        LET temp block_depth
+                                        SUB temp 1
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        PEEK temp2 temp
+                                        IF temp2 == 9
+                                            LET found_flag 1
+                                        END
+                                    END
+                                END
+                                IF found_flag == 1
+                                    LET current_return_guaranteed 1
                                 END
                                 WRITE_STR "    ret"
                                 WRITE_CHAR 10
@@ -9896,6 +12167,71 @@ LET expr_numeric_flag 0
                                     IF found_flag == 0
                                         WRITE_STR "type error"
                                         WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        LET temp current_return_line
+                                        IF expr_line > 0
+                                            IF temp == 0
+                                                LET temp expr_line
+                                            END
+                                            IF expr_line < temp
+                                                LET temp expr_line
+                                            END
+                                        END
+                                        IF tok_type == 2
+                                            IF tok_value == 125
+                                                IF expr_line == tok_line
+                                                    IF temp == tok_line
+                                                        IF temp > 1
+                                                            SUB temp 1
+                                                        END
+                                                    END
+                                                END
+                                            END
+                                        END
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        WRITE_STR "function: "
+                                        IF current_func_hash == 246720401
+                                            WRITE_STR "main"
+                                        END
+                                        IF current_func_hash < 246720401
+                                            IF current_func_hash < 0
+                                                WRITE_STR "FN_N_"
+                                                LET temp2 0
+                                                SUB temp2 current_func_hash
+                                                WRITE_INT temp2
+                                            END
+                                            IF current_func_hash > -1
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                        END
+                                        IF current_func_hash > 246720401
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                        WRITE_CHAR 10
+                                        WRITE_STR "function: "
+                                        IF current_func_hash == 246720401
+                                            WRITE_STR "main"
+                                        END
+                                        IF current_func_hash < 246720401
+                                            IF current_func_hash < 0
+                                                WRITE_STR "FN_N_"
+                                                LET temp2 0
+                                                SUB temp2 current_func_hash
+                                                WRITE_INT temp2
+                                            END
+                                            IF current_func_hash > -1
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                        END
+                                        IF current_func_hash > 246720401
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                        WRITE_CHAR 10
                                         WRITE_STR "return type mismatch"
                                         WRITE_CHAR 10
                                         WRITE_STR "expected: "
@@ -9937,6 +12273,33 @@ LET expr_numeric_flag 0
                                         EXIT
                                     END
                                 END
+                            END
+                            ADD current_return_seen 1
+                            IF block_depth > 0
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                POKE temp 1
+                            END
+                            LET found_flag 0
+                            IF block_depth == 0
+                                LET found_flag 1
+                            END
+                            IF found_flag == 0
+                                IF block_depth == 1
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_kind_tbl
+                                    PEEK temp2 temp
+                                    IF temp2 == 9
+                                        LET found_flag 1
+                                    END
+                                END
+                            END
+                            IF found_flag == 1
+                                LET current_return_guaranteed 1
                             END
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
@@ -9961,6 +12324,50 @@ LET expr_numeric_flag 0
                                     IF found_flag == 0
                                         WRITE_STR "type error"
                                         WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        LET temp current_return_line
+                                        IF expr_line > 0
+                                            IF temp == 0
+                                                LET temp expr_line
+                                            END
+                                            IF expr_line < temp
+                                                LET temp expr_line
+                                            END
+                                        END
+                                        IF tok_type == 2
+                                            IF tok_value == 125
+                                                IF expr_line == tok_line
+                                                    IF temp == tok_line
+                                                        IF temp > 1
+                                                            SUB temp 1
+                                                        END
+                                                    END
+                                                END
+                                            END
+                                        END
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        WRITE_STR "function: "
+                                        IF current_func_hash == 246720401
+                                            WRITE_STR "main"
+                                        END
+                                        IF current_func_hash < 246720401
+                                            IF current_func_hash < 0
+                                                WRITE_STR "FN_N_"
+                                                LET temp2 0
+                                                SUB temp2 current_func_hash
+                                                WRITE_INT temp2
+                                            END
+                                            IF current_func_hash > -1
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                        END
+                                        IF current_func_hash > 246720401
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                        WRITE_CHAR 10
                                         WRITE_STR "return type mismatch"
                                         WRITE_CHAR 10
                                         WRITE_STR "expected: "
@@ -10002,6 +12409,33 @@ LET expr_numeric_flag 0
                                         EXIT
                                     END
                                 END
+                            END
+                            ADD current_return_seen 1
+                            IF block_depth > 0
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                POKE temp 1
+                            END
+                            LET found_flag 0
+                            IF block_depth == 0
+                                LET found_flag 1
+                            END
+                            IF found_flag == 0
+                                IF block_depth == 1
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_kind_tbl
+                                    PEEK temp2 temp
+                                    IF temp2 == 9
+                                        LET found_flag 1
+                                    END
+                                END
+                            END
+                            IF found_flag == 1
+                                LET current_return_guaranteed 1
                             END
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
@@ -10131,6 +12565,16 @@ LET expr_numeric_flag 0
                         ADD temp block_label_tbl
                         POKE temp pending_if_label
 
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_start_tbl
+                        POKE temp current_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
                         ADD block_depth 1
                         LET parser_state 9
                         LET emit_handled 1
@@ -10141,6 +12585,29 @@ LET expr_numeric_flag 0
 
         IF emit_handled == 0
             IF parser_state == 124
+                IF cond_mode == 3
+                    IF tok_type == 2
+                        IF tok_value == 62
+                            WRITE_STR "    mov rax, [cond_expr_lhs]"
+                            WRITE_CHAR 10
+                            WRITE_STR "    cmp rax, 0"
+                            WRITE_CHAR 10
+                            WRITE_STR "    je .MATCH_NEXT_"
+                            WRITE_INT match_next_label
+                            WRITE_CHAR 10
+                            LET cond_mode 0
+                            LET parser_state 69
+                            IF match_case_has_guard == 1
+                                IF match_case_emitted == 0
+                                    LET parser_state 72
+                                END
+                            END
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
                 IF tok_type == 2
                     IF tok_value == 61
                         LET parser_state 22
@@ -10150,6 +12617,7 @@ LET expr_numeric_flag 0
 
                 IF emit_handled == 0
                     LET parser_state 22
+                END
                 END
             END
         END
@@ -10262,6 +12730,16 @@ LET expr_numeric_flag 0
                         ADD temp block_label_tbl
                         POKE temp 0
 
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_start_tbl
+                        POKE temp current_return_seen
+
+                        LET temp block_depth
+                        MUL temp 8
+                        ADD temp block_return_guaranteed_tbl
+                        POKE temp 0
+
                         ADD block_depth 1
                         LET parser_state 9
                         LET emit_handled 1
@@ -10285,6 +12763,12 @@ LET expr_numeric_flag 0
                                 LET temp block_depth
                                 SUB temp 1
                                 MUL temp 8
+                                ADD temp block_return_guaranteed_tbl
+                                PEEK pending_if_return_seen temp
+
+                                LET temp block_depth
+                                SUB temp 1
+                                MUL temp 8
                                 ADD temp block_label_tbl
                                 PEEK pending_if_label temp
                                 SUB block_depth 1
@@ -10297,9 +12781,51 @@ LET expr_numeric_flag 0
                                     LET temp block_depth
                                     SUB temp 1
                                     MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_aux_tbl
+                                    PEEK temp2 temp
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
                                     ADD temp block_label_tbl
                                     PEEK pending_if_label temp
                                     SUB block_depth 1
+                                    LET pending_if_return_seen 0
+                                    IF block_depth == 0
+                                        LET pending_if_return_seen 1
+                                    END
+                                    IF pending_if_return_seen == 0
+                                        IF block_depth == 1
+                                            LET temp block_depth
+                                            SUB temp 1
+                                            MUL temp 8
+                                            ADD temp block_kind_tbl
+                                            PEEK temp temp
+                                            IF temp == 9
+                                                LET pending_if_return_seen 1
+                                            END
+                                        END
+                                    END
+                                    IF temp2 == 1
+                                        IF found_flag == 1
+                                            IF block_depth > 0
+                                                LET temp block_depth
+                                                SUB temp 1
+                                                MUL temp 8
+                                                ADD temp block_return_guaranteed_tbl
+                                                POKE temp 1
+                                            END
+                                            IF pending_if_return_seen == 1
+                                                LET current_return_guaranteed 1
+                                            END
+                                        END
+                                    END
                                     WRITE_STR "IF_END_"
                                     WRITE_INT pending_if_label
                                     WRITE_STR ":"
@@ -10351,8 +12877,175 @@ LET expr_numeric_flag 0
 
                             IF emit_handled == 0
                                 IF temp2 == 9
+                                    IF current_return_type_hash > 0
+                                        IF current_return_guaranteed == 0
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            WRITE_INT tok_line
+                                            WRITE_CHAR 10
+                                            WRITE_STR "function: "
+                                            IF current_func_hash == 246720401
+                                                WRITE_STR "main"
+                                            END
+                                            IF current_func_hash < 246720401
+                                                IF current_func_hash < 0
+                                                    WRITE_STR "FN_N_"
+                                                    LET temp2 0
+                                                    SUB temp2 current_func_hash
+                                                    WRITE_INT temp2
+                                                END
+                                                IF current_func_hash > -1
+                                                    WRITE_STR "FN_P_"
+                                                    WRITE_INT current_func_hash
+                                                END
+                                            END
+                                            IF current_func_hash > 246720401
+                                                WRITE_STR "FN_P_"
+                                                WRITE_INT current_func_hash
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "missing return"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF current_return_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF current_return_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            IF missing_enum_active == 1
+                                                WRITE_STR "missing variants:"
+                                                WRITE_CHAR 10
+                                                LET temp2 enum_variant_count
+                                                LET found_off 0
+                                                WHILE temp2 > 0
+                                                    LET found_index found_off
+                                                    MUL found_index 8
+                                                    ADD found_index enum_variant_enum_tbl
+                                                    PEEK found_index found_index
+                                                    IF found_index == missing_enum_type_hash
+                                                        LET found_flag found_off
+                                                        MUL found_flag 8
+                                                        ADD found_flag enum_variant_value_tbl
+                                                        PEEK found_flag found_flag
+                                                        LET temp 1
+                                                        IF found_flag == 0
+                                                            LET temp missing_enum_seen_1
+                                                        END
+                                                        IF found_flag == 1
+                                                            LET temp missing_enum_seen_2
+                                                        END
+                                                        IF found_flag == 2
+                                                            LET temp missing_enum_seen_3
+                                                        END
+                                                        IF found_flag == 3
+                                                            LET temp missing_enum_seen_4
+                                                        END
+                                                        IF temp == 0
+                                                            WRITE_STR "- "
+                                                            LET found_index found_off
+                                                            MUL found_index 8
+                                                            ADD found_index enum_variant_name_ptr_tbl
+                                                            PEEK found_index found_index
+                                                            LET found_flag found_off
+                                                            MUL found_flag 8
+                                                            ADD found_flag enum_variant_name_len_tbl
+                                                            PEEK found_flag found_flag
+                                                            WHILE found_flag > 0
+                                                                PEEK temp found_index
+                                                                WRITE_CHAR temp
+                                                                ADD found_index 8
+                                                                SUB found_flag 1
+                                                            END
+                                                            WRITE_CHAR 10
+                                                        END
+                                                    END
+                                                    ADD found_off 1
+                                                    SUB temp2 1
+                                                END
+                                            END
+                                            EXIT
+                                        END
+                                    END
+                                    LET current_return_seen 0
+                                    LET current_return_guaranteed 0
                                     SUB block_depth 1
                                     LET parser_state 9
+                                    LET emit_handled 1
+                                END
+                            END
+
+                            IF emit_handled == 0
+                                IF temp2 == 6
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 2
+                                    MUL temp 8
+                                    ADD temp match_return_all_tbl
+                                    IF found_flag == 0
+                                        POKE temp 0
+                                    END
+
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+
+                                    LET temp2 temp
+                                    ADD temp2 block_label_tbl
+                                    PEEK match_end_label temp2
+
+                                    LET temp2 temp
+                                    ADD temp2 block_aux_tbl
+                                    PEEK match_next_label temp2
+
+                                    SUB block_depth 1
+                                    WRITE_STR "    jmp .MATCH_END_"
+                                    WRITE_INT match_end_label
+                                    WRITE_CHAR 10
+                                    WRITE_STR ".MATCH_NEXT_"
+                                    WRITE_INT match_next_label
+                                    WRITE_STR ":"
+                                    WRITE_CHAR 10
+                                    LET parser_state 66
+                                    LET emit_handled 1
+                                END
+                            END
+
+                            IF emit_handled == 0
+                                IF temp2 == 7
+                                    LET temp block_depth
+                                    SUB temp 1
+                                    MUL temp 8
+                                    ADD temp block_return_guaranteed_tbl
+                                    PEEK found_flag temp
+
+                                    LET temp block_depth
+                                    SUB temp 2
+                                    MUL temp 8
+                                    ADD temp match_return_all_tbl
+                                    IF found_flag == 0
+                                        POKE temp 0
+                                    END
+
+                                    SUB block_depth 1
+                                    LET parser_state 66
                                     LET emit_handled 1
                                 END
                             END
@@ -10396,6 +13089,110 @@ LET expr_numeric_flag 0
                         END
 
                         IF emit_handled == 0
+                            IF current_return_type_hash > 0
+                                IF current_return_guaranteed == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "function: "
+                                    IF current_func_hash == 246720401
+                                        WRITE_STR "main"
+                                    END
+                                    IF current_func_hash < 246720401
+                                        IF current_func_hash < 0
+                                            WRITE_STR "FN_N_"
+                                            LET temp2 0
+                                            SUB temp2 current_func_hash
+                                            WRITE_INT temp2
+                                        END
+                                        IF current_func_hash > -1
+                                            WRITE_STR "FN_P_"
+                                            WRITE_INT current_func_hash
+                                        END
+                                    END
+                                    IF current_func_hash > 246720401
+                                        WRITE_STR "FN_P_"
+                                        WRITE_INT current_func_hash
+                                    END
+                                    WRITE_CHAR 10
+                                    WRITE_STR "missing return"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    LET found_flag 0
+                                    IF current_return_type_hash == 1808636
+                                        WRITE_STR "i32"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 222232438
+                                        WRITE_STR "bool"
+                                        LET found_flag 1
+                                    END
+                                    IF current_return_type_hash == 1988825
+                                        WRITE_STR "str"
+                                        LET found_flag 1
+                                    END
+                                    IF found_flag == 0
+                                        WRITE_STR "unknown"
+                                    END
+                                    WRITE_CHAR 10
+                                    IF missing_enum_active == 1
+                                        WRITE_STR "missing variants:"
+                                        WRITE_CHAR 10
+                                        LET temp2 enum_variant_count
+                                        LET found_off 0
+                                        WHILE temp2 > 0
+                                            LET found_index found_off
+                                            MUL found_index 8
+                                            ADD found_index enum_variant_enum_tbl
+                                            PEEK found_index found_index
+                                            IF found_index == missing_enum_type_hash
+                                                LET found_flag found_off
+                                                MUL found_flag 8
+                                                ADD found_flag enum_variant_value_tbl
+                                                PEEK found_flag found_flag
+                                                LET temp 1
+                                                IF found_flag == 0
+                                                    LET temp missing_enum_seen_1
+                                                END
+                                                IF found_flag == 1
+                                                    LET temp missing_enum_seen_2
+                                                END
+                                                IF found_flag == 2
+                                                    LET temp missing_enum_seen_3
+                                                END
+                                                IF found_flag == 3
+                                                    LET temp missing_enum_seen_4
+                                                END
+                                                IF temp == 0
+                                                    WRITE_STR "- "
+                                                    LET found_index found_off
+                                                    MUL found_index 8
+                                                    ADD found_index enum_variant_name_ptr_tbl
+                                                    PEEK found_index found_index
+                                                    LET found_flag found_off
+                                                    MUL found_flag 8
+                                                    ADD found_flag enum_variant_name_len_tbl
+                                                    PEEK found_flag found_flag
+                                                    WHILE found_flag > 0
+                                                        PEEK temp found_index
+                                                        WRITE_CHAR temp
+                                                        ADD found_index 8
+                                                        SUB found_flag 1
+                                                    END
+                                                    WRITE_CHAR 10
+                                                END
+                                            END
+                                            ADD found_off 1
+                                            SUB temp2 1
+                                        END
+                                    END
+                                    EXIT
+                                END
+                            END
+                            LET current_return_seen 0
+                            LET current_return_guaranteed 0
                             WRITE_STR "    ret"
                             WRITE_CHAR 10
                             LET parser_state 40
@@ -10611,6 +13408,7 @@ LET expr_numeric_flag 0
                 IF emit_handled == 0
                 IF tok_type == 1
                     IF tok_hash == 4428069113672
+                            LET current_return_line tok_line
                             LET parser_state 19
                             LET emit_handled 1
                         END
@@ -11039,10 +13837,21 @@ read_char_rax:
         IF emit_handled == 0
             WRITE_STR "parse error"
             WRITE_CHAR 10
-            WRITE_STR "parser_state: "
-            WRITE_INT parser_state
+            WRITE_STR "line: "
+            WRITE_INT tok_line
             WRITE_STR " token_type: "
             WRITE_INT tok_type
+            WRITE_STR " parser_state: "
+            WRITE_INT parser_state
+            WRITE_STR " token: "
+            LET temp token_buf
+            LET temp2 tok_len
+            WHILE temp2 > 0
+                PEEK found_off temp
+                WRITE_CHAR found_off
+                ADD temp 8
+                SUB temp2 1
+            END
             WRITE_CHAR 10
             EXIT
         END

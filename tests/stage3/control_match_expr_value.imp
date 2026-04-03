@@ -1,0 +1,10 @@
+module app.main
+
+function main() {
+    variable x: i32 = 1
+    print(1 + match x {
+        0 => 10,
+        1 => 20,
+        _ => 30,
+    })
+}

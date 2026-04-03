@@ -1,0 +1,7 @@
+type error
+line: 12
+function: FN_P_3850248925371
+missing return
+expected: i32
+missing variants:
+- C

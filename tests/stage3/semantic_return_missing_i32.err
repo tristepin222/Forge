@@ -1,0 +1,5 @@
+type error
+line: 2
+function: FN_P_1694585
+missing return
+expected: i32

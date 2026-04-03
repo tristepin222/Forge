@@ -1,0 +1,27 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B(i32)
+}
+
+function is_two(n: i32) -> bool {
+    return match n {
+        2 => true,
+        _ => false,
+    }
+}
+
+function main() {
+    match Foo::A(2) {
+        Foo::A(v) if is_two(v) => {
+            print(1)
+        }
+        Foo::A(_) => {
+            print(2)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

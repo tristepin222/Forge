@@ -1,0 +1,6 @@
+function bad() -> i32 {
+}
+
+function main() {
+    return 0
+}

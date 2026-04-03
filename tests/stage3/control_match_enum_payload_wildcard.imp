@@ -1,0 +1,17 @@
+module app.main
+
+enum State {
+    Idle
+    Done(i32)
+}
+
+function main() {
+    match State::Done(7) {
+        State::Done(_) => {
+            print(1)
+        }
+        default => {
+            print(0)
+        }
+    }
+}

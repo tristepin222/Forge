@@ -1,4 +1,6 @@
 type error
+line: 4
+function: FN_P_1694585
 return type mismatch
 expected: i32
 got: bool

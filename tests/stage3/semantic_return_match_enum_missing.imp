@@ -1,0 +1,16 @@
+enum Choice {
+    A
+    B
+    C
+}
+
+function choose(x: Choice) -> i32 {
+    match x {
+        Choice::A => { return 1 }
+        Choice::B => { return 2 }
+    }
+}
+
+function main() {
+    return 0
+}

@@ -1,0 +1,23 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B(i32)
+}
+
+function main() {
+    match Foo::A(3) {
+        Foo::A(v1) if v1 == 2 => {
+            print(1)
+        }
+        Foo::A(v2) if v2 == 3 => {
+            print(2)
+        }
+        Foo::B(_) => {
+            print(9)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

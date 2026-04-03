@@ -1,0 +1,26 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B
+}
+
+function make(n: i32) -> Foo {
+    if n == 0 {
+        return Foo::B
+    }
+    return Foo::A(n)
+}
+
+function main() {
+    value x: Foo = make(4)
+
+    match x {
+        Foo::A(v) => {
+            print(v)
+        }
+        Foo::B => {
+            print(0)
+        }
+    }
+}

@@ -1,0 +1,16 @@
+module app.main
+
+function is_even(n: i32) -> bool {
+    return match n {
+        4 => true,
+        _ => false,
+    }
+}
+
+function main() {
+    value x: i32 = 4
+    print(match x {
+        4 if is_even(x) => 1,
+        _ => 0,
+    })
+}

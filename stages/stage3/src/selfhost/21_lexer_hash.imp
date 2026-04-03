@@ -1,1 +1,1 @@
-function hash_step(hash: i32, ch: i32) -> i32 => hash * 33 + ch
+function hash_step(hash: i32, ch: i32) -> i32 => hash * 131 + ch

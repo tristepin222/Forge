@@ -1,0 +1,19 @@
+module app.main
+
+enum State {
+    Idle
+    Done(i32)
+}
+
+function main() {
+    value s = State::Done(5)
+
+    match s {
+        State::Idle => {
+            print(0)
+        }
+        State::_ => {
+            print(1)
+        }
+    }
+}

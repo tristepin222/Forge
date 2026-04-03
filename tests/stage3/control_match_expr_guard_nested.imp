@@ -1,0 +1,10 @@
+module app.main
+
+function main() {
+    value x: i32 = 2
+    print(match x {
+        1 if match 2 { 2 => true, _ => false, } => 9,
+        2 if match x { 2 => true, _ => false, } => 5,
+        _ => 0,
+    })
+}

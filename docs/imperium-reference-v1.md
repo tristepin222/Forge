@@ -328,8 +328,24 @@ value (tx, rx) = channel
 ```imperium
 match msg {
     Ping => print("ping")
-    Data(x) => print(x)
+    Data(x) if x > 0 => print(x)
+    _ => print("other")
 }
+```
+
+`match` can also be used as an expression (assignment, return values, or inside other expressions). Arms use expressions and are comma-separated (trailing comma required for now).
+
+```imperium
+variable x: i32 = 0
+x = match code {
+    200 => 1,
+    _ => 0,
+}
+
+print(1 + match code {
+    200 => 2,
+    _ => 0,
+})
 ```
 
 ---
@@ -426,4 +442,3 @@ unsafe { }
 - No implicit mutation
 - No unsafe without `unsafe`
 - No capability = no access
-

@@ -1,0 +1,6 @@
+function bad() -> bool {
+}
+
+function main() {
+    return 0
+}

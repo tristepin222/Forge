@@ -1,5 +1,5 @@
-function identifier_hash_print() -> i32 => 137038061
-function identifier_hash_len() -> i32 => 121055
+function identifier_hash_print() -> i32 => 33242089957
+function identifier_hash_len() -> i32 => 1866729
 
 function emit_type_name(hash: i32) {
     variable emitted: bool = false
@@ -35,8 +35,29 @@ function emit_type_name(hash: i32) {
     }
 }
 
-function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
+function emit_enum_variant_name(hash: i32) {
+    variable emitted: bool = false
+
+    if hash >= 0 {
+        if hash < 128 {
+            emitc(hash)
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        emits("unknown")
+    }
+}
+
+function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32, function_hash: i32) {
     emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("function: ")
+    emit_function_name(function_hash)
     emitc(10)
     emits("return type mismatch")
     emitc(10)
@@ -45,6 +66,22 @@ function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
     emitc(10)
     emits("got: ")
     emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_missing_return(expected_hash: i32, line: i32, function_hash: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("function: ")
+    emit_function_name(function_hash)
+    emitc(10)
+    emits("missing return")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
     emitc(10)
 }
 

@@ -68,54 +68,54 @@ function keyword_where() -> i32 => 40
 function keyword_requires() -> i32 => 41
 function keyword_ensures() -> i32 => 42
 
-function keyword_hash_function() -> i32 => 4502609522246
-function keyword_hash_return() -> i32 => 4585512800
-function keyword_hash_module() -> i32 => 4401119846
-function keyword_hash_value() -> i32 => 143546141
-function keyword_hash_variable() -> i32 => 5158838217062
-function keyword_hash_if() -> i32 => 3567
-function keyword_hash_else() -> i32 => 3751145
-function keyword_hash_while() -> i32 => 144980057
-function keyword_hash_struct() -> i32 => 4642364645
-function keyword_hash_enum() -> i32 => 3753397
-function keyword_hash_public() -> i32 => 4525559775
-function keyword_hash_true() -> i32 => 4296800
-function keyword_hash_false() -> i32 => 124571339
-function keyword_hash_loop() -> i32 => 4005850
-function keyword_hash_break() -> i32 => 120430373
-function keyword_hash_continue() -> i32 => 4367025156485
-function keyword_hash_match() -> i32 => 132880973
-function keyword_hash_default() -> i32 => 133224052517
-function keyword_hash_import() -> i32 => 4242631355
-function keyword_hash_from() -> i32 => 3793492
-function keyword_hash_as() -> i32 => 3316
-function keyword_hash_constant() -> i32 => 4367024351498
-function keyword_hash_fn() -> i32 => 3476
-function keyword_hash_let() -> i32 => 121061
-function keyword_hash_var() -> i32 => 131817
-function keyword_hash_pub() -> i32 => 125927
-function keyword_hash_private() -> i32 => 149234719163
-function keyword_hash_class() -> i32 => 121396918
-function keyword_hash_interface() -> i32 => 152514835571441
-function keyword_hash_implement() -> i32 => 152467310043659
-function keyword_hash_for() -> i32 => 114855
-function keyword_hash_async() -> i32 => 119302590
-function keyword_hash_await() -> i32 => 119420054
-function keyword_hash_unsafe() -> i32 => 4713534146
-function keyword_hash_try() -> i32 => 130207
-function keyword_hash_catch() -> i32 => 121021763
-function keyword_hash_finally() -> i32 => 135973007599
-function keyword_hash_throw() -> i32 => 141432212
-function keyword_hash_in() -> i32 => 3575
-function keyword_hash_where() -> i32 => 144975899
-function keyword_hash_requires() -> i32 => 4993505717392
-function keyword_hash_ensures() -> i32 => 134883871237
-function identifier_hash_main() -> i32 => 4026341
-function identifier_hash_i32() -> i32 => 116078
-function identifier_hash_bool() -> i32 => 3646476
-function identifier_hash_str() -> i32 => 129177
+function keyword_hash_function() -> i32 => 68125968433712500
+function keyword_hash_return() -> i32 => 4428069113672
+function keyword_hash_module() -> i32 => 4238080694376
+function keyword_hash_value() -> i32 => 34970924321
+function keyword_hash_variable() -> i32 => 78618048163363728
+function keyword_hash_if() -> i32 => 13857
+function keyword_hash_else() -> i32 => 228925745
+function keyword_hash_while() -> i32 => 35281108217
+function keyword_hash_struct() -> i32 => 4471061603997
+function keyword_hash_enum() -> i32 => 228960337
+function keyword_hash_public() -> i32 => 4355581511829
+function keyword_hash_true() -> i32 => 262750338
+function keyword_hash_false() -> i32 => 30258925323
+function keyword_hash_loop() -> i32 => 244713352
+function keyword_hash_break() -> i32 => 29119020707
+function keyword_hash_continue() -> i32 => 66109462071000619
+function keyword_hash_match() -> i32 => 32320559965
+function keyword_hash_default() -> i32 => 509318101961721
+function keyword_hash_import() -> i32 => 4083200610857
+function keyword_hash_from() -> i32 => 231276286
+function keyword_hash_as() -> i32 => 12822
+function keyword_hash_constant() -> i32 => 66109461801005704
+function keyword_hash_fn() -> i32 => 13472
+function keyword_hash_let() -> i32 => 1866735
+function keyword_hash_var() -> i32 => 2037819
+function keyword_hash_pub() -> i32 => 1937457
+function keyword_hash_private() -> i32 => 570467523426043
+function keyword_hash_class() -> i32 => 29399965804
+function keyword_hash_interface() -> i32 => 9180088436911909825
+function keyword_hash_implement() -> i32 => 9179406424881167211
+function keyword_hash_for() -> i32 => 1765077
+function keyword_hash_async() -> i32 => 28827113792
+function keyword_hash_await() -> i32 => 28835693654
+function keyword_hash_unsafe() -> i32 => 4546455489022
+function keyword_hash_try() -> i32 => 2005731
+function keyword_hash_catch() -> i32 => 29375560755
+function keyword_hash_finally() -> i32 => 519582602053811
+function keyword_hash_throw() -> i32 => 34397763314
+function keyword_hash_in() -> i32 => 13865
+function keyword_hash_where() -> i32 => 35281040359
+function keyword_hash_requires() -> i32 => 75989978301105410
+function keyword_hash_ensures() -> i32 => 514723103921253
+function identifier_hash_main() -> i32 => 246720401
+function identifier_hash_i32() -> i32 => 1808636
+function identifier_hash_bool() -> i32 => 222232438
+function identifier_hash_str() -> i32 => 1988825
 function identifier_hash_array_i32() -> i32 => 2109876543
-function identifier_text_hash_array_i32() -> i32 => 141431308976876
+function identifier_text_hash_array_i32() -> i32 => 8488884799549109734
 
 
 struct SourceCursor {
@@ -163,7 +163,7 @@ struct Lexer {
 }
 
 
-function hash_step(hash: i32, ch: i32) -> i32 => hash * 33 + ch
+function hash_step(hash: i32, ch: i32) -> i32 => hash * 131 + ch
 
 
 function is_space(code: i32) -> bool {
@@ -848,8 +848,8 @@ function next_token(self: Lexer) -> i32 {
 }
 
 
-function identifier_hash_print() -> i32 => 137038061
-function identifier_hash_len() -> i32 => 121055
+function identifier_hash_print() -> i32 => 33242089957
+function identifier_hash_len() -> i32 => 1866729
 
 function emit_type_name(hash: i32) {
     variable emitted: bool = false
@@ -885,8 +885,29 @@ function emit_type_name(hash: i32) {
     }
 }
 
-function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
+function emit_enum_variant_name(hash: i32) {
+    variable emitted: bool = false
+
+    if hash >= 0 {
+        if hash < 128 {
+            emitc(hash)
+            emitted = true
+        }
+    }
+
+    if emitted == false {
+        emits("unknown")
+    }
+}
+
+function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32, function_hash: i32) {
     emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("function: ")
+    emit_function_name(function_hash)
     emitc(10)
     emits("return type mismatch")
     emitc(10)
@@ -895,6 +916,22 @@ function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32) {
     emitc(10)
     emits("got: ")
     emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_missing_return(expected_hash: i32, line: i32, function_hash: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("function: ")
+    emit_function_name(function_hash)
+    emitc(10)
+    emits("missing return")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
     emitc(10)
 }
 
@@ -946,7 +983,7 @@ function emit_program_header() {
     emitc(10)
     emits("    call main")
     emitc(10)
-    emits("    mov rdi, rax")
+    emits("    xor rdi, rdi")
     emitc(10)
     emits("    mov rax, 60")
     emitc(10)
@@ -1190,6 +1227,7 @@ function parse_struct_literal_tail(self: Lexer) -> i32 {
             return -6
         }
     }
+    return 0
 }
 
 function parse_postfix_tail(self: Lexer) -> i32 {
@@ -1234,6 +1272,7 @@ function parse_postfix_tail(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_factor(self: Lexer) -> i32 {
@@ -1314,6 +1353,7 @@ function parse_term(self: Lexer) -> i32 {
             return -2
         }
     }
+    return 0
 }
 
 function parse_expression(self: Lexer) -> i32 {
@@ -1340,6 +1380,7 @@ function parse_expression(self: Lexer) -> i32 {
             return -2
         }
     }
+    return 0
 }
 
 function parse_argument_list_tail(self: Lexer) -> i32 {
@@ -1373,6 +1414,7 @@ function parse_argument_list_tail(self: Lexer) -> i32 {
             return -4
         }
     }
+    return 0
 }
 
 function parse_return_tail(self: Lexer) -> i32 {
@@ -1465,6 +1507,7 @@ function parse_type_argument_list_tail(self: Lexer) -> i32 {
             return -3
         }
     }
+    return 0
 }
 
 function parse_type_name(self: Lexer) -> i32 {
@@ -1501,6 +1544,7 @@ function parse_type_name(self: Lexer) -> i32 {
         self.push_token()
         return 0
     }
+    return 0
 }
 
 function parse_parameter(self: Lexer) -> i32 {
@@ -1550,6 +1594,7 @@ function parse_parameter_list(self: Lexer) -> i32 {
             return -4
         }
     }
+    return 0
 }
 
 function parse_optional_generic_parameters(self: Lexer) -> i32 {
@@ -1583,6 +1628,7 @@ function parse_optional_generic_parameters(self: Lexer) -> i32 {
             return -3
         }
     }
+    return 0
 }
 
 function parse_optional_return_type(self: Lexer) -> i32 {
@@ -1682,6 +1728,7 @@ function parse_skip_signature_clause(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_optional_where_clause(self: Lexer) -> i32 {
@@ -1726,6 +1773,7 @@ function parse_optional_contracts(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_expression_body(self: Lexer) -> i32 {
@@ -2051,6 +2099,7 @@ function parse_match_tail(self: Lexer) -> i32 {
             return -11
         }
     }
+    return 0
 }
 
 function parse_statement(self: Lexer) -> i32 {
@@ -2145,6 +2194,7 @@ function parse_block_body(self: Lexer) -> i32 {
             return -1
         }
     }
+    return 0
 }
 
 function parse_function_body(self: Lexer) -> i32 {
@@ -2267,6 +2317,7 @@ function parse_enum_declaration_tail(self: Lexer) -> i32 {
             return 0
         }
     }
+    return 0
 }
 
 function parse_enum_declaration(self: Lexer) -> i32 {
@@ -2332,6 +2383,7 @@ function parse_struct_declaration_tail(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_struct_declaration(self: Lexer) -> i32 {
@@ -2369,6 +2421,7 @@ function skip_brace_block(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_named_brace_skip_tail(self: Lexer) -> i32 {
@@ -2540,6 +2593,7 @@ function parse_dotted_name_tail(self: Lexer) -> i32 {
             return -2
         }
     }
+    return 0
 }
 
 function skip_paren_block(self: Lexer) -> i32 {
@@ -2569,6 +2623,7 @@ function skip_paren_block(self: Lexer) -> i32 {
             }
         }
     }
+    return 0
 }
 
 function parse_annotation(self: Lexer) -> i32 {
@@ -2647,6 +2702,7 @@ function parse_import_member_list_tail(self: Lexer) -> i32 {
             return -6
         }
     }
+    return 0
 }
 
 function parse_import_declaration(self: Lexer) -> i32 {
@@ -2683,6 +2739,7 @@ function parse_import_declaration(self: Lexer) -> i32 {
             return -4
         }
     }
+    return 0
 }
 
 function parse_from_import_declaration(self: Lexer) -> i32 {
@@ -2729,6 +2786,7 @@ function parse_from_import_declaration(self: Lexer) -> i32 {
             return 0
         }
     }
+    return 0
 }
 
 function parse_top_level() -> i32 {
@@ -3202,10 +3260,181 @@ struct CompileState {
     func_return_type_6: i32
     func_return_type_7: i32
     next_func_return_slot: i32
+    current_func_hash: i32
     current_return_type_hash: i32
+    missing_enum_active: i32
+    missing_enum_hash_1: i32
+    missing_enum_hash_2: i32
+    missing_enum_hash_3: i32
+    missing_enum_hash_4: i32
+    current_return_seen: i32
+    current_return_guaranteed: i32
+    last_statement_return_guaranteed: i32
+    current_block_depth: i32
+    block_return_guaranteed_0: i32
+    block_return_guaranteed_1: i32
+    block_return_guaranteed_2: i32
+    block_return_guaranteed_3: i32
+    block_return_guaranteed_4: i32
+    block_return_guaranteed_5: i32
+    block_return_guaranteed_6: i32
+    block_return_guaranteed_7: i32
+    block_return_guaranteed_8: i32
+    block_return_guaranteed_9: i32
+    block_return_guaranteed_10: i32
+    block_return_guaranteed_11: i32
+    block_return_guaranteed_12: i32
+    block_return_guaranteed_13: i32
+    block_return_guaranteed_14: i32
+    block_return_guaranteed_15: i32
+    block_return_guaranteed_16: i32
+    block_return_guaranteed_17: i32
+    block_return_guaranteed_18: i32
+    block_return_guaranteed_19: i32
+    block_return_guaranteed_20: i32
+    block_return_guaranteed_21: i32
+    block_return_guaranteed_22: i32
+    block_return_guaranteed_23: i32
+    block_return_guaranteed_24: i32
+    block_return_guaranteed_25: i32
+    block_return_guaranteed_26: i32
+    block_return_guaranteed_27: i32
+    block_return_guaranteed_28: i32
+    block_return_guaranteed_29: i32
+    block_return_guaranteed_30: i32
+    block_return_guaranteed_31: i32
+    if_end_label_0: i32
+    if_end_label_1: i32
+    if_end_label_2: i32
+    if_end_label_3: i32
+    if_end_label_4: i32
+    if_end_label_5: i32
+    if_end_label_6: i32
+    if_end_label_7: i32
+    if_end_label_8: i32
+    if_end_label_9: i32
+    if_end_label_10: i32
+    if_end_label_11: i32
+    if_end_label_12: i32
+    if_end_label_13: i32
+    if_end_label_14: i32
+    if_end_label_15: i32
+    if_end_label_16: i32
+    if_end_label_17: i32
+    if_end_label_18: i32
+    if_end_label_19: i32
+    if_end_label_20: i32
+    if_end_label_21: i32
+    if_end_label_22: i32
+    if_end_label_23: i32
+    if_end_label_24: i32
+    if_end_label_25: i32
+    if_end_label_26: i32
+    if_end_label_27: i32
+    if_end_label_28: i32
+    if_end_label_29: i32
+    if_end_label_30: i32
+    if_end_label_31: i32
+    if_then_return_0: i32
+    if_then_return_1: i32
+    if_then_return_2: i32
+    if_then_return_3: i32
+    if_then_return_4: i32
+    if_then_return_5: i32
+    if_then_return_6: i32
+    if_then_return_7: i32
+    if_then_return_8: i32
+    if_then_return_9: i32
+    if_then_return_10: i32
+    if_then_return_11: i32
+    if_then_return_12: i32
+    if_then_return_13: i32
+    if_then_return_14: i32
+    if_then_return_15: i32
+    if_then_return_16: i32
+    if_then_return_17: i32
+    if_then_return_18: i32
+    if_then_return_19: i32
+    if_then_return_20: i32
+    if_then_return_21: i32
+    if_then_return_22: i32
+    if_then_return_23: i32
+    if_then_return_24: i32
+    if_then_return_25: i32
+    if_then_return_26: i32
+    if_then_return_27: i32
+    if_then_return_28: i32
+    if_then_return_29: i32
+    if_then_return_30: i32
+    if_then_return_31: i32
+    if_has_else_0: i32
+    if_has_else_1: i32
+    if_has_else_2: i32
+    if_has_else_3: i32
+    if_has_else_4: i32
+    if_has_else_5: i32
+    if_has_else_6: i32
+    if_has_else_7: i32
+    if_has_else_8: i32
+    if_has_else_9: i32
+    if_has_else_10: i32
+    if_has_else_11: i32
+    if_has_else_12: i32
+    if_has_else_13: i32
+    if_has_else_14: i32
+    if_has_else_15: i32
+    if_has_else_16: i32
+    if_has_else_17: i32
+    if_has_else_18: i32
+    if_has_else_19: i32
+    if_has_else_20: i32
+    if_has_else_21: i32
+    if_has_else_22: i32
+    if_has_else_23: i32
+    if_has_else_24: i32
+    if_has_else_25: i32
+    if_has_else_26: i32
+    if_has_else_27: i32
+    if_has_else_28: i32
+    if_has_else_29: i32
+    if_has_else_30: i32
+    if_has_else_31: i32
+    if_is_top_level_0: i32
+    if_is_top_level_1: i32
+    if_is_top_level_2: i32
+    if_is_top_level_3: i32
+    if_is_top_level_4: i32
+    if_is_top_level_5: i32
+    if_is_top_level_6: i32
+    if_is_top_level_7: i32
+    if_is_top_level_8: i32
+    if_is_top_level_9: i32
+    if_is_top_level_10: i32
+    if_is_top_level_11: i32
+    if_is_top_level_12: i32
+    if_is_top_level_13: i32
+    if_is_top_level_14: i32
+    if_is_top_level_15: i32
+    if_is_top_level_16: i32
+    if_is_top_level_17: i32
+    if_is_top_level_18: i32
+    if_is_top_level_19: i32
+    if_is_top_level_20: i32
+    if_is_top_level_21: i32
+    if_is_top_level_22: i32
+    if_is_top_level_23: i32
+    if_is_top_level_24: i32
+    if_is_top_level_25: i32
+    if_is_top_level_26: i32
+    if_is_top_level_27: i32
+    if_is_top_level_28: i32
+    if_is_top_level_29: i32
+    if_is_top_level_30: i32
+    if_is_top_level_31: i32
     last_expression_type_hash: i32
     last_array_argument_hash: i32
     last_array_argument_mode: i32
+    match_expr_active: i32
 }
 
 function new_compile_state() -> CompileState {
@@ -3386,10 +3615,181 @@ function new_compile_state() -> CompileState {
         func_return_type_6: 0,
         func_return_type_7: 0,
         next_func_return_slot: 0,
+        current_func_hash: 0,
         current_return_type_hash: 0,
+        missing_enum_active: 0,
+        missing_enum_hash_1: 0,
+        missing_enum_hash_2: 0,
+        missing_enum_hash_3: 0,
+        missing_enum_hash_4: 0,
+        current_return_seen: 0,
+        current_return_guaranteed: 0,
+        last_statement_return_guaranteed: 0,
+        current_block_depth: 0,
+        block_return_guaranteed_0: 0,
+        block_return_guaranteed_1: 0,
+        block_return_guaranteed_2: 0,
+        block_return_guaranteed_3: 0,
+        block_return_guaranteed_4: 0,
+        block_return_guaranteed_5: 0,
+        block_return_guaranteed_6: 0,
+        block_return_guaranteed_7: 0,
+        block_return_guaranteed_8: 0,
+        block_return_guaranteed_9: 0,
+        block_return_guaranteed_10: 0,
+        block_return_guaranteed_11: 0,
+        block_return_guaranteed_12: 0,
+        block_return_guaranteed_13: 0,
+        block_return_guaranteed_14: 0,
+        block_return_guaranteed_15: 0,
+        block_return_guaranteed_16: 0,
+        block_return_guaranteed_17: 0,
+        block_return_guaranteed_18: 0,
+        block_return_guaranteed_19: 0,
+        block_return_guaranteed_20: 0,
+        block_return_guaranteed_21: 0,
+        block_return_guaranteed_22: 0,
+        block_return_guaranteed_23: 0,
+        block_return_guaranteed_24: 0,
+        block_return_guaranteed_25: 0,
+        block_return_guaranteed_26: 0,
+        block_return_guaranteed_27: 0,
+        block_return_guaranteed_28: 0,
+        block_return_guaranteed_29: 0,
+        block_return_guaranteed_30: 0,
+        block_return_guaranteed_31: 0,
+        if_end_label_0: 0,
+        if_end_label_1: 0,
+        if_end_label_2: 0,
+        if_end_label_3: 0,
+        if_end_label_4: 0,
+        if_end_label_5: 0,
+        if_end_label_6: 0,
+        if_end_label_7: 0,
+        if_end_label_8: 0,
+        if_end_label_9: 0,
+        if_end_label_10: 0,
+        if_end_label_11: 0,
+        if_end_label_12: 0,
+        if_end_label_13: 0,
+        if_end_label_14: 0,
+        if_end_label_15: 0,
+        if_end_label_16: 0,
+        if_end_label_17: 0,
+        if_end_label_18: 0,
+        if_end_label_19: 0,
+        if_end_label_20: 0,
+        if_end_label_21: 0,
+        if_end_label_22: 0,
+        if_end_label_23: 0,
+        if_end_label_24: 0,
+        if_end_label_25: 0,
+        if_end_label_26: 0,
+        if_end_label_27: 0,
+        if_end_label_28: 0,
+        if_end_label_29: 0,
+        if_end_label_30: 0,
+        if_end_label_31: 0,
+        if_then_return_0: 0,
+        if_then_return_1: 0,
+        if_then_return_2: 0,
+        if_then_return_3: 0,
+        if_then_return_4: 0,
+        if_then_return_5: 0,
+        if_then_return_6: 0,
+        if_then_return_7: 0,
+        if_then_return_8: 0,
+        if_then_return_9: 0,
+        if_then_return_10: 0,
+        if_then_return_11: 0,
+        if_then_return_12: 0,
+        if_then_return_13: 0,
+        if_then_return_14: 0,
+        if_then_return_15: 0,
+        if_then_return_16: 0,
+        if_then_return_17: 0,
+        if_then_return_18: 0,
+        if_then_return_19: 0,
+        if_then_return_20: 0,
+        if_then_return_21: 0,
+        if_then_return_22: 0,
+        if_then_return_23: 0,
+        if_then_return_24: 0,
+        if_then_return_25: 0,
+        if_then_return_26: 0,
+        if_then_return_27: 0,
+        if_then_return_28: 0,
+        if_then_return_29: 0,
+        if_then_return_30: 0,
+        if_then_return_31: 0,
+        if_has_else_0: 0,
+        if_has_else_1: 0,
+        if_has_else_2: 0,
+        if_has_else_3: 0,
+        if_has_else_4: 0,
+        if_has_else_5: 0,
+        if_has_else_6: 0,
+        if_has_else_7: 0,
+        if_has_else_8: 0,
+        if_has_else_9: 0,
+        if_has_else_10: 0,
+        if_has_else_11: 0,
+        if_has_else_12: 0,
+        if_has_else_13: 0,
+        if_has_else_14: 0,
+        if_has_else_15: 0,
+        if_has_else_16: 0,
+        if_has_else_17: 0,
+        if_has_else_18: 0,
+        if_has_else_19: 0,
+        if_has_else_20: 0,
+        if_has_else_21: 0,
+        if_has_else_22: 0,
+        if_has_else_23: 0,
+        if_has_else_24: 0,
+        if_has_else_25: 0,
+        if_has_else_26: 0,
+        if_has_else_27: 0,
+        if_has_else_28: 0,
+        if_has_else_29: 0,
+        if_has_else_30: 0,
+        if_has_else_31: 0,
+        if_is_top_level_0: 0,
+        if_is_top_level_1: 0,
+        if_is_top_level_2: 0,
+        if_is_top_level_3: 0,
+        if_is_top_level_4: 0,
+        if_is_top_level_5: 0,
+        if_is_top_level_6: 0,
+        if_is_top_level_7: 0,
+        if_is_top_level_8: 0,
+        if_is_top_level_9: 0,
+        if_is_top_level_10: 0,
+        if_is_top_level_11: 0,
+        if_is_top_level_12: 0,
+        if_is_top_level_13: 0,
+        if_is_top_level_14: 0,
+        if_is_top_level_15: 0,
+        if_is_top_level_16: 0,
+        if_is_top_level_17: 0,
+        if_is_top_level_18: 0,
+        if_is_top_level_19: 0,
+        if_is_top_level_20: 0,
+        if_is_top_level_21: 0,
+        if_is_top_level_22: 0,
+        if_is_top_level_23: 0,
+        if_is_top_level_24: 0,
+        if_is_top_level_25: 0,
+        if_is_top_level_26: 0,
+        if_is_top_level_27: 0,
+        if_is_top_level_28: 0,
+        if_is_top_level_29: 0,
+        if_is_top_level_30: 0,
+        if_is_top_level_31: 0,
         last_expression_type_hash: 0,
         last_array_argument_hash: 0,
-        last_array_argument_mode: 0
+        last_array_argument_mode: 0,
+        match_expr_active: 0
     }
 
     return state
@@ -3685,6 +4085,1102 @@ function register_function_return_type(self: CompileState, hash: i32, return_typ
         self.next_func_return_slot = 0
     }
 
+    return 0
+}
+
+function get_block_return_guaranteed(self: CompileState, depth: i32) -> i32 {
+    if depth == 0 { return self.block_return_guaranteed_0 }
+    if depth == 1 { return self.block_return_guaranteed_1 }
+    if depth == 2 { return self.block_return_guaranteed_2 }
+    if depth == 3 { return self.block_return_guaranteed_3 }
+    if depth == 4 { return self.block_return_guaranteed_4 }
+    if depth == 5 { return self.block_return_guaranteed_5 }
+    if depth == 6 { return self.block_return_guaranteed_6 }
+    if depth == 7 { return self.block_return_guaranteed_7 }
+    if depth == 8 { return self.block_return_guaranteed_8 }
+    if depth == 9 { return self.block_return_guaranteed_9 }
+    if depth == 10 { return self.block_return_guaranteed_10 }
+    if depth == 11 { return self.block_return_guaranteed_11 }
+    if depth == 12 { return self.block_return_guaranteed_12 }
+    if depth == 13 { return self.block_return_guaranteed_13 }
+    if depth == 14 { return self.block_return_guaranteed_14 }
+    if depth == 15 { return self.block_return_guaranteed_15 }
+    if depth == 16 { return self.block_return_guaranteed_16 }
+    if depth == 17 { return self.block_return_guaranteed_17 }
+    if depth == 18 { return self.block_return_guaranteed_18 }
+    if depth == 19 { return self.block_return_guaranteed_19 }
+    if depth == 20 { return self.block_return_guaranteed_20 }
+    if depth == 21 { return self.block_return_guaranteed_21 }
+    if depth == 22 { return self.block_return_guaranteed_22 }
+    if depth == 23 { return self.block_return_guaranteed_23 }
+    if depth == 24 { return self.block_return_guaranteed_24 }
+    if depth == 25 { return self.block_return_guaranteed_25 }
+    if depth == 26 { return self.block_return_guaranteed_26 }
+    if depth == 27 { return self.block_return_guaranteed_27 }
+    if depth == 28 { return self.block_return_guaranteed_28 }
+    if depth == 29 { return self.block_return_guaranteed_29 }
+    if depth == 30 { return self.block_return_guaranteed_30 }
+    if depth == 31 { return self.block_return_guaranteed_31 }
+    return 0
+}
+
+function set_block_return_guaranteed(self: CompileState, depth: i32, value: i32) -> i32 {
+    if depth == 0 {
+        self.block_return_guaranteed_0 = value
+        return 0
+    }
+    if depth == 1 {
+        self.block_return_guaranteed_1 = value
+        return 0
+    }
+    if depth == 2 {
+        self.block_return_guaranteed_2 = value
+        return 0
+    }
+    if depth == 3 {
+        self.block_return_guaranteed_3 = value
+        return 0
+    }
+    if depth == 4 {
+        self.block_return_guaranteed_4 = value
+        return 0
+    }
+    if depth == 5 {
+        self.block_return_guaranteed_5 = value
+        return 0
+    }
+    if depth == 6 {
+        self.block_return_guaranteed_6 = value
+        return 0
+    }
+    if depth == 7 {
+        self.block_return_guaranteed_7 = value
+        return 0
+    }
+    if depth == 8 {
+        self.block_return_guaranteed_8 = value
+        return 0
+    }
+    if depth == 9 {
+        self.block_return_guaranteed_9 = value
+        return 0
+    }
+    if depth == 10 {
+        self.block_return_guaranteed_10 = value
+        return 0
+    }
+    if depth == 11 {
+        self.block_return_guaranteed_11 = value
+        return 0
+    }
+    if depth == 12 {
+        self.block_return_guaranteed_12 = value
+        return 0
+    }
+    if depth == 13 {
+        self.block_return_guaranteed_13 = value
+        return 0
+    }
+    if depth == 14 {
+        self.block_return_guaranteed_14 = value
+        return 0
+    }
+    if depth == 15 {
+        self.block_return_guaranteed_15 = value
+        return 0
+    }
+    if depth == 16 {
+        self.block_return_guaranteed_16 = value
+        return 0
+    }
+    if depth == 17 {
+        self.block_return_guaranteed_17 = value
+        return 0
+    }
+    if depth == 18 {
+        self.block_return_guaranteed_18 = value
+        return 0
+    }
+    if depth == 19 {
+        self.block_return_guaranteed_19 = value
+        return 0
+    }
+    if depth == 20 {
+        self.block_return_guaranteed_20 = value
+        return 0
+    }
+    if depth == 21 {
+        self.block_return_guaranteed_21 = value
+        return 0
+    }
+    if depth == 22 {
+        self.block_return_guaranteed_22 = value
+        return 0
+    }
+    if depth == 23 {
+        self.block_return_guaranteed_23 = value
+        return 0
+    }
+    if depth == 24 {
+        self.block_return_guaranteed_24 = value
+        return 0
+    }
+    if depth == 25 {
+        self.block_return_guaranteed_25 = value
+        return 0
+    }
+    if depth == 26 {
+        self.block_return_guaranteed_26 = value
+        return 0
+    }
+    if depth == 27 {
+        self.block_return_guaranteed_27 = value
+        return 0
+    }
+    if depth == 28 {
+        self.block_return_guaranteed_28 = value
+        return 0
+    }
+    if depth == 29 {
+        self.block_return_guaranteed_29 = value
+        return 0
+    }
+    if depth == 30 {
+        self.block_return_guaranteed_30 = value
+        return 0
+    }
+    if depth == 31 {
+        self.block_return_guaranteed_31 = value
+        return 0
+    }
+    return -1
+}
+
+function get_if_end_label(self: CompileState, depth: i32) -> i32 {
+    if depth == 0 {
+        return self.if_end_label_0
+    }
+    if depth == 1 {
+        return self.if_end_label_1
+    }
+    if depth == 2 {
+        return self.if_end_label_2
+    }
+    if depth == 3 {
+        return self.if_end_label_3
+    }
+    if depth == 4 {
+        return self.if_end_label_4
+    }
+    if depth == 5 {
+        return self.if_end_label_5
+    }
+    if depth == 6 {
+        return self.if_end_label_6
+    }
+    if depth == 7 {
+        return self.if_end_label_7
+    }
+    if depth == 8 {
+        return self.if_end_label_8
+    }
+    if depth == 9 {
+        return self.if_end_label_9
+    }
+    if depth == 10 {
+        return self.if_end_label_10
+    }
+    if depth == 11 {
+        return self.if_end_label_11
+    }
+    if depth == 12 {
+        return self.if_end_label_12
+    }
+    if depth == 13 {
+        return self.if_end_label_13
+    }
+    if depth == 14 {
+        return self.if_end_label_14
+    }
+    if depth == 15 {
+        return self.if_end_label_15
+    }
+    if depth == 16 {
+        return self.if_end_label_16
+    }
+    if depth == 17 {
+        return self.if_end_label_17
+    }
+    if depth == 18 {
+        return self.if_end_label_18
+    }
+    if depth == 19 {
+        return self.if_end_label_19
+    }
+    if depth == 20 {
+        return self.if_end_label_20
+    }
+    if depth == 21 {
+        return self.if_end_label_21
+    }
+    if depth == 22 {
+        return self.if_end_label_22
+    }
+    if depth == 23 {
+        return self.if_end_label_23
+    }
+    if depth == 24 {
+        return self.if_end_label_24
+    }
+    if depth == 25 {
+        return self.if_end_label_25
+    }
+    if depth == 26 {
+        return self.if_end_label_26
+    }
+    if depth == 27 {
+        return self.if_end_label_27
+    }
+    if depth == 28 {
+        return self.if_end_label_28
+    }
+    if depth == 29 {
+        return self.if_end_label_29
+    }
+    if depth == 30 {
+        return self.if_end_label_30
+    }
+    if depth == 31 {
+        return self.if_end_label_31
+    }
+    return 0
+}
+
+function set_if_end_label(self: CompileState, depth: i32, value: i32) -> i32 {
+    if depth == 0 {
+        self.if_end_label_0 = value
+        return 0
+    }
+    if depth == 1 {
+        self.if_end_label_1 = value
+        return 0
+    }
+    if depth == 2 {
+        self.if_end_label_2 = value
+        return 0
+    }
+    if depth == 3 {
+        self.if_end_label_3 = value
+        return 0
+    }
+    if depth == 4 {
+        self.if_end_label_4 = value
+        return 0
+    }
+    if depth == 5 {
+        self.if_end_label_5 = value
+        return 0
+    }
+    if depth == 6 {
+        self.if_end_label_6 = value
+        return 0
+    }
+    if depth == 7 {
+        self.if_end_label_7 = value
+        return 0
+    }
+    if depth == 8 {
+        self.if_end_label_8 = value
+        return 0
+    }
+    if depth == 9 {
+        self.if_end_label_9 = value
+        return 0
+    }
+    if depth == 10 {
+        self.if_end_label_10 = value
+        return 0
+    }
+    if depth == 11 {
+        self.if_end_label_11 = value
+        return 0
+    }
+    if depth == 12 {
+        self.if_end_label_12 = value
+        return 0
+    }
+    if depth == 13 {
+        self.if_end_label_13 = value
+        return 0
+    }
+    if depth == 14 {
+        self.if_end_label_14 = value
+        return 0
+    }
+    if depth == 15 {
+        self.if_end_label_15 = value
+        return 0
+    }
+    if depth == 16 {
+        self.if_end_label_16 = value
+        return 0
+    }
+    if depth == 17 {
+        self.if_end_label_17 = value
+        return 0
+    }
+    if depth == 18 {
+        self.if_end_label_18 = value
+        return 0
+    }
+    if depth == 19 {
+        self.if_end_label_19 = value
+        return 0
+    }
+    if depth == 20 {
+        self.if_end_label_20 = value
+        return 0
+    }
+    if depth == 21 {
+        self.if_end_label_21 = value
+        return 0
+    }
+    if depth == 22 {
+        self.if_end_label_22 = value
+        return 0
+    }
+    if depth == 23 {
+        self.if_end_label_23 = value
+        return 0
+    }
+    if depth == 24 {
+        self.if_end_label_24 = value
+        return 0
+    }
+    if depth == 25 {
+        self.if_end_label_25 = value
+        return 0
+    }
+    if depth == 26 {
+        self.if_end_label_26 = value
+        return 0
+    }
+    if depth == 27 {
+        self.if_end_label_27 = value
+        return 0
+    }
+    if depth == 28 {
+        self.if_end_label_28 = value
+        return 0
+    }
+    if depth == 29 {
+        self.if_end_label_29 = value
+        return 0
+    }
+    if depth == 30 {
+        self.if_end_label_30 = value
+        return 0
+    }
+    if depth == 31 {
+        self.if_end_label_31 = value
+        return 0
+    }
+    return 0
+}
+
+function get_if_then_return(self: CompileState, depth: i32) -> i32 {
+    if depth == 0 {
+        return self.if_then_return_0
+    }
+    if depth == 1 {
+        return self.if_then_return_1
+    }
+    if depth == 2 {
+        return self.if_then_return_2
+    }
+    if depth == 3 {
+        return self.if_then_return_3
+    }
+    if depth == 4 {
+        return self.if_then_return_4
+    }
+    if depth == 5 {
+        return self.if_then_return_5
+    }
+    if depth == 6 {
+        return self.if_then_return_6
+    }
+    if depth == 7 {
+        return self.if_then_return_7
+    }
+    if depth == 8 {
+        return self.if_then_return_8
+    }
+    if depth == 9 {
+        return self.if_then_return_9
+    }
+    if depth == 10 {
+        return self.if_then_return_10
+    }
+    if depth == 11 {
+        return self.if_then_return_11
+    }
+    if depth == 12 {
+        return self.if_then_return_12
+    }
+    if depth == 13 {
+        return self.if_then_return_13
+    }
+    if depth == 14 {
+        return self.if_then_return_14
+    }
+    if depth == 15 {
+        return self.if_then_return_15
+    }
+    if depth == 16 {
+        return self.if_then_return_16
+    }
+    if depth == 17 {
+        return self.if_then_return_17
+    }
+    if depth == 18 {
+        return self.if_then_return_18
+    }
+    if depth == 19 {
+        return self.if_then_return_19
+    }
+    if depth == 20 {
+        return self.if_then_return_20
+    }
+    if depth == 21 {
+        return self.if_then_return_21
+    }
+    if depth == 22 {
+        return self.if_then_return_22
+    }
+    if depth == 23 {
+        return self.if_then_return_23
+    }
+    if depth == 24 {
+        return self.if_then_return_24
+    }
+    if depth == 25 {
+        return self.if_then_return_25
+    }
+    if depth == 26 {
+        return self.if_then_return_26
+    }
+    if depth == 27 {
+        return self.if_then_return_27
+    }
+    if depth == 28 {
+        return self.if_then_return_28
+    }
+    if depth == 29 {
+        return self.if_then_return_29
+    }
+    if depth == 30 {
+        return self.if_then_return_30
+    }
+    if depth == 31 {
+        return self.if_then_return_31
+    }
+    return 0
+}
+
+function set_if_then_return(self: CompileState, depth: i32, value: i32) -> i32 {
+    if depth == 0 {
+        self.if_then_return_0 = value
+        return 0
+    }
+    if depth == 1 {
+        self.if_then_return_1 = value
+        return 0
+    }
+    if depth == 2 {
+        self.if_then_return_2 = value
+        return 0
+    }
+    if depth == 3 {
+        self.if_then_return_3 = value
+        return 0
+    }
+    if depth == 4 {
+        self.if_then_return_4 = value
+        return 0
+    }
+    if depth == 5 {
+        self.if_then_return_5 = value
+        return 0
+    }
+    if depth == 6 {
+        self.if_then_return_6 = value
+        return 0
+    }
+    if depth == 7 {
+        self.if_then_return_7 = value
+        return 0
+    }
+    if depth == 8 {
+        self.if_then_return_8 = value
+        return 0
+    }
+    if depth == 9 {
+        self.if_then_return_9 = value
+        return 0
+    }
+    if depth == 10 {
+        self.if_then_return_10 = value
+        return 0
+    }
+    if depth == 11 {
+        self.if_then_return_11 = value
+        return 0
+    }
+    if depth == 12 {
+        self.if_then_return_12 = value
+        return 0
+    }
+    if depth == 13 {
+        self.if_then_return_13 = value
+        return 0
+    }
+    if depth == 14 {
+        self.if_then_return_14 = value
+        return 0
+    }
+    if depth == 15 {
+        self.if_then_return_15 = value
+        return 0
+    }
+    if depth == 16 {
+        self.if_then_return_16 = value
+        return 0
+    }
+    if depth == 17 {
+        self.if_then_return_17 = value
+        return 0
+    }
+    if depth == 18 {
+        self.if_then_return_18 = value
+        return 0
+    }
+    if depth == 19 {
+        self.if_then_return_19 = value
+        return 0
+    }
+    if depth == 20 {
+        self.if_then_return_20 = value
+        return 0
+    }
+    if depth == 21 {
+        self.if_then_return_21 = value
+        return 0
+    }
+    if depth == 22 {
+        self.if_then_return_22 = value
+        return 0
+    }
+    if depth == 23 {
+        self.if_then_return_23 = value
+        return 0
+    }
+    if depth == 24 {
+        self.if_then_return_24 = value
+        return 0
+    }
+    if depth == 25 {
+        self.if_then_return_25 = value
+        return 0
+    }
+    if depth == 26 {
+        self.if_then_return_26 = value
+        return 0
+    }
+    if depth == 27 {
+        self.if_then_return_27 = value
+        return 0
+    }
+    if depth == 28 {
+        self.if_then_return_28 = value
+        return 0
+    }
+    if depth == 29 {
+        self.if_then_return_29 = value
+        return 0
+    }
+    if depth == 30 {
+        self.if_then_return_30 = value
+        return 0
+    }
+    if depth == 31 {
+        self.if_then_return_31 = value
+        return 0
+    }
+    return 0
+}
+
+function get_if_has_else(self: CompileState, depth: i32) -> i32 {
+    if depth == 0 {
+        return self.if_has_else_0
+    }
+    if depth == 1 {
+        return self.if_has_else_1
+    }
+    if depth == 2 {
+        return self.if_has_else_2
+    }
+    if depth == 3 {
+        return self.if_has_else_3
+    }
+    if depth == 4 {
+        return self.if_has_else_4
+    }
+    if depth == 5 {
+        return self.if_has_else_5
+    }
+    if depth == 6 {
+        return self.if_has_else_6
+    }
+    if depth == 7 {
+        return self.if_has_else_7
+    }
+    if depth == 8 {
+        return self.if_has_else_8
+    }
+    if depth == 9 {
+        return self.if_has_else_9
+    }
+    if depth == 10 {
+        return self.if_has_else_10
+    }
+    if depth == 11 {
+        return self.if_has_else_11
+    }
+    if depth == 12 {
+        return self.if_has_else_12
+    }
+    if depth == 13 {
+        return self.if_has_else_13
+    }
+    if depth == 14 {
+        return self.if_has_else_14
+    }
+    if depth == 15 {
+        return self.if_has_else_15
+    }
+    if depth == 16 {
+        return self.if_has_else_16
+    }
+    if depth == 17 {
+        return self.if_has_else_17
+    }
+    if depth == 18 {
+        return self.if_has_else_18
+    }
+    if depth == 19 {
+        return self.if_has_else_19
+    }
+    if depth == 20 {
+        return self.if_has_else_20
+    }
+    if depth == 21 {
+        return self.if_has_else_21
+    }
+    if depth == 22 {
+        return self.if_has_else_22
+    }
+    if depth == 23 {
+        return self.if_has_else_23
+    }
+    if depth == 24 {
+        return self.if_has_else_24
+    }
+    if depth == 25 {
+        return self.if_has_else_25
+    }
+    if depth == 26 {
+        return self.if_has_else_26
+    }
+    if depth == 27 {
+        return self.if_has_else_27
+    }
+    if depth == 28 {
+        return self.if_has_else_28
+    }
+    if depth == 29 {
+        return self.if_has_else_29
+    }
+    if depth == 30 {
+        return self.if_has_else_30
+    }
+    if depth == 31 {
+        return self.if_has_else_31
+    }
+    return 0
+}
+
+function set_if_has_else(self: CompileState, depth: i32, value: i32) -> i32 {
+    if depth == 0 {
+        self.if_has_else_0 = value
+        return 0
+    }
+    if depth == 1 {
+        self.if_has_else_1 = value
+        return 0
+    }
+    if depth == 2 {
+        self.if_has_else_2 = value
+        return 0
+    }
+    if depth == 3 {
+        self.if_has_else_3 = value
+        return 0
+    }
+    if depth == 4 {
+        self.if_has_else_4 = value
+        return 0
+    }
+    if depth == 5 {
+        self.if_has_else_5 = value
+        return 0
+    }
+    if depth == 6 {
+        self.if_has_else_6 = value
+        return 0
+    }
+    if depth == 7 {
+        self.if_has_else_7 = value
+        return 0
+    }
+    if depth == 8 {
+        self.if_has_else_8 = value
+        return 0
+    }
+    if depth == 9 {
+        self.if_has_else_9 = value
+        return 0
+    }
+    if depth == 10 {
+        self.if_has_else_10 = value
+        return 0
+    }
+    if depth == 11 {
+        self.if_has_else_11 = value
+        return 0
+    }
+    if depth == 12 {
+        self.if_has_else_12 = value
+        return 0
+    }
+    if depth == 13 {
+        self.if_has_else_13 = value
+        return 0
+    }
+    if depth == 14 {
+        self.if_has_else_14 = value
+        return 0
+    }
+    if depth == 15 {
+        self.if_has_else_15 = value
+        return 0
+    }
+    if depth == 16 {
+        self.if_has_else_16 = value
+        return 0
+    }
+    if depth == 17 {
+        self.if_has_else_17 = value
+        return 0
+    }
+    if depth == 18 {
+        self.if_has_else_18 = value
+        return 0
+    }
+    if depth == 19 {
+        self.if_has_else_19 = value
+        return 0
+    }
+    if depth == 20 {
+        self.if_has_else_20 = value
+        return 0
+    }
+    if depth == 21 {
+        self.if_has_else_21 = value
+        return 0
+    }
+    if depth == 22 {
+        self.if_has_else_22 = value
+        return 0
+    }
+    if depth == 23 {
+        self.if_has_else_23 = value
+        return 0
+    }
+    if depth == 24 {
+        self.if_has_else_24 = value
+        return 0
+    }
+    if depth == 25 {
+        self.if_has_else_25 = value
+        return 0
+    }
+    if depth == 26 {
+        self.if_has_else_26 = value
+        return 0
+    }
+    if depth == 27 {
+        self.if_has_else_27 = value
+        return 0
+    }
+    if depth == 28 {
+        self.if_has_else_28 = value
+        return 0
+    }
+    if depth == 29 {
+        self.if_has_else_29 = value
+        return 0
+    }
+    if depth == 30 {
+        self.if_has_else_30 = value
+        return 0
+    }
+    if depth == 31 {
+        self.if_has_else_31 = value
+        return 0
+    }
+    return 0
+}
+
+function get_if_is_top_level(self: CompileState, depth: i32) -> i32 {
+    if depth == 0 {
+        return self.if_is_top_level_0
+    }
+    if depth == 1 {
+        return self.if_is_top_level_1
+    }
+    if depth == 2 {
+        return self.if_is_top_level_2
+    }
+    if depth == 3 {
+        return self.if_is_top_level_3
+    }
+    if depth == 4 {
+        return self.if_is_top_level_4
+    }
+    if depth == 5 {
+        return self.if_is_top_level_5
+    }
+    if depth == 6 {
+        return self.if_is_top_level_6
+    }
+    if depth == 7 {
+        return self.if_is_top_level_7
+    }
+    if depth == 8 {
+        return self.if_is_top_level_8
+    }
+    if depth == 9 {
+        return self.if_is_top_level_9
+    }
+    if depth == 10 {
+        return self.if_is_top_level_10
+    }
+    if depth == 11 {
+        return self.if_is_top_level_11
+    }
+    if depth == 12 {
+        return self.if_is_top_level_12
+    }
+    if depth == 13 {
+        return self.if_is_top_level_13
+    }
+    if depth == 14 {
+        return self.if_is_top_level_14
+    }
+    if depth == 15 {
+        return self.if_is_top_level_15
+    }
+    if depth == 16 {
+        return self.if_is_top_level_16
+    }
+    if depth == 17 {
+        return self.if_is_top_level_17
+    }
+    if depth == 18 {
+        return self.if_is_top_level_18
+    }
+    if depth == 19 {
+        return self.if_is_top_level_19
+    }
+    if depth == 20 {
+        return self.if_is_top_level_20
+    }
+    if depth == 21 {
+        return self.if_is_top_level_21
+    }
+    if depth == 22 {
+        return self.if_is_top_level_22
+    }
+    if depth == 23 {
+        return self.if_is_top_level_23
+    }
+    if depth == 24 {
+        return self.if_is_top_level_24
+    }
+    if depth == 25 {
+        return self.if_is_top_level_25
+    }
+    if depth == 26 {
+        return self.if_is_top_level_26
+    }
+    if depth == 27 {
+        return self.if_is_top_level_27
+    }
+    if depth == 28 {
+        return self.if_is_top_level_28
+    }
+    if depth == 29 {
+        return self.if_is_top_level_29
+    }
+    if depth == 30 {
+        return self.if_is_top_level_30
+    }
+    if depth == 31 {
+        return self.if_is_top_level_31
+    }
+    return 0
+}
+
+function set_if_is_top_level(self: CompileState, depth: i32, value: i32) -> i32 {
+    if depth == 0 {
+        self.if_is_top_level_0 = value
+        return 0
+    }
+    if depth == 1 {
+        self.if_is_top_level_1 = value
+        return 0
+    }
+    if depth == 2 {
+        self.if_is_top_level_2 = value
+        return 0
+    }
+    if depth == 3 {
+        self.if_is_top_level_3 = value
+        return 0
+    }
+    if depth == 4 {
+        self.if_is_top_level_4 = value
+        return 0
+    }
+    if depth == 5 {
+        self.if_is_top_level_5 = value
+        return 0
+    }
+    if depth == 6 {
+        self.if_is_top_level_6 = value
+        return 0
+    }
+    if depth == 7 {
+        self.if_is_top_level_7 = value
+        return 0
+    }
+    if depth == 8 {
+        self.if_is_top_level_8 = value
+        return 0
+    }
+    if depth == 9 {
+        self.if_is_top_level_9 = value
+        return 0
+    }
+    if depth == 10 {
+        self.if_is_top_level_10 = value
+        return 0
+    }
+    if depth == 11 {
+        self.if_is_top_level_11 = value
+        return 0
+    }
+    if depth == 12 {
+        self.if_is_top_level_12 = value
+        return 0
+    }
+    if depth == 13 {
+        self.if_is_top_level_13 = value
+        return 0
+    }
+    if depth == 14 {
+        self.if_is_top_level_14 = value
+        return 0
+    }
+    if depth == 15 {
+        self.if_is_top_level_15 = value
+        return 0
+    }
+    if depth == 16 {
+        self.if_is_top_level_16 = value
+        return 0
+    }
+    if depth == 17 {
+        self.if_is_top_level_17 = value
+        return 0
+    }
+    if depth == 18 {
+        self.if_is_top_level_18 = value
+        return 0
+    }
+    if depth == 19 {
+        self.if_is_top_level_19 = value
+        return 0
+    }
+    if depth == 20 {
+        self.if_is_top_level_20 = value
+        return 0
+    }
+    if depth == 21 {
+        self.if_is_top_level_21 = value
+        return 0
+    }
+    if depth == 22 {
+        self.if_is_top_level_22 = value
+        return 0
+    }
+    if depth == 23 {
+        self.if_is_top_level_23 = value
+        return 0
+    }
+    if depth == 24 {
+        self.if_is_top_level_24 = value
+        return 0
+    }
+    if depth == 25 {
+        self.if_is_top_level_25 = value
+        return 0
+    }
+    if depth == 26 {
+        self.if_is_top_level_26 = value
+        return 0
+    }
+    if depth == 27 {
+        self.if_is_top_level_27 = value
+        return 0
+    }
+    if depth == 28 {
+        self.if_is_top_level_28 = value
+        return 0
+    }
+    if depth == 29 {
+        self.if_is_top_level_29 = value
+        return 0
+    }
+    if depth == 30 {
+        self.if_is_top_level_30 = value
+        return 0
+    }
+    if depth == 31 {
+        self.if_is_top_level_31 = value
+        return 0
+    }
     return 0
 }
 
@@ -4148,6 +5644,75 @@ function type_field_count(self: CompileState, type_hash: i32) -> i32 {
         return 1
     }
 
+    return 0
+}
+
+function type_field_hash(self: CompileState, type_hash: i32, index: i32) -> i32 {
+    variable slot: i32 = self.find_type_slot(type_hash)
+    if slot < 0 {
+        return 0
+    }
+
+    if slot == 0 {
+        if index == 0 { return self.type_field_0_0 }
+        if index == 1 { return self.type_field_0_1 }
+        if index == 2 { return self.type_field_0_2 }
+        if index == 3 { return self.type_field_0_3 }
+        return 0
+    }
+
+    if slot == 1 {
+        if index == 0 { return self.type_field_1_0 }
+        if index == 1 { return self.type_field_1_1 }
+        if index == 2 { return self.type_field_1_2 }
+        if index == 3 { return self.type_field_1_3 }
+        return 0
+    }
+
+    if slot == 2 {
+        if index == 0 { return self.type_field_2_0 }
+        if index == 1 { return self.type_field_2_1 }
+        if index == 2 { return self.type_field_2_2 }
+        if index == 3 { return self.type_field_2_3 }
+        return 0
+    }
+
+    if slot == 3 {
+        if index == 0 { return self.type_field_3_0 }
+        if index == 1 { return self.type_field_3_1 }
+        if index == 2 { return self.type_field_3_2 }
+        if index == 3 { return self.type_field_3_3 }
+        return 0
+    }
+
+    if slot == 4 {
+        if index == 0 { return self.type_field_4_0 }
+        if index == 1 { return self.type_field_4_1 }
+        if index == 2 { return self.type_field_4_2 }
+        if index == 3 { return self.type_field_4_3 }
+        return 0
+    }
+
+    if slot == 5 {
+        if index == 0 { return self.type_field_5_0 }
+        if index == 1 { return self.type_field_5_1 }
+        if index == 2 { return self.type_field_5_2 }
+        if index == 3 { return self.type_field_5_3 }
+        return 0
+    }
+
+    if slot == 6 {
+        if index == 0 { return self.type_field_6_0 }
+        if index == 1 { return self.type_field_6_1 }
+        if index == 2 { return self.type_field_6_2 }
+        if index == 3 { return self.type_field_6_3 }
+        return 0
+    }
+
+    if index == 0 { return self.type_field_7_0 }
+    if index == 1 { return self.type_field_7_1 }
+    if index == 2 { return self.type_field_7_2 }
+    if index == 3 { return self.type_field_7_3 }
     return 0
 }
 
@@ -5744,6 +7309,7 @@ function parse_type_name_hash(self: Lexer) -> i32 {
         self.push_token()
         return type_hash
     }
+    return type_hash
 }
 
 function parse_optional_return_type_hash(self: Lexer) -> i32 {
@@ -5766,7 +7332,7 @@ function parse_optional_return_type_hash(self: Lexer) -> i32 {
     return self.parse_type_name_hash()
 }
 
-function check_return_expression_type(state: CompileState) -> i32 {
+function check_return_expression_type(state: CompileState, line: i32) -> i32 {
     if state.current_return_type_hash == 0 {
         return 0
     }
@@ -5779,8 +7345,39 @@ function check_return_expression_type(state: CompileState) -> i32 {
         return 0
     }
 
-    emit_return_type_mismatch(state.current_return_type_hash, state.last_expression_type_hash)
+    emit_return_type_mismatch(state.current_return_type_hash, state.last_expression_type_hash, line, state.current_func_hash)
     return -1
+}
+
+function emit_missing_enum_variants(state: CompileState) {
+    if state.missing_enum_active != 0 {
+        emits("missing variants:")
+        emitc(10)
+
+        if state.missing_enum_hash_1 != 0 {
+            emits("- ")
+            emit_enum_variant_name(state.missing_enum_hash_1)
+            emitc(10)
+        }
+
+        if state.missing_enum_hash_2 != 0 {
+            emits("- ")
+            emit_enum_variant_name(state.missing_enum_hash_2)
+            emitc(10)
+        }
+
+        if state.missing_enum_hash_3 != 0 {
+            emits("- ")
+            emit_enum_variant_name(state.missing_enum_hash_3)
+            emitc(10)
+        }
+
+        if state.missing_enum_hash_4 != 0 {
+            emits("- ")
+            emit_enum_variant_name(state.missing_enum_hash_4)
+            emitc(10)
+        }
+    }
 }
 
 function parse_member_name_hash(self: Lexer) -> i32 {
@@ -5848,6 +7445,7 @@ function compile_struct_literal_into_variable(self: Lexer, state: CompileState, 
             return -6
         }
     }
+    return 0
 }
 
 function compile_array_literal_into_variable(self: Lexer, state: CompileState, function_hash: i32, variable_hash: i32) -> i32 {
@@ -5910,6 +7508,19 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
         if self.token_value == keyword_false() {
             emit_load_number(0)
             state.last_expression_type_hash = identifier_hash_bool()
+            return 0
+        }
+
+        if self.token_value == keyword_match() {
+            if state.match_expr_active != 0 {
+                if self.compile_match_expression_nested(state, function_hash) != 0 {
+                    return -4
+                }
+            } else {
+                if self.compile_match_expression(state, function_hash) != 0 {
+                    return -4
+                }
+            }
             return 0
         }
     }
@@ -6225,6 +7836,7 @@ function compile_term(self: Lexer, state: CompileState, function_hash: i32) -> i
         emitc(10)
         state.last_expression_type_hash = identifier_hash_i32()
     }
+    return 0
 }
 
 function compile_expression(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
@@ -6234,7 +7846,6 @@ function compile_expression(self: Lexer, state: CompileState, function_hash: i32
 
     loop {
         variable kind: i32 = self.next_token()
-        variable op: i32 = 0
 
         if kind != token_symbol() {
             self.push_token()
@@ -6242,35 +7853,102 @@ function compile_expression(self: Lexer, state: CompileState, function_hash: i32
         }
 
         if self.token_value == 43 {
-            op = 1
-        } else {
-            if self.token_value == 45 {
-                op = 2
-            } else {
-                self.push_token()
-                return 0
+            emit_push_rax()
+
+            if self.compile_term(state, function_hash) != 0 {
+                return -2
             }
-        }
 
-        emit_push_rax()
-
-        if self.compile_term(state, function_hash) != 0 {
-            return -2
-        }
-
-        emit_pop_rbx()
-
-        if op == 1 {
+            emit_pop_rbx()
             emits("    add rax, rbx")
             emitc(10)
-        } else {
+            state.last_expression_type_hash = identifier_hash_i32()
+            continue
+        }
+
+        if self.token_value == 45 {
+            emit_push_rax()
+
+            if self.compile_term(state, function_hash) != 0 {
+                return -2
+            }
+
+            emit_pop_rbx()
+
             emits("    sub rbx, rax")
             emitc(10)
             emits("    mov rax, rbx")
             emitc(10)
+            state.last_expression_type_hash = identifier_hash_i32()
+            continue
         }
-        state.last_expression_type_hash = identifier_hash_i32()
+
+        self.push_token()
+        return 0
     }
+    return 0
+}
+
+function peek_compare_operator(self: Lexer) -> bool {
+    variable saved_index: i32 = self.index
+    variable saved_line: i32 = self.line
+    variable saved_has_peeked: i32 = self.has_peeked
+    variable saved_peeked_char: i32 = self.peeked_char
+    variable result: bool = false
+
+    if self.has_pushed == true {
+        if self.pushed_kind == token_symbol() {
+            if self.pushed_value == 60 {
+                return true
+            }
+            if self.pushed_value == 62 {
+                return true
+            }
+            if self.pushed_value == 61 {
+                if self.peek_char() == 61 {
+                    return true
+                }
+                return false
+            }
+            if self.pushed_value == 33 {
+                if self.peek_char() == 61 {
+                    return true
+                }
+                return false
+            }
+        }
+        return false
+    }
+
+    self.skip_whitespace()
+
+    variable first: i32 = self.peek_char()
+    if first == 60 {
+        result = true
+    }
+    if first == 62 {
+        result = true
+    }
+    if first == 61 {
+        self.next_char()
+        variable second: i32 = self.peek_char()
+        if second == 61 {
+            result = true
+        }
+    }
+    if first == 33 {
+        self.next_char()
+        variable second: i32 = self.peek_char()
+        if second == 61 {
+            result = true
+        }
+    }
+
+    self.index = saved_index
+    self.line = saved_line
+    self.has_peeked = saved_has_peeked
+    self.peeked_char = saved_peeked_char
+    return result
 }
 
 function compile_condition_jump_false(self: Lexer, state: CompileState, function_hash: i32, false_label: i32) -> i32 {
@@ -6280,19 +7958,28 @@ function compile_condition_jump_false(self: Lexer, state: CompileState, function
         return -1
     }
 
-    emit_push_rax()
+    if self.peek_compare_operator() == true {
+        emit_push_rax()
 
-    op = self.parse_compare_operator()
-    if op < 0 {
-        return -2
+        op = self.parse_compare_operator()
+        if op < 0 {
+            return -2
+        }
+
+        if self.compile_expression(state, function_hash) != 0 {
+            return -3
+        }
+
+        emit_pop_rbx()
+        emit_compare_jump_false(op, false_label)
+        return 0
     }
 
-    if self.compile_expression(state, function_hash) != 0 {
-        return -3
-    }
-
-    emit_pop_rbx()
-    emit_compare_jump_false(op, false_label)
+    emits("    cmp rax, 0")
+    emitc(10)
+    emits("    je ")
+    emit_internal_label_name(false_label)
+    emitc(10)
     return 0
 }
 
@@ -6301,6 +7988,7 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
     variable field_count: i32 = 0
     variable kind: i32 = 0
     variable source_hash: i32 = 0
+    variable variant_hash: i32 = 0
 
     if self.expect_identifier() != 0 {
         return -1
@@ -6351,26 +8039,51 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
             return 0
         }
     }
+
+    if kind == token_keyword() {
+        if self.token_value == keyword_match() {
+            emit_declare_variable(function_hash, variable_hash)
+            if self.compile_match_expression_into_variable(state, function_hash, variable_hash) != 0 {
+                return -10
+            }
+            return 0
+        }
+    }
     self.push_token()
 
     emit_declare_variable(function_hash, variable_hash)
 
     field_count = state.type_field_count(type_hash)
     if field_count > 0 {
-        emit_declare_struct_storage(function_hash, variable_hash, field_count)
-
         kind = self.next_token()
         if kind == token_identifier() {
             if self.token_hash == type_hash {
-                if self.expect_symbol(123) != 0 {
-                    return -10
-                }
+                kind = self.next_token()
+                if kind == token_symbol() {
+                    if self.token_value == 123 {
+                        emit_declare_struct_storage(function_hash, variable_hash, field_count)
+                        if self.compile_struct_literal_into_variable(state, function_hash, variable_hash, type_hash) != 0 {
+                            return -11
+                        }
 
-                if self.compile_struct_literal_into_variable(state, function_hash, variable_hash, type_hash) != 0 {
-                    return -11
+                        return 0
+                    }
+                    if self.token_value == 58 {
+                        if self.expect_symbol(58) != 0 {
+                            return -10
+                        }
+                        if self.expect_identifier() != 0 {
+                            return -12
+                        }
+                        variant_hash = self.token_hash
+                        if self.compile_enum_variant_expression(state, type_hash, variant_hash, function_hash) != 0 {
+                            return -13
+                        }
+                        emit_store_variable(function_hash, variable_hash)
+                        return 0
+                    }
                 }
-
-                return 0
+                return -10
             }
         }
 
@@ -6418,6 +8131,7 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     variable arg_count: i32 = 0
     variable call_hash: i32 = 0
     variable string_hash: i32 = 0
+    variable variant_hash: i32 = 0
 
     if kind != token_symbol() {
         return -1
@@ -6707,6 +8421,15 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     if self.token_value == 61 {
         kind = self.next_token()
 
+        if kind == token_keyword() {
+            if self.token_value == keyword_match() {
+                if self.compile_match_expression_into_variable(state, function_hash, name_hash) != 0 {
+                    return -21
+                }
+                return 0
+            }
+        }
+
         if type_hash == identifier_hash_str() {
             if kind == token_string() {
                 if self.emit_load_current_string_literal(state) != 0 {
@@ -6730,15 +8453,31 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
         if type_hash != 0 {
             if kind == token_identifier() {
                 if self.token_hash == type_hash {
-                    if self.expect_symbol(123) != 0 {
-                        return -23
-                    }
+                    kind = self.next_token()
+                    if kind == token_symbol() {
+                        if self.token_value == 123 {
+                            if self.compile_struct_literal_into_variable(state, function_hash, name_hash, type_hash) != 0 {
+                                return -24
+                            }
 
-                    if self.compile_struct_literal_into_variable(state, function_hash, name_hash, type_hash) != 0 {
-                        return -24
+                            return 0
+                        }
+                        if self.token_value == 58 {
+                            if self.expect_symbol(58) != 0 {
+                                return -23
+                            }
+                            if self.expect_identifier() != 0 {
+                                return -24
+                            }
+                            variant_hash = self.token_hash
+                            if self.compile_enum_variant_expression(state, type_hash, variant_hash, function_hash) != 0 {
+                                return -25
+                            }
+                            emit_store_variable(function_hash, name_hash)
+                            return 0
+                        }
                     }
-
-                    return 0
+                    return -23
                 }
             }
 
@@ -6800,6 +8539,21 @@ function compile_if_tail(self: Lexer, state: CompileState, function_hash: i32) -
     variable else_label: i32 = state.allocate_label()
     variable end_label: i32 = state.allocate_label()
     variable kind: i32 = 0
+    variable is_top_level: bool = false
+    variable parent_depth: i32 = 0
+    variable then_return: bool = false
+    variable else_return: bool = false
+    variable has_else: bool = false
+    variable statement_returns: i32 = 0
+
+    parent_depth = state.current_block_depth
+    if state.current_block_depth == 1 {
+        is_top_level = true
+    }
+    set_if_is_top_level(state, parent_depth, is_top_level)
+    set_if_has_else(state, parent_depth, 0)
+    set_if_then_return(state, parent_depth, 0)
+    set_if_end_label(state, parent_depth, end_label)
 
     if self.compile_condition_jump_false(state, function_hash, else_label) != 0 {
         return -1
@@ -6812,6 +8566,11 @@ function compile_if_tail(self: Lexer, state: CompileState, function_hash: i32) -
     if self.compile_block_body(state, function_hash) != 0 {
         return -3
     }
+    parent_depth = state.current_block_depth
+    if get_block_return_guaranteed(state, parent_depth + 1) == 1 {
+        then_return = true
+    }
+    set_if_then_return(state, parent_depth, then_return)
 
     emit_jump(end_label)
     emit_internal_label(else_label)
@@ -6823,8 +8582,15 @@ function compile_if_tail(self: Lexer, state: CompileState, function_hash: i32) -
                 return -4
             }
 
+            has_else = true
+            set_if_has_else(state, parent_depth, 1)
             if self.compile_block_body(state, function_hash) != 0 {
                 return -5
+            }
+            parent_depth = state.current_block_depth
+            else_return = false
+            if get_block_return_guaranteed(state, parent_depth + 1) == 1 {
+                else_return = true
             }
         } else {
             self.push_token()
@@ -6833,7 +8599,35 @@ function compile_if_tail(self: Lexer, state: CompileState, function_hash: i32) -
         self.push_token()
     }
 
+    parent_depth = state.current_block_depth
+    end_label = get_if_end_label(state, parent_depth)
     emit_internal_label(end_label)
+    has_else = get_if_has_else(state, parent_depth)
+    then_return = get_if_then_return(state, parent_depth)
+    is_top_level = get_if_is_top_level(state, parent_depth)
+    if has_else != 0 {
+        if then_return != 0 {
+            if else_return != 0 {
+                statement_returns = 1
+            }
+        }
+    }
+    if statement_returns != 0 {
+        if parent_depth > 0 {
+            set_block_return_guaranteed(state, parent_depth, 1)
+        }
+        if is_top_level != 0 {
+            state.current_return_guaranteed = 1
+        }
+        state.last_statement_return_guaranteed = 1
+    } else {
+        state.last_statement_return_guaranteed = 0
+    }
+    if parent_depth == 1 {
+        if get_block_return_guaranteed(state, parent_depth) == 1 {
+            state.current_return_guaranteed = 1
+        }
+    }
     return 0
 }
 
@@ -7006,6 +8800,26 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
     variable enum_variant_hash: i32 = 0
     variable payload_binding_hash: i32 = 0
     variable has_payload_pattern: i32 = false
+    variable guard_present: bool = false
+    variable is_top_level: bool = false
+    variable match_all_return: bool = true
+    variable has_default_arm: bool = false
+    variable arm_return: bool = false
+    variable parent_depth: i32 = 0
+    variable statement_returns: i32 = 0
+    variable match_enum_type: i32 = 0
+    variable match_enum_count: i32 = 0
+    variable match_enum_seen_1: i32 = 0
+    variable match_enum_seen_2: i32 = 0
+    variable match_enum_seen_3: i32 = 0
+    variable match_enum_seen_4: i32 = 0
+    variable match_enum_invalid: i32 = 0
+    variable match_enum_exhaustive: i32 = 0
+
+    parent_depth = state.current_block_depth
+    if state.current_block_depth == 1 {
+        is_top_level = true
+    }
 
     if self.compile_expression(state, function_hash) != 0 {
         return -1
@@ -7021,6 +8835,8 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
     loop {
         kind = self.next_token()
         has_payload_pattern = false
+        guard_present = false
+        next_label = 0
 
         if kind == token_symbol() {
             if self.token_value == 125 {
@@ -7032,6 +8848,8 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
 
         if kind == token_number() {
             pattern_value = self.token_value
+            match_enum_invalid = 1
+            if match_enum_type > 0 { match_enum_type = -1 }
             next_label = state.allocate_label()
             emit_load_variable(function_hash, match_value_hash)
             emit_push_rax()
@@ -7046,6 +8864,8 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
             if kind == token_keyword() {
                 if self.token_value == keyword_true() {
                     pattern_value = 1
+                    match_enum_invalid = 1
+                    if match_enum_type > 0 { match_enum_type = -1 }
                     next_label = state.allocate_label()
                     emit_load_variable(function_hash, match_value_hash)
                     emit_push_rax()
@@ -7059,6 +8879,8 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
                 } else {
                     if self.token_value == keyword_false() {
                         pattern_value = 0
+                        match_enum_invalid = 1
+                        if match_enum_type > 0 { match_enum_type = -1 }
                         next_label = state.allocate_label()
                         emit_load_variable(function_hash, match_value_hash)
                         emit_push_rax()
@@ -7097,41 +8919,112 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
                         }
                         enum_variant_hash = self.token_hash
 
-                        pattern_value = state.enum_variant_tag(enum_type_hash, enum_variant_hash)
-                        if pattern_value < 0 {
-                            return -7
-                        }
-
-                        next_label = state.allocate_label()
-                        emit_compare_enum_tag_jump_false(match_value_hash, pattern_value, next_label, function_hash)
-
-                        kind = self.next_token()
-                        if kind == token_symbol() {
-                            if self.token_value == 40 {
-                                if state.enum_variant_has_payload(enum_type_hash, enum_variant_hash) == false {
-                                    return -8
+                        if enum_variant_hash == identifier_hash_wildcard() {
+                            is_default_arm = true
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
                                 }
+                            }
+                        } else {
+                            pattern_value = state.enum_variant_tag(enum_type_hash, enum_variant_hash)
+                            if pattern_value < 0 {
+                                return -7
+                            }
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
+                                }
+                            }
+                            if match_enum_type > 0 {
+                                if pattern_value == 1 { match_enum_seen_1 = 1 }
+                                if pattern_value == 2 { match_enum_seen_2 = 1 }
+                                if pattern_value == 3 { match_enum_seen_3 = 1 }
+                                if pattern_value == 4 { match_enum_seen_4 = 1 }
+                            }
+
+                            next_label = state.allocate_label()
+                            emit_compare_enum_tag_jump_false(match_value_hash, pattern_value, next_label, function_hash)
+
+                            kind = self.next_token()
+                            if kind == token_symbol() {
+                                if self.token_value == 40 {
+                                    if state.enum_variant_has_payload(enum_type_hash, enum_variant_hash) == false {
+                                        return -8
+                                    }
 
                                 if self.expect_identifier() != 0 {
                                     return -9
                                 }
                                 payload_binding_hash = self.token_hash
-                                has_payload_pattern = true
+                                if payload_binding_hash == identifier_hash_wildcard() {
+                                    has_payload_pattern = false
+                                } else {
+                                    has_payload_pattern = true
+                                }
 
                                 if self.expect_symbol(41) != 0 {
                                     return -10
                                 }
+                                } else {
+                                    self.push_token()
+                                }
                             } else {
                                 self.push_token()
                             }
-                        } else {
-                            self.push_token()
                         }
                     }
                 } else {
                     return -11
                 }
             }
+        }
+
+        if has_payload_pattern == true {
+            if state.lookup_variable_type(function_hash, payload_binding_hash) == 0 {
+                emit_declare_variable(function_hash, payload_binding_hash)
+                if state.register_variable_type(function_hash, payload_binding_hash, identifier_hash_i32()) != 0 {
+                    return -11
+                }
+                if register_variable_mode(state, function_hash, payload_binding_hash, 0) != 0 {
+                    return -12
+                }
+            }
+            emit_load_variable(function_hash, match_value_hash)
+            emits("    sar rax, 32")
+            emitc(10)
+            emit_store_variable(function_hash, payload_binding_hash)
+        }
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_if() {
+                guard_present = true
+                if next_label == 0 {
+                    next_label = state.allocate_label()
+                }
+                if self.compile_condition_jump_false(state, function_hash, next_label) != 0 {
+                    return -12
+                }
+            } else {
+                self.push_token()
+            }
+        } else {
+            self.push_token()
         }
 
         if self.expect_symbol(61) != 0 {
@@ -7146,31 +9039,807 @@ function compile_match_tail(self: Lexer, state: CompileState, function_hash: i32
             return -14
         }
 
-        if has_payload_pattern == true {
-            emit_declare_variable(function_hash, payload_binding_hash)
-            emit_load_variable(function_hash, match_value_hash)
-            emits("    sar rax, 32")
-            emitc(10)
-            emit_store_variable(function_hash, payload_binding_hash)
-        }
-
         if self.compile_block_body(state, function_hash) != 0 {
             return -15
+        }
+        parent_depth = state.current_block_depth
+        arm_return = false
+        if get_block_return_guaranteed(state, parent_depth + 1) == 1 {
+            arm_return = true
+        }
+        if arm_return == false {
+            match_all_return = false
         }
 
         emit_jump(end_label)
 
         if is_default_arm == false {
             emit_internal_label(next_label)
+        } else {
+            if guard_present == true {
+                emit_internal_label(next_label)
+            } else {
+                has_default_arm = true
+            }
         }
     }
 
     emit_internal_label(end_label)
+    if match_enum_type > 0 {
+        if match_enum_count == 1 {
+            if match_enum_seen_1 != 0 { match_enum_exhaustive = 1 }
+        } else {
+            if match_enum_count == 2 {
+                if match_enum_seen_1 != 0 {
+                    if match_enum_seen_2 != 0 {
+                        match_enum_exhaustive = 1
+                    }
+                }
+            } else {
+                if match_enum_count == 3 {
+                    if match_enum_seen_1 != 0 {
+                        if match_enum_seen_2 != 0 {
+                            if match_enum_seen_3 != 0 {
+                                match_enum_exhaustive = 1
+                            }
+                        }
+                    }
+                } else {
+                    if match_enum_count == 4 {
+                        if match_enum_seen_1 != 0 {
+                            if match_enum_seen_2 != 0 {
+                                if match_enum_seen_3 != 0 {
+                                    if match_enum_seen_4 != 0 {
+                                        match_enum_exhaustive = 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    state.missing_enum_active = 0
+    state.missing_enum_hash_1 = 0
+    state.missing_enum_hash_2 = 0
+    state.missing_enum_hash_3 = 0
+    state.missing_enum_hash_4 = 0
+    if match_all_return != 0 {
+        if has_default_arm == 0 {
+            if match_enum_exhaustive == 0 {
+                if match_enum_invalid == 0 {
+                    if match_enum_type > 0 {
+                        state.missing_enum_active = 1
+                        if match_enum_count >= 1 {
+                            if match_enum_seen_1 == 0 { state.missing_enum_hash_1 = state.type_field_hash(match_enum_type, 0) }
+                        }
+                        if match_enum_count >= 2 {
+                            if match_enum_seen_2 == 0 { state.missing_enum_hash_2 = state.type_field_hash(match_enum_type, 1) }
+                        }
+                        if match_enum_count >= 3 {
+                            if match_enum_seen_3 == 0 { state.missing_enum_hash_3 = state.type_field_hash(match_enum_type, 2) }
+                        }
+                        if match_enum_count >= 4 {
+                            if match_enum_seen_4 == 0 { state.missing_enum_hash_4 = state.type_field_hash(match_enum_type, 3) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if has_default_arm != 0 {
+        if match_all_return != 0 {
+            statement_returns = 1
+        }
+    } else {
+        if match_enum_exhaustive != 0 {
+            if match_all_return != 0 {
+                statement_returns = 1
+            }
+        }
+    }
+    if statement_returns != 0 {
+            if parent_depth > 0 {
+                set_block_return_guaranteed(state, parent_depth, 1)
+            }
+            if is_top_level != 0 {
+                state.current_return_guaranteed = 1
+            }
+            state.last_statement_return_guaranteed = 1
+    } else {
+        state.last_statement_return_guaranteed = 0
+    }
+    return 0
+}
+
+function compile_match_expression_into_variable(self: Lexer, state: CompileState, function_hash: i32, target_hash: i32) -> i32 {
+    variable prev_active: i32 = state.match_expr_active
+    variable result: i32 = 0
+
+    state.match_expr_active = prev_active + 1
+    result = self.compile_match_expression_into_variable_outer(state, function_hash, target_hash)
+    state.match_expr_active = prev_active
+    return result
+}
+
+function compile_match_expression_into_variable_outer(self: Lexer, state: CompileState, function_hash: i32, target_hash: i32) -> i32 {
+    variable match_value_hash: i32 = 900000000 + state.allocate_label()
+    variable end_label: i32 = state.allocate_label()
+    variable kind: i32 = 0
+    variable next_label: i32 = 0
+    variable pattern_value: i32 = 0
+    variable is_default_arm: bool = false
+    variable enum_type_hash: i32 = 0
+    variable enum_variant_hash: i32 = 0
+    variable payload_binding_hash: i32 = 0
+    variable has_payload_pattern: bool = false
+    variable guard_present: bool = false
+    variable has_default_arm: bool = false
+    variable match_enum_type: i32 = 0
+    variable match_enum_count: i32 = 0
+    variable match_enum_seen_1: i32 = 0
+    variable match_enum_seen_2: i32 = 0
+    variable match_enum_seen_3: i32 = 0
+    variable match_enum_seen_4: i32 = 0
+    variable match_enum_invalid: i32 = 0
+    variable match_enum_exhaustive: i32 = 0
+    variable match_expr_type_hash: i32 = 0
+    variable match_expr_type_set: bool = false
+
+    if self.compile_expression(state, function_hash) != 0 {
+        return -1
+    }
+
+    emit_declare_variable(function_hash, match_value_hash)
+    emit_store_variable(function_hash, match_value_hash)
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+        has_payload_pattern = false
+        guard_present = false
+        next_label = 0
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                break
+            }
+        }
+
+        is_default_arm = false
+
+        if kind == token_number() {
+            pattern_value = self.token_value
+            match_enum_invalid = 1
+            if match_enum_type > 0 { match_enum_type = -1 }
+            next_label = state.allocate_label()
+            emit_load_variable(function_hash, match_value_hash)
+            emit_push_rax()
+            emit_load_number(pattern_value)
+            emit_pop_rbx()
+            emits("    cmp rbx, rax")
+            emitc(10)
+            emits("    jne ")
+            emit_internal_label_name(next_label)
+            emitc(10)
+        } else {
+            if kind == token_keyword() {
+                if self.token_value == keyword_true() {
+                    pattern_value = 1
+                    match_enum_invalid = 1
+                    if match_enum_type > 0 { match_enum_type = -1 }
+                    next_label = state.allocate_label()
+                    emit_load_variable(function_hash, match_value_hash)
+                    emit_push_rax()
+                    emit_load_number(pattern_value)
+                    emit_pop_rbx()
+                    emits("    cmp rbx, rax")
+                    emitc(10)
+                    emits("    jne ")
+                    emit_internal_label_name(next_label)
+                    emitc(10)
+                } else {
+                    if self.token_value == keyword_false() {
+                        pattern_value = 0
+                        match_enum_invalid = 1
+                        if match_enum_type > 0 { match_enum_type = -1 }
+                        next_label = state.allocate_label()
+                        emit_load_variable(function_hash, match_value_hash)
+                        emit_push_rax()
+                        emit_load_number(pattern_value)
+                        emit_pop_rbx()
+                        emits("    cmp rbx, rax")
+                        emitc(10)
+                        emits("    jne ")
+                        emit_internal_label_name(next_label)
+                        emitc(10)
+                    } else {
+                        if self.token_value == keyword_default() {
+                            is_default_arm = true
+                        } else {
+                            return -3
+                        }
+                    }
+                }
+            } else {
+                if kind == token_identifier() {
+                    if self.token_hash == identifier_hash_wildcard() {
+                        is_default_arm = true
+                    } else {
+                        enum_type_hash = self.token_hash
+
+                        if self.expect_symbol(58) != 0 {
+                            return -4
+                        }
+
+                        if self.expect_symbol(58) != 0 {
+                            return -5
+                        }
+
+                        if self.expect_identifier() != 0 {
+                            return -6
+                        }
+                        enum_variant_hash = self.token_hash
+
+                        if enum_variant_hash == identifier_hash_wildcard() {
+                            is_default_arm = true
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
+                                }
+                            }
+                        } else {
+                            pattern_value = state.enum_variant_tag(enum_type_hash, enum_variant_hash)
+                            if pattern_value < 0 {
+                                return -7
+                            }
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
+                                }
+                            }
+                            if match_enum_type > 0 {
+                                if pattern_value == 1 { match_enum_seen_1 = 1 }
+                                if pattern_value == 2 { match_enum_seen_2 = 1 }
+                                if pattern_value == 3 { match_enum_seen_3 = 1 }
+                                if pattern_value == 4 { match_enum_seen_4 = 1 }
+                            }
+
+                            next_label = state.allocate_label()
+                            emit_compare_enum_tag_jump_false(match_value_hash, pattern_value, next_label, function_hash)
+
+                            kind = self.next_token()
+                            if kind == token_symbol() {
+                                if self.token_value == 40 {
+                                    if state.enum_variant_has_payload(enum_type_hash, enum_variant_hash) == false {
+                                        return -8
+                                    }
+
+                                    if self.expect_identifier() != 0 {
+                                        return -9
+                                    }
+                                    payload_binding_hash = self.token_hash
+                                    if payload_binding_hash == identifier_hash_wildcard() {
+                                        has_payload_pattern = false
+                                    } else {
+                                        has_payload_pattern = true
+                                    }
+
+                                    if self.expect_symbol(41) != 0 {
+                                        return -10
+                                    }
+                                } else {
+                                    self.push_token()
+                                }
+                            } else {
+                                self.push_token()
+                            }
+                        }
+                    }
+                } else {
+                    return -11
+                }
+            }
+        }
+
+        if has_payload_pattern == true {
+            if state.lookup_variable_type(function_hash, payload_binding_hash) == 0 {
+                emit_declare_variable(function_hash, payload_binding_hash)
+                if state.register_variable_type(function_hash, payload_binding_hash, identifier_hash_i32()) != 0 {
+                    return -11
+                }
+                if register_variable_mode(state, function_hash, payload_binding_hash, 0) != 0 {
+                    return -12
+                }
+            }
+            emit_load_variable(function_hash, match_value_hash)
+            emits("    sar rax, 32")
+            emitc(10)
+            emit_store_variable(function_hash, payload_binding_hash)
+        }
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_if() {
+                guard_present = true
+                if next_label == 0 {
+                    next_label = state.allocate_label()
+                }
+                if self.compile_condition_jump_false(state, function_hash, next_label) != 0 {
+                    return -12
+                }
+            } else {
+                self.push_token()
+            }
+        } else {
+            self.push_token()
+        }
+
+        if self.expect_symbol(61) != 0 {
+            return -13
+        }
+
+        if self.expect_symbol(62) != 0 {
+            return -14
+        }
+
+        if self.compile_expression(state, function_hash) != 0 {
+            return -15
+        }
+
+        if match_expr_type_set == false {
+            if state.last_expression_type_hash > 0 {
+                match_expr_type_hash = state.last_expression_type_hash
+                match_expr_type_set = true
+            }
+        } else {
+            if state.last_expression_type_hash > 0 {
+                if state.last_expression_type_hash != match_expr_type_hash {
+                    return -16
+                }
+            }
+        }
+
+        emit_store_variable(function_hash, target_hash)
+        emit_jump(end_label)
+
+        if is_default_arm == false {
+            emit_internal_label(next_label)
+        } else {
+            if guard_present == true {
+                emit_internal_label(next_label)
+            } else {
+                has_default_arm = true
+            }
+        }
+
+        if self.expect_symbol(44) != 0 {
+            return -17
+        }
+    }
+
+    emit_internal_label(end_label)
+    if match_enum_type > 0 {
+        if match_enum_count == 1 {
+            if match_enum_seen_1 != 0 { match_enum_exhaustive = 1 }
+        } else {
+            if match_enum_count == 2 {
+                if match_enum_seen_1 != 0 {
+                    if match_enum_seen_2 != 0 {
+                        match_enum_exhaustive = 1
+                    }
+                }
+            } else {
+                if match_enum_count == 3 {
+                    if match_enum_seen_1 != 0 {
+                        if match_enum_seen_2 != 0 {
+                            if match_enum_seen_3 != 0 {
+                                match_enum_exhaustive = 1
+                            }
+                        }
+                    }
+                } else {
+                    if match_enum_count == 4 {
+                        if match_enum_seen_1 != 0 {
+                            if match_enum_seen_2 != 0 {
+                                if match_enum_seen_3 != 0 {
+                                    if match_enum_seen_4 != 0 {
+                                        match_enum_exhaustive = 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if has_default_arm == 0 {
+        if match_enum_exhaustive == 0 {
+            return -18
+        }
+    }
+
+    if match_expr_type_set != 0 {
+        state.last_expression_type_hash = match_expr_type_hash
+    } else {
+        state.last_expression_type_hash = 0
+    }
+
+    return 0
+}
+
+function compile_match_expression_into_variable_nested(self: Lexer, state: CompileState, function_hash: i32, target_hash: i32) -> i32 {
+    variable match_value_hash: i32 = 900000000 + state.allocate_label()
+    variable end_label: i32 = state.allocate_label()
+    variable kind: i32 = 0
+    variable next_label: i32 = 0
+    variable pattern_value: i32 = 0
+    variable is_default_arm: bool = false
+    variable enum_type_hash: i32 = 0
+    variable enum_variant_hash: i32 = 0
+    variable payload_binding_hash: i32 = 0
+    variable has_payload_pattern: bool = false
+    variable guard_present: bool = false
+    variable has_default_arm: bool = false
+    variable match_enum_type: i32 = 0
+    variable match_enum_count: i32 = 0
+    variable match_enum_seen_1: i32 = 0
+    variable match_enum_seen_2: i32 = 0
+    variable match_enum_seen_3: i32 = 0
+    variable match_enum_seen_4: i32 = 0
+    variable match_enum_invalid: i32 = 0
+    variable match_enum_exhaustive: i32 = 0
+    variable match_expr_type_hash: i32 = 0
+    variable match_expr_type_set: bool = false
+
+    if self.compile_expression(state, function_hash) != 0 {
+        return -1
+    }
+
+    emit_declare_variable(function_hash, match_value_hash)
+    emit_store_variable(function_hash, match_value_hash)
+
+    if self.expect_symbol(123) != 0 {
+        return -2
+    }
+
+    loop {
+        kind = self.next_token()
+        has_payload_pattern = false
+        guard_present = false
+        next_label = 0
+
+        if kind == token_symbol() {
+            if self.token_value == 125 {
+                break
+            }
+        }
+
+        is_default_arm = false
+
+        if kind == token_number() {
+            pattern_value = self.token_value
+            match_enum_invalid = 1
+            if match_enum_type > 0 { match_enum_type = -1 }
+            next_label = state.allocate_label()
+            emit_load_variable(function_hash, match_value_hash)
+            emit_push_rax()
+            emit_load_number(pattern_value)
+            emit_pop_rbx()
+            emits("    cmp rbx, rax")
+            emitc(10)
+            emits("    jne ")
+            emit_internal_label_name(next_label)
+            emitc(10)
+        } else {
+            if kind == token_keyword() {
+                if self.token_value == keyword_true() {
+                    pattern_value = 1
+                    match_enum_invalid = 1
+                    if match_enum_type > 0 { match_enum_type = -1 }
+                    next_label = state.allocate_label()
+                    emit_load_variable(function_hash, match_value_hash)
+                    emit_push_rax()
+                    emit_load_number(pattern_value)
+                    emit_pop_rbx()
+                    emits("    cmp rbx, rax")
+                    emitc(10)
+                    emits("    jne ")
+                    emit_internal_label_name(next_label)
+                    emitc(10)
+                } else {
+                    if self.token_value == keyword_false() {
+                        pattern_value = 0
+                        match_enum_invalid = 1
+                        if match_enum_type > 0 { match_enum_type = -1 }
+                        next_label = state.allocate_label()
+                        emit_load_variable(function_hash, match_value_hash)
+                        emit_push_rax()
+                        emit_load_number(pattern_value)
+                        emit_pop_rbx()
+                        emits("    cmp rbx, rax")
+                        emitc(10)
+                        emits("    jne ")
+                        emit_internal_label_name(next_label)
+                        emitc(10)
+                    } else {
+                        if self.token_value == keyword_default() {
+                            is_default_arm = true
+                        } else {
+                            return -3
+                        }
+                    }
+                }
+            } else {
+                if kind == token_identifier() {
+                    if self.token_hash == identifier_hash_wildcard() {
+                        is_default_arm = true
+                    } else {
+                        enum_type_hash = self.token_hash
+
+                        if self.expect_symbol(58) != 0 {
+                            return -4
+                        }
+
+                        if self.expect_symbol(58) != 0 {
+                            return -5
+                        }
+
+                        if self.expect_identifier() != 0 {
+                            return -6
+                        }
+                        enum_variant_hash = self.token_hash
+
+                        if enum_variant_hash == identifier_hash_wildcard() {
+                            is_default_arm = true
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
+                                }
+                            }
+                        } else {
+                            pattern_value = state.enum_variant_tag(enum_type_hash, enum_variant_hash)
+                            if pattern_value < 0 {
+                                return -7
+                            }
+                            if match_enum_invalid != 0 {
+                                match_enum_type = -1
+                            } else {
+                                if match_enum_type == 0 {
+                                    match_enum_type = enum_type_hash
+                                    match_enum_count = state.type_field_count(enum_type_hash)
+                                } else {
+                                    if match_enum_type != enum_type_hash {
+                                        match_enum_type = -1
+                                    }
+                                }
+                            }
+                            if match_enum_type > 0 {
+                                if pattern_value == 1 { match_enum_seen_1 = 1 }
+                                if pattern_value == 2 { match_enum_seen_2 = 1 }
+                                if pattern_value == 3 { match_enum_seen_3 = 1 }
+                                if pattern_value == 4 { match_enum_seen_4 = 1 }
+                            }
+
+                            next_label = state.allocate_label()
+                            emit_compare_enum_tag_jump_false(match_value_hash, pattern_value, next_label, function_hash)
+
+                            kind = self.next_token()
+                            if kind == token_symbol() {
+                                if self.token_value == 40 {
+                                    if state.enum_variant_has_payload(enum_type_hash, enum_variant_hash) == false {
+                                        return -8
+                                    }
+
+                                    if self.expect_identifier() != 0 {
+                                        return -9
+                                    }
+                                    payload_binding_hash = self.token_hash
+                                    if payload_binding_hash == identifier_hash_wildcard() {
+                                        has_payload_pattern = false
+                                    } else {
+                                        has_payload_pattern = true
+                                    }
+
+                                    if self.expect_symbol(41) != 0 {
+                                        return -10
+                                    }
+                                } else {
+                                    self.push_token()
+                                }
+                            } else {
+                                self.push_token()
+                            }
+                        }
+                    }
+                } else {
+                    return -11
+                }
+            }
+        }
+
+        if has_payload_pattern == true {
+            if state.lookup_variable_type(function_hash, payload_binding_hash) == 0 {
+                emit_declare_variable(function_hash, payload_binding_hash)
+                if state.register_variable_type(function_hash, payload_binding_hash, identifier_hash_i32()) != 0 {
+                    return -11
+                }
+                if register_variable_mode(state, function_hash, payload_binding_hash, 0) != 0 {
+                    return -12
+                }
+            }
+            emit_load_variable(function_hash, match_value_hash)
+            emits("    sar rax, 32")
+            emitc(10)
+            emit_store_variable(function_hash, payload_binding_hash)
+        }
+
+        kind = self.next_token()
+        if kind == token_keyword() {
+            if self.token_value == keyword_if() {
+                guard_present = true
+                if next_label == 0 {
+                    next_label = state.allocate_label()
+                }
+                if self.compile_condition_jump_false(state, function_hash, next_label) != 0 {
+                    return -12
+                }
+            } else {
+                self.push_token()
+            }
+        } else {
+            self.push_token()
+        }
+
+        if self.expect_symbol(61) != 0 {
+            return -13
+        }
+
+        if self.expect_symbol(62) != 0 {
+            return -14
+        }
+
+        if self.compile_expression(state, function_hash) != 0 {
+            return -15
+        }
+
+        if match_expr_type_set == false {
+            if state.last_expression_type_hash > 0 {
+                match_expr_type_hash = state.last_expression_type_hash
+                match_expr_type_set = true
+            }
+        } else {
+            if state.last_expression_type_hash > 0 {
+                if state.last_expression_type_hash != match_expr_type_hash {
+                    return -16
+                }
+            }
+        }
+
+        emit_store_variable(function_hash, target_hash)
+        emit_jump(end_label)
+
+        if is_default_arm == false {
+            emit_internal_label(next_label)
+        } else {
+            if guard_present == true {
+                emit_internal_label(next_label)
+            } else {
+                has_default_arm = true
+            }
+        }
+
+        if self.expect_symbol(44) != 0 {
+            return -17
+        }
+    }
+
+    emit_internal_label(end_label)
+    if match_enum_type > 0 {
+        if match_enum_count == 1 {
+            if match_enum_seen_1 != 0 { match_enum_exhaustive = 1 }
+        } else {
+            if match_enum_count == 2 {
+                if match_enum_seen_1 != 0 {
+                    if match_enum_seen_2 != 0 {
+                        match_enum_exhaustive = 1
+                    }
+                }
+            } else {
+                if match_enum_count == 3 {
+                    if match_enum_seen_1 != 0 {
+                        if match_enum_seen_2 != 0 {
+                            if match_enum_seen_3 != 0 {
+                                match_enum_exhaustive = 1
+                            }
+                        }
+                    }
+                } else {
+                    if match_enum_count == 4 {
+                        if match_enum_seen_1 != 0 {
+                            if match_enum_seen_2 != 0 {
+                                if match_enum_seen_3 != 0 {
+                                    if match_enum_seen_4 != 0 {
+                                        match_enum_exhaustive = 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if has_default_arm == 0 {
+        if match_enum_exhaustive == 0 {
+            return -18
+        }
+    }
+
+    if match_expr_type_set != 0 {
+        state.last_expression_type_hash = match_expr_type_hash
+    } else {
+        state.last_expression_type_hash = 0
+    }
+
+    return 0
+}
+
+function compile_match_expression(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
+    variable temp_hash: i32 = 900000000 + state.allocate_label()
+
+    emit_declare_variable(function_hash, temp_hash)
+    if self.compile_match_expression_into_variable(state, function_hash, temp_hash) != 0 {
+        return -1
+    }
+
+    emit_load_variable(function_hash, temp_hash)
+    return 0
+}
+
+function compile_match_expression_nested(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
+    variable temp_hash: i32 = 900000000 + state.allocate_label()
+
+    emit_declare_variable(function_hash, temp_hash)
+    if self.compile_match_expression_into_variable_nested(state, function_hash, temp_hash) != 0 {
+        return -1
+    }
+
+    emit_load_variable(function_hash, temp_hash)
     return 0
 }
 
 function compile_statement(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
     variable kind: i32 = self.next_token()
+    state.last_statement_return_guaranteed = 0
 
     if kind == token_identifier() {
         return self.compile_identifier_statement_tail(state, function_hash, self.token_hash)
@@ -7178,14 +9847,23 @@ function compile_statement(self: Lexer, state: CompileState, function_hash: i32)
 
     if kind == token_keyword() {
         if self.token_value == keyword_return() {
+            variable return_line: i32 = self.token_line
             if self.compile_expression(state, function_hash) != 0 {
                 return -1
             }
 
-            if check_return_expression_type(state) != 0 {
+            if check_return_expression_type(state, return_line) != 0 {
                 return -16
             }
 
+            state.current_return_seen += 1
+            if state.current_block_depth > 0 {
+                set_block_return_guaranteed(state, state.current_block_depth, 1)
+            }
+            if state.current_block_depth == 1 {
+                state.current_return_guaranteed = 1
+            }
+            state.last_statement_return_guaranteed = 1
             emit_return_rax()
             return 0
         }
@@ -7253,21 +9931,31 @@ function compile_statement(self: Lexer, state: CompileState, function_hash: i32)
 }
 
 function compile_block_body(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
+    state.current_block_depth += 1
+    set_block_return_guaranteed(state, state.current_block_depth, 0)
     loop {
         variable kind: i32 = self.next_token()
 
         if kind == token_symbol() {
             if self.token_value == 125 {
+                state.current_block_depth -= 1
                 return 0
             }
+        }
+
+        if get_block_return_guaranteed(state, state.current_block_depth) == 1 {
+            set_block_return_guaranteed(state, state.current_block_depth, 0)
         }
 
         self.push_token()
 
         if self.compile_statement(state, function_hash) != 0 {
+            state.current_block_depth -= 1
             return -1
         }
+        set_block_return_guaranteed(state, state.current_block_depth, state.last_statement_return_guaranteed)
     }
+    return 0
 }
 
 function compile_register_field_declaration_tail(self: Lexer, state: CompileState, type_hash: i32) -> i32 {
@@ -7426,7 +10114,16 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
     if register_function_return_type(state, function_hash, return_type_hash) != 0 {
         return -17
     }
+    state.current_func_hash = function_hash
+    state.missing_enum_active = 0
+    state.missing_enum_hash_1 = 0
+    state.missing_enum_hash_2 = 0
+    state.missing_enum_hash_3 = 0
+    state.missing_enum_hash_4 = 0
     state.current_return_type_hash = return_type_hash
+    state.current_return_seen = 0
+    state.current_return_guaranteed = 0
+    state.current_block_depth = 0
 
     kind = self.next_token()
     if kind != token_symbol() {
@@ -7438,7 +10135,27 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
             return -12
         }
 
+        if return_type_hash > 0 {
+            if get_block_return_guaranteed(state, 1) == 1 {
+                state.current_return_guaranteed = 1
+            }
+            if state.current_return_guaranteed == 0 {
+                emit_missing_return(return_type_hash, self.token_line, function_hash)
+                emit_missing_enum_variants(state)
+                state.current_return_type_hash = 0
+                state.current_return_seen = 0
+                state.current_return_guaranteed = 0
+                state.current_block_depth = 0
+                state.current_func_hash = 0
+                return -18
+            }
+        }
+
         state.current_return_type_hash = 0
+        state.current_return_seen = 0
+        state.current_return_guaranteed = 0
+        state.current_block_depth = 0
+        state.current_func_hash = 0
         emits("    mov rax, 0")
         emitc(10)
         emit_return_rax()
@@ -7446,6 +10163,7 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
     }
 
     if self.token_value == 61 {
+        variable return_line: i32 = self.token_line
         if self.expect_symbol(62) != 0 {
             return -13
         }
@@ -7454,16 +10172,24 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
             return -14
         }
 
-        if check_return_expression_type(state) != 0 {
+        if check_return_expression_type(state, return_line) != 0 {
             return -16
         }
 
         state.current_return_type_hash = 0
+        state.current_return_seen = 0
+        state.current_return_guaranteed = 0
+        state.current_block_depth = 0
+        state.current_func_hash = 0
         emit_return_rax()
         return 0
     }
 
     state.current_return_type_hash = 0
+    state.current_return_seen = 0
+    state.current_return_guaranteed = 0
+    state.current_block_depth = 0
+    state.current_func_hash = 0
     return -15
 }
 
@@ -7497,6 +10223,7 @@ function compile_struct_declaration_tail(self: Lexer, state: CompileState) -> i3
             return -4
         }
     }
+    return 0
 }
 
 function compile_enum_declaration_tail(self: Lexer, state: CompileState) -> i32 {
@@ -7571,6 +10298,7 @@ function compile_enum_declaration_tail(self: Lexer, state: CompileState) -> i32 
 
         return -9
     }
+    return 0
 }
 
 function compile_class_declaration_tail(self: Lexer, state: CompileState) -> i32 {
@@ -7698,6 +10426,7 @@ function compile_class_declaration_tail(self: Lexer, state: CompileState) -> i32
 
         return -19
     }
+    return 0
 }
 
 function compile_implement_declaration_tail(self: Lexer, state: CompileState) -> i32 {
@@ -7770,6 +10499,7 @@ function compile_implement_declaration_tail(self: Lexer, state: CompileState) ->
 
         return -11
     }
+    return 0
 }
 
 function compile_import_member_list_semantic(self: Lexer, state: CompileState) -> i32 {
@@ -7832,6 +10562,7 @@ function compile_import_member_list_semantic(self: Lexer, state: CompileState) -
             return -5
         }
     }
+    return 0
 }
 
 function compile_import_declaration_semantic(self: Lexer, state: CompileState) -> i32 {
@@ -7868,6 +10599,7 @@ function compile_import_declaration_semantic(self: Lexer, state: CompileState) -
             return -3
         }
     }
+    return 0
 }
 
 function compile_from_import_declaration_semantic(self: Lexer, state: CompileState) -> i32 {
@@ -7931,6 +10663,7 @@ function compile_from_import_declaration_semantic(self: Lexer, state: CompileSta
             return 0
         }
     }
+    return 0
 }
 
 function compile_skip_preamble(self: Lexer, state: CompileState) -> i32 {
@@ -7987,6 +10720,7 @@ function compile_skip_preamble(self: Lexer, state: CompileState) -> i32 {
         self.push_token()
         return 0
     }
+    return 0
 }
 
 function new_lexer() -> Lexer {
@@ -8238,7 +10972,177 @@ function compile_translation_unit() -> i32 {
         func_return_type_6: 0,
         func_return_type_7: 0,
         next_func_return_slot: 0,
+        current_func_hash: 0,
         current_return_type_hash: 0,
+        missing_enum_active: 0,
+        missing_enum_hash_1: 0,
+        missing_enum_hash_2: 0,
+        missing_enum_hash_3: 0,
+        missing_enum_hash_4: 0,
+        current_return_seen: 0,
+        current_return_guaranteed: 0,
+        last_statement_return_guaranteed: 0,
+        current_block_depth: 0,
+        block_return_guaranteed_0: 0,
+        block_return_guaranteed_1: 0,
+        block_return_guaranteed_2: 0,
+        block_return_guaranteed_3: 0,
+        block_return_guaranteed_4: 0,
+        block_return_guaranteed_5: 0,
+        block_return_guaranteed_6: 0,
+        block_return_guaranteed_7: 0,
+        block_return_guaranteed_8: 0,
+        block_return_guaranteed_9: 0,
+        block_return_guaranteed_10: 0,
+        block_return_guaranteed_11: 0,
+        block_return_guaranteed_12: 0,
+        block_return_guaranteed_13: 0,
+        block_return_guaranteed_14: 0,
+        block_return_guaranteed_15: 0,
+        block_return_guaranteed_16: 0,
+        block_return_guaranteed_17: 0,
+        block_return_guaranteed_18: 0,
+        block_return_guaranteed_19: 0,
+        block_return_guaranteed_20: 0,
+        block_return_guaranteed_21: 0,
+        block_return_guaranteed_22: 0,
+        block_return_guaranteed_23: 0,
+        block_return_guaranteed_24: 0,
+        block_return_guaranteed_25: 0,
+        block_return_guaranteed_26: 0,
+        block_return_guaranteed_27: 0,
+        block_return_guaranteed_28: 0,
+        block_return_guaranteed_29: 0,
+        block_return_guaranteed_30: 0,
+        block_return_guaranteed_31: 0,
+        if_end_label_0: 0,
+        if_end_label_1: 0,
+        if_end_label_2: 0,
+        if_end_label_3: 0,
+        if_end_label_4: 0,
+        if_end_label_5: 0,
+        if_end_label_6: 0,
+        if_end_label_7: 0,
+        if_end_label_8: 0,
+        if_end_label_9: 0,
+        if_end_label_10: 0,
+        if_end_label_11: 0,
+        if_end_label_12: 0,
+        if_end_label_13: 0,
+        if_end_label_14: 0,
+        if_end_label_15: 0,
+        if_end_label_16: 0,
+        if_end_label_17: 0,
+        if_end_label_18: 0,
+        if_end_label_19: 0,
+        if_end_label_20: 0,
+        if_end_label_21: 0,
+        if_end_label_22: 0,
+        if_end_label_23: 0,
+        if_end_label_24: 0,
+        if_end_label_25: 0,
+        if_end_label_26: 0,
+        if_end_label_27: 0,
+        if_end_label_28: 0,
+        if_end_label_29: 0,
+        if_end_label_30: 0,
+        if_end_label_31: 0,
+        if_then_return_0: 0,
+        if_then_return_1: 0,
+        if_then_return_2: 0,
+        if_then_return_3: 0,
+        if_then_return_4: 0,
+        if_then_return_5: 0,
+        if_then_return_6: 0,
+        if_then_return_7: 0,
+        if_then_return_8: 0,
+        if_then_return_9: 0,
+        if_then_return_10: 0,
+        if_then_return_11: 0,
+        if_then_return_12: 0,
+        if_then_return_13: 0,
+        if_then_return_14: 0,
+        if_then_return_15: 0,
+        if_then_return_16: 0,
+        if_then_return_17: 0,
+        if_then_return_18: 0,
+        if_then_return_19: 0,
+        if_then_return_20: 0,
+        if_then_return_21: 0,
+        if_then_return_22: 0,
+        if_then_return_23: 0,
+        if_then_return_24: 0,
+        if_then_return_25: 0,
+        if_then_return_26: 0,
+        if_then_return_27: 0,
+        if_then_return_28: 0,
+        if_then_return_29: 0,
+        if_then_return_30: 0,
+        if_then_return_31: 0,
+        if_has_else_0: 0,
+        if_has_else_1: 0,
+        if_has_else_2: 0,
+        if_has_else_3: 0,
+        if_has_else_4: 0,
+        if_has_else_5: 0,
+        if_has_else_6: 0,
+        if_has_else_7: 0,
+        if_has_else_8: 0,
+        if_has_else_9: 0,
+        if_has_else_10: 0,
+        if_has_else_11: 0,
+        if_has_else_12: 0,
+        if_has_else_13: 0,
+        if_has_else_14: 0,
+        if_has_else_15: 0,
+        if_has_else_16: 0,
+        if_has_else_17: 0,
+        if_has_else_18: 0,
+        if_has_else_19: 0,
+        if_has_else_20: 0,
+        if_has_else_21: 0,
+        if_has_else_22: 0,
+        if_has_else_23: 0,
+        if_has_else_24: 0,
+        if_has_else_25: 0,
+        if_has_else_26: 0,
+        if_has_else_27: 0,
+        if_has_else_28: 0,
+        if_has_else_29: 0,
+        if_has_else_30: 0,
+        if_has_else_31: 0,
+        if_is_top_level_0: 0,
+        if_is_top_level_1: 0,
+        if_is_top_level_2: 0,
+        if_is_top_level_3: 0,
+        if_is_top_level_4: 0,
+        if_is_top_level_5: 0,
+        if_is_top_level_6: 0,
+        if_is_top_level_7: 0,
+        if_is_top_level_8: 0,
+        if_is_top_level_9: 0,
+        if_is_top_level_10: 0,
+        if_is_top_level_11: 0,
+        if_is_top_level_12: 0,
+        if_is_top_level_13: 0,
+        if_is_top_level_14: 0,
+        if_is_top_level_15: 0,
+        if_is_top_level_16: 0,
+        if_is_top_level_17: 0,
+        if_is_top_level_18: 0,
+        if_is_top_level_19: 0,
+        if_is_top_level_20: 0,
+        if_is_top_level_21: 0,
+        if_is_top_level_22: 0,
+        if_is_top_level_23: 0,
+        if_is_top_level_24: 0,
+        if_is_top_level_25: 0,
+        if_is_top_level_26: 0,
+        if_is_top_level_27: 0,
+        if_is_top_level_28: 0,
+        if_is_top_level_29: 0,
+        if_is_top_level_30: 0,
+        if_is_top_level_31: 0,
         last_expression_type_hash: 0,
         last_array_argument_hash: 0,
         last_array_argument_mode: 0

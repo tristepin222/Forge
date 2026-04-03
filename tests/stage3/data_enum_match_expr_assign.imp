@@ -1,0 +1,22 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B(i32)
+}
+
+function main() {
+    variable x: Foo = match 1 {
+        0 => Foo::A(3),
+        _ => Foo::B(5),
+    }
+
+    match x {
+        Foo::A(v) => {
+            print(v)
+        }
+        Foo::B(v) => {
+            print(v)
+        }
+    }
+}

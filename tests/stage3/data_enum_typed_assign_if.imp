@@ -1,0 +1,26 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B(i32)
+}
+
+function main() {
+    variable x: Foo = Foo::A(1)
+
+    if 1 == 1 {
+        x = Foo::B(7)
+    }
+
+    match x {
+        Foo::A(v1) => {
+            print(v1)
+        }
+        Foo::B(v2) => {
+            print(v2)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

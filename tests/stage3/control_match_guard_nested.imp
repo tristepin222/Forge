@@ -1,0 +1,17 @@
+module app.main
+
+function main() {
+    value x: i32 = 2
+
+    match x {
+        1 if match 2 { 2 => true, _ => false, } => {
+            print(1)
+        }
+        2 if match x { 2 => true, _ => false, } => {
+            print(2)
+        }
+        _ => {
+            print(0)
+        }
+    }
+}

@@ -1,0 +1,14 @@
+module app.main
+
+enum Foo {
+    A(i32)
+    B(i32)
+}
+
+function main() {
+    value x: i32 = 4
+    print(match Foo::A(2) {
+        Foo::A(v) if v + x == 6 => 11,
+        _ => 0,
+    })
+}

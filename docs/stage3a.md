@@ -214,7 +214,7 @@ It currently supports:
 
 Current limitation:
 - return types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, arithmetic expressions, direct same-unit call expressions with declared return types, method-call expressions with declared return types, direct imported-function alias call expressions with declared return types, and imported method-call alias expressions with declared return types
-- return-flow completeness and arbitrary call-return inference are not checked yet
+- return-flow completeness is still shallow: typed block-bodied functions require either a top-level `return`, a top-level `if`/`else` with returns in both branches, or a top-level `match` with a `default` arm and returns in all arms; arbitrary call-return inference is still not checked yet
 - imports are still mostly syntax-only; only builtin `print` and `len` aliases currently have semantics, including grouped aliases tracked independently
 - non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls and method-call member names, and the module path is still ignored in favor of same-translation-unit function names
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`

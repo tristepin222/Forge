@@ -61,6 +61,21 @@ TEST_NAMES=(
   control_loop_continue
   control_match_literal
   control_match_default
+  control_match_guard
+  control_match_guard_default
+  control_match_guard_nested
+  control_match_expr_assign
+  control_match_expr_assign_enum
+  control_match_expr_value
+  control_match_expr_guard
+  control_match_expr_guard_default
+  control_match_expr_guard_nested
+  control_match_expr_guard_call
+  control_match_expr_enum_guard
+  control_match_expr_enum_guard_default
+  control_match_expr_enum_guard_wildcard
+  control_match_expr_enum_guard_expr
+  control_match_expr_enum_guard_outer
   control_for_range
   control_for_expr_range
   control_for_break_continue
@@ -75,6 +90,16 @@ TEST_NAMES=(
   syntax_return_type
   semantic_return_bool_to_i32
   semantic_return_i32_to_bool
+  semantic_return_missing_i32
+  semantic_return_missing_bool
+  semantic_return_if_else_all
+  semantic_return_if_else_missing
+  semantic_return_if_chain_all
+  semantic_return_if_chain_missing
+  semantic_return_match_all
+  semantic_return_match_missing
+  semantic_return_match_enum_all
+  semantic_return_match_enum_missing
   semantic_return_call_i32
   semantic_return_call_bool
   semantic_return_call_bool_to_i32
@@ -135,8 +160,20 @@ TEST_NAMES=(
   bool_literals
   data_enum_unit
   data_enum_payload
+  data_enum_typed_init
+  data_enum_return
+  data_enum_match_expr_assign
+  data_enum_typed_assign
+  data_enum_typed_assign_if
+  data_enum_typed_assign_var
   control_match_enum
+  control_match_enum_guard
+  control_match_enum_guard_nested
+  control_match_enum_guard_call
+  control_match_enum_guard_default
+  control_match_enum_wildcard
   control_match_enum_payload
+  control_match_enum_payload_wildcard
   data_struct_fields
   data_struct_field_assign
   data_struct_field_compound
