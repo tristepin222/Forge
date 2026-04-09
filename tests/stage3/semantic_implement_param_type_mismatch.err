@@ -1,0 +1,6 @@
+type error
+line: 10
+interface method parameter type mismatch
+parameter: 2
+expected: bool
+got: i32

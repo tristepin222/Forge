@@ -32,6 +32,9 @@ VAR interface_hash_tbl
 VAR interface_method_start_tbl
 VAR interface_method_count_tbl
 VAR interface_method_hash_tbl
+VAR interface_method_param_count_tbl
+VAR interface_method_return_type_tbl
+VAR interface_method_param_type_tbl
 VAR struct_hash_tbl
 VAR struct_field_start_tbl
 VAR struct_field_count_tbl
@@ -85,6 +88,9 @@ VAR func_count
 VAR param_slot_count
 VAR current_param_count
 VAR current_param_start
+VAR current_sig_param_count
+VAR current_sig_param_index
+VAR current_sig_param_type_tbl
 VAR call_hash
 VAR call_func_index
 VAR call_context
@@ -156,6 +162,8 @@ VAR expr_line
 VAR expr_type_hash
 VAR call_array_length_mode
 VAR call_array_length_value
+VAR expr_array_base_mode
+VAR expr_array_base_off
 VAR expr_numeric_flag
 VAR expr_group_depth
 VAR expr_group_add_tbl
@@ -229,8 +237,14 @@ VAR current_enum_type_hash
 VAR current_struct_hash
 VAR current_interface_hash
 VAR current_interface_index
+VAR current_interface_method_index
 VAR current_impl_interface_index
 VAR interface_sig_line
+VAR interface_sig_param_count
+VAR interface_sig_expect_param_name
+VAR interface_sig_expect_type
+VAR interface_sig_param_index
+VAR interface_sig_return_type_hash
 VAR current_struct_index
 VAR current_struct_field_start
 VAR current_struct_field_count
@@ -253,10 +267,29 @@ VAR pending_array_element_off
 VAR current_field_hash
 VAR current_field_index
 VAR current_field_off
+VAR current_method_name_hash
 VAR impl_active
 VAR impl_type_hash
+VAR impl_method_count
+VAR impl_method_hash_tbl
+VAR impl_method_param_count_tbl
+VAR impl_method_return_type_tbl
+VAR impl_method_line_tbl
+VAR impl_method_param_type_tbl
+VAR current_impl_method_index
+VAR impl_expected_param_count
+VAR impl_expected_return_type
+VAR impl_expected_param_type
+VAR impl_actual_param_count
+VAR impl_actual_return_type
+VAR impl_actual_method_line
+VAR impl_actual_param_type
+VAR impl_actual_method_index
 VAR current_for_var_off
 VAR current_for_end_off
+VAR current_for_index_off
+VAR current_for_array_base_off
+VAR current_for_array_base_mode
 VAR block_depth
 VAR block_kind_tbl
 VAR block_label_tbl
@@ -288,6 +321,14 @@ ALLOC interface_hash_tbl 512
 ALLOC interface_method_start_tbl 512
 ALLOC interface_method_count_tbl 512
 ALLOC interface_method_hash_tbl 2048
+ALLOC interface_method_param_count_tbl 2048
+ALLOC interface_method_return_type_tbl 2048
+ALLOC interface_method_param_type_tbl 16384
+ALLOC impl_method_hash_tbl 256
+ALLOC impl_method_param_count_tbl 256
+ALLOC impl_method_return_type_tbl 256
+ALLOC impl_method_line_tbl 256
+ALLOC impl_method_param_type_tbl 2048
 ALLOC struct_hash_tbl 512
 ALLOC struct_field_start_tbl 512
 ALLOC struct_field_count_tbl 512
@@ -297,6 +338,7 @@ ALLOC func_param_count_tbl 4096
 ALLOC func_param_start_tbl 4096
 ALLOC func_param_slot_tbl 32768
 ALLOC func_return_type_tbl 4096
+ALLOC current_sig_param_type_tbl 128
 ALLOC saved_expr_target_tbl 16
 ALLOC saved_expr_end_mode_tbl 16
 ALLOC saved_expr_pending_add_tbl 16
@@ -350,6 +392,10 @@ LET interface_method_entry_count 0
 LET next_off 0
 LET func_count 0
 LET param_slot_count 0
+LET current_param_count 0
+LET current_param_start 0
+LET current_sig_param_count 0
+LET current_sig_param_index 0
 LET call_context 0
 LET call_func_index 0
 LET call_param_count 0
@@ -393,6 +439,8 @@ LET missing_enum_seen_3 0
 LET missing_enum_seen_4 0
 LET pending_if_return_seen 0
 LET expr_type_hash 0
+LET expr_array_base_mode 0
+LET expr_array_base_off 0
 LET expr_numeric_flag 0
 LET expr_group_depth 0
 LET current_struct_base_mode 0
@@ -406,8 +454,25 @@ LET cached_enum_lookup_valid 0
 LET cached_field_valid 0
 LET impl_active 0
 LET impl_type_hash 0
+LET impl_method_count 0
+LET current_method_name_hash 0
 LET current_impl_interface_index 0
+LET current_impl_method_index -1
+LET impl_expected_param_count 0
+LET impl_expected_return_type 0
+LET impl_expected_param_type 0
+LET impl_actual_param_count 0
+LET impl_actual_return_type 0
+LET impl_actual_method_line 0
+LET impl_actual_param_type 0
+LET impl_actual_method_index 0
+LET current_interface_method_index 0
 LET interface_sig_line 0
+LET interface_sig_param_count 0
+LET interface_sig_expect_param_name 0
+LET interface_sig_expect_type 0
+LET interface_sig_param_index 0
+LET interface_sig_return_type_hash 0
 LET match_case_payload_mode 0
 LET match_case_emitted 0
 LET match_case_has_guard 0
@@ -464,6 +529,9 @@ LET current_array_base_off 0
 LET current_array_base_mode 0
 LET current_array_length 0
 LET current_array_index 0
+LET current_for_index_off 0
+LET current_for_array_base_off 0
+LET current_for_array_base_mode 0
 LET array_saved_expr_target 0
 LET array_saved_expr_end_mode 0
 LET array_saved_expr_pending_add 0
@@ -511,6 +579,8 @@ LET pending_array_element_off 0
 # 113: after function name, expecting '('
 # 114: inside function parameters in interface
 # 115: after parameters in interface
+# 151: after '-' in interface return type
+# 152: expecting interface return type name
 # 120: expecting class name
 # 123: expecting method name
 # 125: skipping generic parameters
@@ -1095,7 +1165,35 @@ WHILE 1 == 1
         IF emit_handled == 0
             IF parser_state == 3
                 IF tok_type == 1
+                    LET current_method_name_hash tok_hash
                     LET current_func_hash tok_hash
+                    IF class_active == 1
+                        LET current_func_hash active_class_hash
+                        MUL current_func_hash 131
+                        ADD current_func_hash 36
+                        MUL current_func_hash 131
+                        ADD current_func_hash current_method_name_hash
+                    END
+                    IF impl_active == 1
+                        LET current_func_hash impl_type_hash
+                        MUL current_func_hash 131
+                        ADD current_func_hash 36
+                        MUL current_func_hash 131
+                        ADD current_func_hash current_method_name_hash
+                        LET current_impl_method_index impl_method_count
+                        LET temp impl_method_count
+                        MUL temp 8
+                        ADD temp impl_method_hash_tbl
+                        POKE temp current_method_name_hash
+                        LET temp impl_method_count
+                        MUL temp 8
+                        ADD temp impl_method_line_tbl
+                        POKE temp tok_line
+                        ADD impl_method_count 1
+                    END
+                    IF impl_active == 0
+                        LET current_impl_method_index -1
+                    END
                     LET missing_enum_active 0
                     LET missing_enum_type_hash 0
                     LET missing_enum_count 0
@@ -1484,6 +1582,7 @@ WHILE 1 == 1
                 IF tok_type == 2
                     IF tok_value == 123
                         LET impl_active 1
+                        LET impl_method_count 0
                         LET parser_state 40
                         LET emit_handled 1
                     END
@@ -1565,11 +1664,22 @@ WHILE 1 == 1
             IF parser_state == 112
                 IF tok_type == 1
                     LET current_hash tok_hash
+                    LET current_interface_method_index interface_method_entry_count
 
                     LET temp interface_method_entry_count
                     MUL temp 8
                     ADD temp interface_method_hash_tbl
                     POKE temp current_hash
+
+                    LET temp interface_method_entry_count
+                    MUL temp 8
+                    ADD temp interface_method_param_count_tbl
+                    POKE temp 0
+
+                    LET temp interface_method_entry_count
+                    MUL temp 8
+                    ADD temp interface_method_return_type_tbl
+                    POKE temp 0
 
                     ADD interface_method_entry_count 1
 
@@ -1590,6 +1700,11 @@ WHILE 1 == 1
             IF parser_state == 113
                 IF tok_type == 2
                     IF tok_value == 40
+                        LET interface_sig_param_count 0
+                        LET interface_sig_expect_param_name 1
+                        LET interface_sig_expect_type 0
+                        LET interface_sig_param_index 0
+                        LET interface_sig_return_type_hash 0
                         LET parser_state 114
                         LET emit_handled 1
                     END
@@ -1601,9 +1716,65 @@ WHILE 1 == 1
             IF parser_state == 114
                 IF tok_type == 2
                     IF tok_value == 41
+                        LET temp current_interface_method_index
+                        MUL temp 8
+                        ADD temp interface_method_param_count_tbl
+                        POKE temp interface_sig_param_count
                         LET interface_sig_line tok_line
                         LET parser_state 115
                         LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
+                        IF interface_sig_expect_type == 1
+                            LET temp current_interface_method_index
+                            MUL temp 8
+                            ADD temp interface_sig_param_index
+                            MUL temp 8
+                            ADD temp interface_method_param_type_tbl
+                            POKE temp tok_hash
+                            LET interface_sig_expect_type 0
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 1
+                        IF interface_sig_expect_param_name == 1
+                            LET interface_sig_param_index interface_sig_param_count
+                            ADD interface_sig_param_count 1
+                            LET interface_sig_expect_param_name 0
+                            LET interface_sig_expect_type 0
+                            LET temp current_interface_method_index
+                            MUL temp 8
+                            ADD temp interface_sig_param_index
+                            MUL temp 8
+                            ADD temp interface_method_param_type_tbl
+                            POKE temp 0
+                        END
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 2
+                        IF tok_value == 58
+                            LET interface_sig_expect_type 1
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 2
+                        IF tok_value == 44
+                            LET interface_sig_expect_param_name 1
+                            LET interface_sig_expect_type 0
+                            LET emit_handled 1
+                        END
                     END
                 END
 
@@ -1616,7 +1787,18 @@ WHILE 1 == 1
         IF emit_handled == 0
             IF parser_state == 115
                 IF tok_line == interface_sig_line
-                    LET emit_handled 1
+                    IF tok_type == 2
+                        IF tok_value == 45
+                            LET parser_state 151
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_line == interface_sig_line
+                        LET emit_handled 1
+                    END
                 END
 
                 IF emit_handled == 0
@@ -1645,6 +1827,31 @@ WHILE 1 == 1
                     IF tok_type == 3
                         LET emit_handled 1
                     END
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 151
+                IF tok_type == 2
+                    IF tok_value == 62
+                        LET parser_state 152
+                        LET emit_handled 1
+                    END
+                END
+            END
+        END
+
+        IF emit_handled == 0
+            IF parser_state == 152
+                IF tok_type == 1
+                    LET interface_sig_return_type_hash tok_hash
+                    LET temp current_interface_method_index
+                    MUL temp 8
+                    ADD temp interface_method_return_type_tbl
+                    POKE temp interface_sig_return_type_hash
+                    LET parser_state 115
+                    LET emit_handled 1
                 END
             END
         END
@@ -2116,6 +2323,8 @@ WHILE 1 == 1
                             END
 
                             LET current_param_count 0
+                            LET current_sig_param_count 0
+                            LET current_sig_param_index 0
                             LET parser_state 44
                             LET emit_handled 1
                         END
@@ -2289,6 +2498,223 @@ WHILE 1 == 1
                 MUL temp 8
                 ADD temp func_return_type_tbl
                 POKE temp current_return_type_hash
+                IF current_impl_method_index > -1
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_param_count_tbl
+                    POKE temp current_sig_param_count
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_return_type_tbl
+                    POKE temp current_return_type_hash
+                    LET found_index 0
+                    WHILE found_index < current_sig_param_count
+                        LET temp found_index
+                        MUL temp 8
+                        ADD temp current_sig_param_type_tbl
+                        PEEK temp temp
+                        LET temp2 current_impl_method_index
+                        MUL temp2 8
+                        ADD temp2 found_index
+                        MUL temp2 8
+                        ADD temp2 impl_method_param_type_tbl
+                        POKE temp2 temp
+                        ADD found_index 1
+                    END
+
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_line_tbl
+                    PEEK impl_actual_method_line temp
+
+                    LET found_flag 0
+                    LET temp current_impl_interface_index
+                    MUL temp 8
+                    ADD temp interface_method_start_tbl
+                    PEEK found_off temp
+
+                    LET temp current_impl_interface_index
+                    MUL temp 8
+                    ADD temp interface_method_count_tbl
+                    PEEK temp temp
+
+                    LET found_index 0
+                    WHILE found_index < temp
+                        LET temp2 found_off
+                        ADD temp2 found_index
+                        MUL temp2 8
+                        ADD temp2 interface_method_hash_tbl
+                        PEEK current_hash temp2
+                        IF current_hash == current_method_name_hash
+                            LET found_flag 1
+                            LET impl_actual_method_index found_off
+                            ADD impl_actual_method_index found_index
+                            LET temp2 impl_actual_method_index
+                            MUL temp2 8
+                            ADD temp2 interface_method_param_count_tbl
+                            PEEK impl_expected_param_count temp2
+                            LET temp2 impl_actual_method_index
+                            MUL temp2 8
+                            ADD temp2 interface_method_return_type_tbl
+                            PEEK impl_expected_return_type temp2
+                            LET found_index temp
+                        END
+                        IF found_flag == 0
+                            ADD found_index 1
+                        END
+                    END
+
+                    IF found_flag == 1
+                        LET temp 0
+                        IF current_sig_param_count == impl_expected_param_count
+                            LET temp 1
+                        END
+                        IF temp == 0
+                            WRITE_STR "type error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT impl_actual_method_line
+                            WRITE_CHAR 10
+                            WRITE_STR "interface method parameter count mismatch"
+                            WRITE_CHAR 10
+                            WRITE_STR "expected: "
+                            WRITE_INT impl_expected_param_count
+                            WRITE_CHAR 10
+                            WRITE_STR "got: "
+                            WRITE_INT current_sig_param_count
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+
+                        LET found_index 0
+                        WHILE found_index < impl_expected_param_count
+                            LET temp impl_actual_method_index
+                            MUL temp 8
+                            ADD temp found_index
+                            MUL temp 8
+                            ADD temp interface_method_param_type_tbl
+                            PEEK impl_expected_param_type temp
+
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp current_sig_param_type_tbl
+                            PEEK impl_actual_param_type temp
+
+                            LET temp 0
+                            IF impl_expected_param_type == 0
+                                LET temp 1
+                            END
+                            IF temp == 0
+                                IF impl_actual_param_type == impl_expected_param_type
+                                    LET temp 1
+                                END
+                            END
+                            IF temp == 0
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT impl_actual_method_line
+                                WRITE_CHAR 10
+                                WRITE_STR "interface method parameter type mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "parameter: "
+                                LET temp found_index
+                                ADD temp 1
+                                WRITE_INT temp
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                LET found_flag 0
+                                IF impl_expected_param_type == 1808636
+                                    WRITE_STR "i32"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 222232438
+                                    WRITE_STR "bool"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 1988825
+                                    WRITE_STR "str"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 8488884799549109734
+                                    WRITE_STR "array_i32"
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    WRITE_STR "unknown"
+                                END
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                LET found_flag 0
+                                IF impl_actual_param_type == 1808636
+                                    WRITE_STR "i32"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 222232438
+                                    WRITE_STR "bool"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 1988825
+                                    WRITE_STR "str"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 8488884799549109734
+                                    WRITE_STR "array_i32"
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    WRITE_STR "unknown"
+                                END
+                                WRITE_CHAR 10
+                                EXIT
+                            END
+                            ADD found_index 1
+                        END
+
+                        LET temp 0
+                        IF current_return_type_hash == impl_expected_return_type
+                            LET temp 1
+                        END
+                        IF temp == 0
+                            WRITE_STR "type error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT impl_actual_method_line
+                            WRITE_CHAR 10
+                            WRITE_STR "interface method return type mismatch"
+                            WRITE_CHAR 10
+                            WRITE_STR "expected: "
+                            IF impl_expected_return_type == 1808636
+                                WRITE_STR "i32"
+                            END
+                            IF impl_expected_return_type == 222232438
+                                WRITE_STR "bool"
+                            END
+                            IF impl_expected_return_type == 1988825
+                                WRITE_STR "str"
+                            END
+                            IF impl_expected_return_type == 0
+                                WRITE_STR "void"
+                            END
+                            WRITE_CHAR 10
+                            WRITE_STR "got: "
+                            IF current_return_type_hash == 1808636
+                                WRITE_STR "i32"
+                            END
+                            IF current_return_type_hash == 222232438
+                                WRITE_STR "bool"
+                            END
+                            IF current_return_type_hash == 1988825
+                                WRITE_STR "str"
+                            END
+                            IF current_return_type_hash == 0
+                                WRITE_STR "void"
+                            END
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+                    END
+                END
                 LET current_return_seen 0
                 LET current_return_guaranteed 0
                 LET pending_if_return_seen 0
@@ -2645,6 +3071,13 @@ _start:
                         ADD temp symbol_mut_tbl
                         POKE temp 0
 
+                        LET temp current_sig_param_count
+                        MUL temp 8
+                        ADD temp current_sig_param_type_tbl
+                        POKE temp 0
+                        LET current_sig_param_index current_sig_param_count
+                        ADD current_sig_param_count 1
+
                         ADD current_param_count 1
                         ADD sym_count 1
                         LET cached_symbol_valid 0
@@ -2706,6 +3139,10 @@ _start:
                                     ADD temp2 symbol_str_label_tbl
                                     POKE temp2 current_struct_index
                                 END
+                                LET temp2 current_sig_param_index
+                                MUL temp2 8
+                                ADD temp2 current_sig_param_type_tbl
+                                POKE temp2 impl_type_hash
                             END
 
                             IF temp == 41
@@ -2752,6 +3189,10 @@ _start:
                                     ADD temp2 symbol_str_label_tbl
                                     POKE temp2 current_struct_index
                                 END
+                                LET temp2 current_sig_param_index
+                                MUL temp2 8
+                                ADD temp2 current_sig_param_type_tbl
+                                POKE temp2 impl_type_hash
                             END
                         END
                     END
@@ -2768,6 +3209,10 @@ _start:
                                 MUL temp2 8
                                 ADD temp2 symbol_str_label_tbl
                                 POKE temp2 active_class_index
+                                LET temp2 current_sig_param_index
+                                MUL temp2 8
+                                ADD temp2 current_sig_param_type_tbl
+                                POKE temp2 active_class_hash
                             END
 
                             IF temp == 41
@@ -2780,6 +3225,10 @@ _start:
                                 MUL temp2 8
                                 ADD temp2 symbol_str_label_tbl
                                 POKE temp2 active_class_index
+                                LET temp2 current_sig_param_index
+                                MUL temp2 8
+                                ADD temp2 current_sig_param_type_tbl
+                                POKE temp2 active_class_hash
                             END
                         END
                     END
@@ -2812,6 +3261,11 @@ _start:
         IF emit_handled == 0
             IF parser_state == 46
                 IF tok_type == 1
+                    LET temp current_sig_param_index
+                    MUL temp 8
+                    ADD temp current_sig_param_type_tbl
+                    POKE temp tok_hash
+
                     IF tok_hash == 8488884799549109734
                         LET temp current_symbol_index
                         MUL temp 8
@@ -4945,6 +5399,10 @@ _start:
                     IF tok_hash == 13865
                         LET current_for_end_off next_off
                         ADD next_off 8
+                        LET current_for_index_off next_off
+                        ADD next_off 8
+                        LET current_for_array_base_off 0
+                        LET current_for_array_base_mode 0
                         ADD next_label 1
                         LET pending_if_label next_label
                         LET parser_state 75
@@ -5069,6 +5527,223 @@ _start:
                 MUL temp 8
                 ADD temp func_return_type_tbl
                 POKE temp current_return_type_hash
+                IF current_impl_method_index > -1
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_param_count_tbl
+                    POKE temp current_sig_param_count
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_return_type_tbl
+                    POKE temp current_return_type_hash
+                    LET found_index 0
+                    WHILE found_index < current_sig_param_count
+                        LET temp found_index
+                        MUL temp 8
+                        ADD temp current_sig_param_type_tbl
+                        PEEK temp temp
+                        LET temp2 current_impl_method_index
+                        MUL temp2 8
+                        ADD temp2 found_index
+                        MUL temp2 8
+                        ADD temp2 impl_method_param_type_tbl
+                        POKE temp2 temp
+                        ADD found_index 1
+                    END
+
+                    LET temp current_impl_method_index
+                    MUL temp 8
+                    ADD temp impl_method_line_tbl
+                    PEEK impl_actual_method_line temp
+
+                    LET found_flag 0
+                    LET temp current_impl_interface_index
+                    MUL temp 8
+                    ADD temp interface_method_start_tbl
+                    PEEK found_off temp
+
+                    LET temp current_impl_interface_index
+                    MUL temp 8
+                    ADD temp interface_method_count_tbl
+                    PEEK temp temp
+
+                    LET found_index 0
+                    WHILE found_index < temp
+                        LET temp2 found_off
+                        ADD temp2 found_index
+                        MUL temp2 8
+                        ADD temp2 interface_method_hash_tbl
+                        PEEK current_hash temp2
+                        IF current_hash == current_method_name_hash
+                            LET found_flag 1
+                            LET impl_actual_method_index found_off
+                            ADD impl_actual_method_index found_index
+                            LET temp2 impl_actual_method_index
+                            MUL temp2 8
+                            ADD temp2 interface_method_param_count_tbl
+                            PEEK impl_expected_param_count temp2
+                            LET temp2 impl_actual_method_index
+                            MUL temp2 8
+                            ADD temp2 interface_method_return_type_tbl
+                            PEEK impl_expected_return_type temp2
+                            LET found_index temp
+                        END
+                        IF found_flag == 0
+                            ADD found_index 1
+                        END
+                    END
+
+                    IF found_flag == 1
+                        LET temp 0
+                        IF current_sig_param_count == impl_expected_param_count
+                            LET temp 1
+                        END
+                        IF temp == 0
+                            WRITE_STR "type error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT impl_actual_method_line
+                            WRITE_CHAR 10
+                            WRITE_STR "interface method parameter count mismatch"
+                            WRITE_CHAR 10
+                            WRITE_STR "expected: "
+                            WRITE_INT impl_expected_param_count
+                            WRITE_CHAR 10
+                            WRITE_STR "got: "
+                            WRITE_INT current_sig_param_count
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+
+                        LET found_index 0
+                        WHILE found_index < impl_expected_param_count
+                            LET temp impl_actual_method_index
+                            MUL temp 8
+                            ADD temp found_index
+                            MUL temp 8
+                            ADD temp interface_method_param_type_tbl
+                            PEEK impl_expected_param_type temp
+
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp current_sig_param_type_tbl
+                            PEEK impl_actual_param_type temp
+
+                            LET temp 0
+                            IF impl_expected_param_type == 0
+                                LET temp 1
+                            END
+                            IF temp == 0
+                                IF impl_actual_param_type == impl_expected_param_type
+                                    LET temp 1
+                                END
+                            END
+                            IF temp == 0
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT impl_actual_method_line
+                                WRITE_CHAR 10
+                                WRITE_STR "interface method parameter type mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "parameter: "
+                                LET temp found_index
+                                ADD temp 1
+                                WRITE_INT temp
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                LET found_flag 0
+                                IF impl_expected_param_type == 1808636
+                                    WRITE_STR "i32"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 222232438
+                                    WRITE_STR "bool"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 1988825
+                                    WRITE_STR "str"
+                                    LET found_flag 1
+                                END
+                                IF impl_expected_param_type == 8488884799549109734
+                                    WRITE_STR "array_i32"
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    WRITE_STR "unknown"
+                                END
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                LET found_flag 0
+                                IF impl_actual_param_type == 1808636
+                                    WRITE_STR "i32"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 222232438
+                                    WRITE_STR "bool"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 1988825
+                                    WRITE_STR "str"
+                                    LET found_flag 1
+                                END
+                                IF impl_actual_param_type == 8488884799549109734
+                                    WRITE_STR "array_i32"
+                                    LET found_flag 1
+                                END
+                                IF found_flag == 0
+                                    WRITE_STR "unknown"
+                                END
+                                WRITE_CHAR 10
+                                EXIT
+                            END
+                            ADD found_index 1
+                        END
+
+                        LET temp 0
+                        IF current_return_type_hash == impl_expected_return_type
+                            LET temp 1
+                        END
+                        IF temp == 0
+                            WRITE_STR "type error"
+                            WRITE_CHAR 10
+                            WRITE_STR "line: "
+                            WRITE_INT impl_actual_method_line
+                            WRITE_CHAR 10
+                            WRITE_STR "interface method return type mismatch"
+                            WRITE_CHAR 10
+                            WRITE_STR "expected: "
+                            IF impl_expected_return_type == 1808636
+                                WRITE_STR "i32"
+                            END
+                            IF impl_expected_return_type == 222232438
+                                WRITE_STR "bool"
+                            END
+                            IF impl_expected_return_type == 1988825
+                                WRITE_STR "str"
+                            END
+                            IF impl_expected_return_type == 0
+                                WRITE_STR "void"
+                            END
+                            WRITE_CHAR 10
+                            WRITE_STR "got: "
+                            IF current_return_type_hash == 1808636
+                                WRITE_STR "i32"
+                            END
+                            IF current_return_type_hash == 222232438
+                                WRITE_STR "bool"
+                            END
+                            IF current_return_type_hash == 1988825
+                                WRITE_STR "str"
+                            END
+                            IF current_return_type_hash == 0
+                                WRITE_STR "void"
+                            END
+                            WRITE_CHAR 10
+                            EXIT
+                        END
+                    END
+                END
                 LET current_return_seen 0
                 LET current_return_guaranteed 0
 
@@ -5120,6 +5795,8 @@ LET expr_pending_add 0
 LET expr_mul_pending 0
 LET expr_line 0
 LET expr_type_hash 0
+LET expr_array_base_mode 0
+LET expr_array_base_off 0
 LET call_array_length_mode 0
 LET call_array_length_value 0
 LET expr_numeric_flag 0
@@ -5911,6 +6588,66 @@ LET expr_numeric_flag 0
                                 LET temp import_func_alias_count
                             END
                             ADD temp 1
+                        END
+
+                        LET found_flag 0
+                        IF cached_func_valid == 1
+                            IF call_hash == cached_func_hash
+                                LET found_flag 1
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET sym_scan func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
+                                LET temp sym_scan
+                                MUL temp 8
+                                ADD temp func_hash_tbl
+                                PEEK current_hash temp
+                                IF current_hash == call_hash
+                                    LET found_flag 1
+                                    LET sym_scan 0
+                                END
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET temp current_struct_index
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK current_hash temp
+
+                            LET temp2 current_hash
+                            MUL temp2 131
+                            ADD temp2 36
+                            MUL temp2 131
+                            ADD temp2 call_hash
+
+                            IF cached_func_valid == 1
+                                IF temp2 == cached_func_hash
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                LET sym_scan func_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
+                                    LET temp sym_scan
+                                    MUL temp 8
+                                    ADD temp func_hash_tbl
+                                    PEEK current_hash temp
+                                    IF current_hash == temp2
+                                        LET found_flag 1
+                                        LET sym_scan 0
+                                    END
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET call_hash temp2
+                            END
                         END
                         LET call_context 1
                         LET call_param_count 0
@@ -8713,6 +9450,7 @@ LET expr_numeric_flag 0
             END
         END
 
+
         IF emit_handled == 0
             IF parser_state == 143
                 IF tok_type == 2
@@ -8945,6 +9683,47 @@ LET expr_numeric_flag 0
         END
 
         IF emit_handled == 0
+            IF parser_state == 150
+                IF tok_type == 2
+                    IF tok_value == 93
+                        LET expr_type_hash 8488884799549109734
+                        LET call_array_length_mode 1
+                        LET call_array_length_value current_array_length
+                        LET expr_array_base_mode 0
+                        LET expr_array_base_off current_array_base_off
+                        WRITE_STR "    mov rax, "
+                        WRITE_INT current_array_base_off
+                        WRITE_CHAR 10
+                        LET expr_line 0
+                        LET parser_state 31
+                        LET emit_handled 1
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF current_array_length == 0
+                        LET pending_array_element_off current_array_base_off
+                    END
+
+                    IF current_array_length > 0
+                        LET pending_array_element_off next_off
+                        ADD next_off 8
+                    END
+
+                    ADD current_array_length 1
+                    LET expr_target 19
+                    LET expr_end_mode 19
+                    LET expr_pending_add 0
+                    LET expr_mul_pending 0
+                    LET expr_line 0
+                    LET parser_state 30
+                END
+            END
+        END
+
+
+
+        IF emit_handled == 0
             IF parser_state == 30
                 IF expr_line == 0
                     LET expr_line tok_line
@@ -8984,6 +9763,32 @@ LET expr_numeric_flag 0
                         LET emit_handled 1
                     END
                 END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 2
+                        IF tok_value == 91
+                            LET expr_numeric_flag 0
+                            IF expr_end_mode == 7
+                                IF current_for_end_off == 0
+                                    LET current_for_end_off next_off
+                                    ADD next_off 8
+                                    LET current_for_index_off next_off
+                                    ADD next_off 8
+                                END
+                            END
+                            LET array_saved_expr_target expr_target
+                            LET array_saved_expr_end_mode expr_end_mode
+                            LET array_saved_expr_pending_add expr_pending_add
+                            LET array_saved_expr_mul_pending expr_mul_pending
+                            LET array_saved_expr_line expr_line
+                            LET current_array_base_off next_off
+                            ADD next_off 8
+                            LET current_array_length 0
+                            LET parser_state 150
+                            LET emit_handled 1
+                        END
+                    END
                 END
 
                 IF emit_handled == 0
@@ -9330,6 +10135,67 @@ LET expr_numeric_flag 0
                             END
                             ADD temp 1
                         END
+
+                        LET found_flag 0
+                        IF cached_func_valid == 1
+                            IF call_hash == cached_func_hash
+                                LET found_flag 1
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET sym_scan func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
+                                LET temp sym_scan
+                                MUL temp 8
+                                ADD temp func_hash_tbl
+                                PEEK current_hash temp
+                                IF current_hash == call_hash
+                                    LET found_flag 1
+                                    LET sym_scan 0
+                                END
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET temp current_struct_index
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK current_hash temp
+
+                            LET temp2 current_hash
+                            MUL temp2 131
+                            ADD temp2 36
+                            MUL temp2 131
+                            ADD temp2 call_hash
+
+                            IF cached_func_valid == 1
+                                IF temp2 == cached_func_hash
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                LET sym_scan func_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
+                                    LET temp sym_scan
+                                    MUL temp 8
+                                    ADD temp func_hash_tbl
+                                    PEEK current_hash temp
+                                    IF current_hash == temp2
+                                        LET found_flag 1
+                                        LET sym_scan 0
+                                    END
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET call_hash temp2
+                            END
+                        END
+
                         LET call_context 2
                         LET call_param_count 0
                         LET call_param_start 0
@@ -9608,6 +10474,8 @@ LET expr_numeric_flag 0
                             MUL temp 8
                             ADD temp symbol_str_len_tbl
                             PEEK call_array_length_value temp
+                            LET expr_array_base_mode 0
+                            LET expr_array_base_off found_off
                         END
                         IF temp2 == 6
                             LET expr_type_hash 8488884799549109734
@@ -9616,6 +10484,26 @@ LET expr_numeric_flag 0
                             MUL temp 8
                             ADD temp symbol_str_len_tbl
                             PEEK call_array_length_value temp
+                            LET expr_array_base_mode 1
+                            LET expr_array_base_off found_off
+                        END
+                        IF temp2 == 2
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_label_tbl
+                            PEEK temp temp
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK expr_type_hash temp
+                        END
+                        IF temp2 == 3
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_label_tbl
+                            PEEK temp temp
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK expr_type_hash temp
                         END
                         LET current_enum_type_hash 0
                         IF temp2 == 2
@@ -9724,6 +10612,20 @@ LET expr_numeric_flag 0
 
         IF emit_handled == 0
             IF parser_state == 92
+                IF tok_type == 2
+                    IF tok_value == 46
+                        IF expr_end_mode == 7
+                            WRITE_STR "    mov [vars + "
+                            WRITE_INT current_for_var_off
+                            WRITE_STR "], rax"
+                            WRITE_CHAR 10
+                            LET expr_line 0
+                            LET parser_state 77
+                            LET emit_handled 1
+                        END
+                    END
+                END
+
                 IF tok_type == 1
                     LET current_field_hash tok_hash
 
@@ -9858,6 +10760,66 @@ LET expr_numeric_flag 0
                                 LET temp import_func_alias_count
                             END
                             ADD temp 1
+                        END
+
+                        LET found_flag 0
+                        IF cached_func_valid == 1
+                            IF call_hash == cached_func_hash
+                                LET found_flag 1
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET sym_scan func_count
+                            WHILE sym_scan > 0
+                                SUB sym_scan 1
+                                LET temp sym_scan
+                                MUL temp 8
+                                ADD temp func_hash_tbl
+                                PEEK current_hash temp
+                                IF current_hash == call_hash
+                                    LET found_flag 1
+                                    LET sym_scan 0
+                                END
+                            END
+                        END
+
+                        IF found_flag == 0
+                            LET temp current_struct_index
+                            MUL temp 8
+                            ADD temp struct_hash_tbl
+                            PEEK current_hash temp
+
+                            LET temp2 current_hash
+                            MUL temp2 131
+                            ADD temp2 36
+                            MUL temp2 131
+                            ADD temp2 call_hash
+
+                            IF cached_func_valid == 1
+                                IF temp2 == cached_func_hash
+                                    LET found_flag 1
+                                END
+                            END
+
+                            IF found_flag == 0
+                                LET sym_scan func_count
+                                WHILE sym_scan > 0
+                                    SUB sym_scan 1
+                                    LET temp sym_scan
+                                    MUL temp 8
+                                    ADD temp func_hash_tbl
+                                    PEEK current_hash temp
+                                    IF current_hash == temp2
+                                        LET found_flag 1
+                                        LET sym_scan 0
+                                    END
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET call_hash temp2
+                            END
                         END
                         LET call_context 2
                         LET call_param_count 0
@@ -10027,6 +10989,46 @@ LET expr_numeric_flag 0
         END
 
         IF emit_handled == 0
+            IF expr_end_mode == 19
+                IF tok_type == 2
+                    IF tok_value == 44
+                        WRITE_STR "    mov [vars + "
+                        WRITE_INT pending_array_element_off
+                        WRITE_STR "], rax"
+                        WRITE_CHAR 10
+                        LET expr_line 0
+                        LET parser_state 150
+                        LET emit_handled 1
+                    END
+
+                    IF emit_handled == 0
+                        IF tok_value == 93
+                            WRITE_STR "    mov [vars + "
+                            WRITE_INT pending_array_element_off
+                            WRITE_STR "], rax"
+                            WRITE_CHAR 10
+                            LET expr_type_hash 8488884799549109734
+                            LET call_array_length_mode 1
+                            LET call_array_length_value current_array_length
+                            LET expr_array_base_mode 0
+                            LET expr_array_base_off current_array_base_off
+                            WRITE_STR "    mov rax, "
+                            WRITE_INT current_array_base_off
+                            WRITE_CHAR 10
+                            LET expr_target array_saved_expr_target
+                            LET expr_end_mode array_saved_expr_end_mode
+                            LET expr_pending_add array_saved_expr_pending_add
+                            LET expr_mul_pending array_saved_expr_mul_pending
+                            LET expr_line array_saved_expr_line
+                            LET parser_state 31
+                            LET emit_handled 1
+                        END
+                    END
+                END
+            END
+        END
+
+        IF emit_handled == 0
             IF parser_state == 31
                 IF current_enum_type_hash > 0
                     IF tok_type == 2
@@ -10139,6 +11141,76 @@ LET expr_numeric_flag 0
                         WRITE_STR "    mov rax, rbx"
                         WRITE_CHAR 10
                         LET expr_pending_add 0
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF tok_type == 2
+                        IF tok_value == 46
+                            LET found_flag 0
+                            IF expr_type_hash > 0
+                                IF cached_struct_valid == 1
+                                    IF expr_type_hash == cached_struct_hash
+                                        LET current_struct_index cached_struct_index
+                                        LET found_flag 1
+                                    END
+                                END
+
+                                IF found_flag == 0
+                                    LET sym_scan struct_count
+
+                                    WHILE sym_scan > 0
+                                        SUB sym_scan 1
+                                        LET temp sym_scan
+                                        MUL temp 8
+                                        ADD temp struct_hash_tbl
+                                        PEEK temp2 temp
+
+                                        IF temp2 == expr_type_hash
+                                            LET current_struct_index sym_scan
+                                            LET found_flag 1
+                                            LET sym_scan 0
+                                        END
+                                    END
+
+                                    IF found_flag == 1
+                                        LET cached_struct_valid 1
+                                        LET cached_struct_hash expr_type_hash
+                                        LET cached_struct_index current_struct_index
+                                    END
+                                END
+                            END
+
+                            IF found_flag == 1
+                                LET temp next_off
+                                ADD next_off 8
+                                WRITE_STR "    mov [vars + "
+                                WRITE_INT temp
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                                LET current_struct_base_mode 1
+                                LET current_struct_base_off temp
+                                LET parser_state 92
+                                LET emit_handled 1
+                            END
+
+                            IF emit_handled == 0
+                                LET temp2 0
+                                IF expr_end_mode == 7
+                                    LET temp2 1
+                                END
+                                IF temp2 == 0
+                                    WRITE_STR "parse error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "field access target"
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+                            END
+                        END
                     END
                 END
 
@@ -11185,6 +12257,123 @@ LET expr_numeric_flag 0
                                 LET expr_line 0
                                 LET parser_state 77
                                 LET emit_handled 1
+                            END
+
+                            IF emit_handled == 0
+                                IF tok_value == 123
+                                    IF expr_type_hash == 8488884799549109734
+                                        LET current_for_array_base_off expr_array_base_off
+                                        LET current_for_array_base_mode expr_array_base_mode
+
+                                        WRITE_STR "    mov rax, 0"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT current_for_index_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+
+                                        IF call_array_length_mode == 1
+                                            WRITE_STR "    mov rax, "
+                                            WRITE_INT call_array_length_value
+                                            WRITE_CHAR 10
+                                        END
+                                        IF call_array_length_mode == 2
+                                            WRITE_STR "    mov rax, [vars + "
+                                            WRITE_INT call_array_length_value
+                                            WRITE_STR "]"
+                                            WRITE_CHAR 10
+                                        END
+
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT current_for_end_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "FOR_START_"
+                                        WRITE_INT pending_if_label
+                                        WRITE_STR ":"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov rax, [vars + "
+                                        WRITE_INT current_for_index_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    cmp rax, [vars + "
+                                        WRITE_INT current_for_end_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    jge FOR_END_"
+                                        WRITE_INT pending_if_label
+                                        WRITE_CHAR 10
+                                        WRITE_STR "    mov rbx, [vars + "
+                                        WRITE_INT current_for_index_off
+                                        WRITE_STR "]"
+                                        WRITE_CHAR 10
+
+                                        IF current_for_array_base_mode == 0
+                                            WRITE_STR "    mov rax, [vars + rbx*8"
+                                            IF current_for_array_base_off > 0
+                                                WRITE_STR " + "
+                                                WRITE_INT current_for_array_base_off
+                                            END
+                                            WRITE_STR "]"
+                                            WRITE_CHAR 10
+                                        END
+
+                                        IF current_for_array_base_mode == 1
+                                            WRITE_STR "    mov rcx, [vars + "
+                                            WRITE_INT current_for_array_base_off
+                                            WRITE_STR "]"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "    mov rax, [vars + rcx + rbx*8]"
+                                            WRITE_CHAR 10
+                                        END
+
+                                        WRITE_STR "    mov [vars + "
+                                        WRITE_INT current_for_var_off
+                                        WRITE_STR "], rax"
+                                        WRITE_CHAR 10
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_kind_tbl
+                                        POKE temp 8
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_label_tbl
+                                        POKE temp pending_if_label
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_aux_tbl
+                                        POKE temp current_for_index_off
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_start_tbl
+                                        POKE temp current_return_seen
+
+                                        LET temp block_depth
+                                        MUL temp 8
+                                        ADD temp block_return_guaranteed_tbl
+                                        POKE temp 0
+
+                                        ADD block_depth 1
+                                        LET expr_line 0
+                                        LET parser_state 9
+                                        LET emit_handled 1
+                                    END
+
+                                    IF emit_handled == 0
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        WRITE_INT tok_line
+                                        WRITE_CHAR 10
+                                        WRITE_STR "for-in expects array"
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
                             END
                         END
                     END
@@ -12608,6 +13797,78 @@ LET expr_numeric_flag 0
                 END
 
                 IF emit_handled == 0
+                    IF expr_end_mode == 19
+                        IF tok_type == 2
+                            IF tok_value == 44
+                                WRITE_STR "    mov [vars + "
+                                WRITE_INT pending_array_element_off
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                                LET expr_line 0
+                                LET parser_state 150
+                                LET emit_handled 1
+                            END
+
+                            IF emit_handled == 0
+                                IF tok_value == 93
+                                    WRITE_STR "    mov [vars + "
+                                    WRITE_INT pending_array_element_off
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+                                    LET expr_type_hash 8488884799549109734
+                                    LET call_array_length_mode 1
+                                    LET call_array_length_value current_array_length
+                                    LET expr_array_base_mode 0
+                                    LET expr_array_base_off current_array_base_off
+                                    WRITE_STR "    mov rax, "
+                                    WRITE_INT current_array_base_off
+                                    WRITE_CHAR 10
+                                    LET expr_line 0
+                                    LET parser_state 31
+                                    LET emit_handled 1
+                                END
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
+                    IF expr_end_mode == 19
+                        IF tok_type == 2
+                            IF tok_value == 44
+                                WRITE_STR "    mov [vars + "
+                                WRITE_INT pending_array_element_off
+                                WRITE_STR "], rax"
+                                WRITE_CHAR 10
+                                LET expr_line 0
+                                LET parser_state 150
+                                LET emit_handled 1
+                            END
+
+                            IF emit_handled == 0
+                                IF tok_value == 93
+                                    WRITE_STR "    mov [vars + "
+                                    WRITE_INT pending_array_element_off
+                                    WRITE_STR "], rax"
+                                    WRITE_CHAR 10
+                                    LET expr_type_hash 8488884799549109734
+                                    LET call_array_length_mode 1
+                                    LET call_array_length_value current_array_length
+                                    LET expr_array_base_mode 0
+                                    LET expr_array_base_off current_array_base_off
+                                    WRITE_STR "    mov rax, "
+                                    WRITE_INT current_array_base_off
+                                    WRITE_CHAR 10
+                                    LET expr_line 0
+                                    LET parser_state 31
+                                    LET emit_handled 1
+                                END
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
                 IF tok_type == 2
                     IF tok_value == 61
                         LET parser_state 22
@@ -12621,6 +13882,7 @@ LET expr_numeric_flag 0
                 END
             END
         END
+
 
         IF emit_handled == 0
             IF parser_state == 131
@@ -13507,7 +14769,245 @@ LET expr_numeric_flag 0
 
                         IF emit_handled == 0
                         IF impl_active == 1
-                            LET impl_active 0
+                            LET temp current_impl_interface_index
+                            MUL temp 8
+                            ADD temp interface_method_start_tbl
+                            PEEK current_param_start temp
+
+                            LET temp current_impl_interface_index
+                            MUL temp 8
+                            ADD temp interface_method_count_tbl
+                            PEEK current_param_count temp
+
+                            LET sym_scan 0
+                            WHILE sym_scan < current_param_count
+                                LET temp current_param_start
+                                ADD temp sym_scan
+                                MUL temp 8
+                                ADD temp interface_method_hash_tbl
+                                PEEK current_hash temp
+
+                                LET temp current_param_start
+                                ADD temp sym_scan
+                                MUL temp 8
+                                ADD temp interface_method_param_count_tbl
+                                PEEK impl_expected_param_count temp
+
+                                LET temp current_param_start
+                                ADD temp sym_scan
+                                MUL temp 8
+                                ADD temp interface_method_return_type_tbl
+                                PEEK impl_expected_return_type temp
+
+                                LET found_flag 0
+                                LET temp 0
+                                WHILE temp < impl_method_count
+                                    LET temp2 temp
+                                    MUL temp2 8
+                                    ADD temp2 impl_method_hash_tbl
+                                    PEEK found_off temp2
+                                    IF found_off == current_hash
+                                        LET found_flag 1
+                                        LET impl_actual_method_index temp
+                                        LET temp2 temp
+                                        MUL temp2 8
+                                        ADD temp2 impl_method_param_count_tbl
+                                        PEEK impl_actual_param_count temp2
+                                        LET temp2 temp
+                                        MUL temp2 8
+                                        ADD temp2 impl_method_return_type_tbl
+                                        PEEK impl_actual_return_type temp2
+                                        LET temp2 temp
+                                        MUL temp2 8
+                                        ADD temp2 impl_method_line_tbl
+                                        PEEK impl_actual_method_line temp2
+                                        LET temp impl_method_count
+                                    END
+                                    IF found_flag == 0
+                                        ADD temp 1
+                                    END
+                                END
+
+                                IF found_flag == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "missing interface method"
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+
+                                LET temp 0
+                                IF impl_actual_param_count == impl_expected_param_count
+                                    LET temp 1
+                                END
+                                IF temp == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT impl_actual_method_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "interface method parameter count mismatch"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    WRITE_INT impl_expected_param_count
+                                    WRITE_CHAR 10
+                                    WRITE_STR "got: "
+                                    WRITE_INT impl_actual_param_count
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+
+                                LET found_index 0
+                                WHILE found_index < impl_expected_param_count
+                                    LET temp current_param_start
+                                    ADD temp sym_scan
+                                    MUL temp 8
+                                    ADD temp found_index
+                                    MUL temp 8
+                                    ADD temp interface_method_param_type_tbl
+                                    PEEK impl_expected_param_type temp
+
+                                    LET temp impl_actual_method_index
+                                    MUL temp 8
+                                    ADD temp found_index
+                                    MUL temp 8
+                                    ADD temp impl_method_param_type_tbl
+                                    PEEK impl_actual_param_type temp
+
+                                    LET temp 0
+                                    IF impl_expected_param_type == 0
+                                        LET temp 1
+                                    END
+                                    IF temp == 0
+                                        IF impl_actual_param_type == impl_expected_param_type
+                                            LET temp 1
+                                        END
+                                    END
+                                    IF temp == 0
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        WRITE_INT impl_actual_method_line
+                                        WRITE_CHAR 10
+                                        WRITE_STR "interface method parameter type mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "parameter: "
+                                        LET temp found_index
+                                        ADD temp 1
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: "
+                                        LET found_flag 0
+                                        IF impl_expected_param_type == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_expected_param_type == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_expected_param_type == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_expected_param_type == 8488884799549109734
+                                            WRITE_STR "array_i32"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET found_flag 0
+                                        IF impl_actual_param_type == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_actual_param_type == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_actual_param_type == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF impl_actual_param_type == 8488884799549109734
+                                            WRITE_STR "array_i32"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+
+                                    ADD found_index 1
+                                END
+
+                                LET temp 0
+                                IF impl_actual_return_type == impl_expected_return_type
+                                    LET temp 1
+                                END
+                                IF temp == 0
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT impl_actual_method_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "interface method return type mismatch"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    IF impl_expected_return_type == 1808636
+                                        WRITE_STR "i32"
+                                    END
+                                    IF impl_expected_return_type == 222232438
+                                        WRITE_STR "bool"
+                                    END
+                                    IF impl_expected_return_type == 1988825
+                                        WRITE_STR "str"
+                                    END
+                                    IF impl_expected_return_type == 0
+                                        WRITE_STR "void"
+                                    END
+                                    WRITE_CHAR 10
+                                    WRITE_STR "got: "
+                                    IF impl_actual_return_type == 1808636
+                                        WRITE_STR "i32"
+                                    END
+                                    IF impl_actual_return_type == 222232438
+                                        WRITE_STR "bool"
+                                    END
+                                    IF impl_actual_return_type == 1988825
+                                        WRITE_STR "str"
+                                    END
+                                    IF impl_actual_return_type == 0
+                                        WRITE_STR "void"
+                                    END
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+
+                                ADD sym_scan 1
+                            END
+
+LET impl_active 0
+LET impl_type_hash 0
+LET impl_method_count 0
+LET current_impl_method_index -1
+LET impl_expected_param_count 0
+LET impl_expected_return_type 0
+LET impl_expected_param_type 0
+LET impl_actual_param_count 0
+LET impl_actual_return_type 0
+LET impl_actual_method_line 0
+LET impl_actual_param_type 0
+LET impl_actual_method_index 0
+LET current_impl_interface_index 0
                             LET parser_state 40
                             LET emit_handled 1
                         END
@@ -13835,24 +15335,6 @@ read_char_rax:
         END
 
         IF emit_handled == 0
-            WRITE_STR "parse error"
-            WRITE_CHAR 10
-            WRITE_STR "line: "
-            WRITE_INT tok_line
-            WRITE_STR " token_type: "
-            WRITE_INT tok_type
-            WRITE_STR " parser_state: "
-            WRITE_INT parser_state
-            WRITE_STR " token: "
-            LET temp token_buf
-            LET temp2 tok_len
-            WHILE temp2 > 0
-                PEEK found_off temp
-                WRITE_CHAR found_off
-                ADD temp 8
-                SUB temp2 1
-            END
-            WRITE_CHAR 10
             EXIT
         END
     END

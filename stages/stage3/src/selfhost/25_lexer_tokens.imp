@@ -48,3 +48,5 @@ function next_token(self: Lexer) -> i32 {
 
     return self.read_token()
 }
+
+

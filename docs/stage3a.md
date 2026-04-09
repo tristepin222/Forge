@@ -70,6 +70,8 @@ These are the features to implement first:
 - `while expr { ... }`
 - `loop { ... }`
 - `for name in start..end { ... }`
+- `for name in xs { ... }`
+- `for name in [1, 2, 3] { ... }`
 - `break`
 - `continue`
 - `match expr { literal => { ... } default => { ... } }`
@@ -181,8 +183,10 @@ It currently supports:
 - enum payload construction like `State::Done(5)`
 - array index reads in expressions like `xs[i + 1]`
 - struct field reads in expressions
+- struct field reads on expression results like `make().x`
 - struct field assignment with `=` / `+=` / `-=`
 - method-call syntax on struct values, lowered to normal function calls through a typed `self: StructName` first parameter
+- method-call syntax on expression results like `make().sum()`
 - untyped `self` inside `implement ... for Struct` methods and class-body methods auto-binds to that type
 - class literals and method calls through the same struct-backed layout machinery
 - `value` / `variable` / `constant` declarations inside `main`
@@ -195,6 +199,8 @@ It currently supports:
 - `while lhs <op> rhs { ... }` with `==`, `!=`, `<`, `<=`, `>`, `>=`
 - `loop { ... }` and `break`
 - `for name in start..end { ... }` with arithmetic-expression range endpoints and exclusive end
+- `for name in xs { ... }` with array variables and `array_i32` parameters
+- `for name in [1, 2, 3] { ... }` with array literal expressions
 - `continue` in `while`, `loop`, and `for`
 - `match expr { literal => { ... } default => { ... } }` with integer and boolean literal arms
 - `match` on enum variants, including one payload binding like `State::Done(x)`
@@ -218,7 +224,7 @@ Current limitation:
 - imports are still mostly syntax-only; only builtin `print` and `len` aliases currently have semantics, including grouped aliases tracked independently
 - non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls and method-call member names, and the module path is still ignored in favor of same-translation-unit function names
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`
-- `implement` currently checks that the named interface exists and stores interface method names, but method/signature checking is not enforced yet
+- `implement` now checks that the named interface exists, that every required interface method name appears in the impl body, and enforces arity, parameter types, and return type matching
 - `default =>` is the canonical fallback arm in `match`; `_ =>` remains accepted as an alias for now
 - string literals are currently supported in `print(...)` and string-variable assignment
 - string literals currently support `\\`, `\"`, `\n`, `\t`, and `\r`

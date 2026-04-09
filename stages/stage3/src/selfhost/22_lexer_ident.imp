@@ -29,3 +29,5 @@ function is_ident_continue(code: i32) -> bool {
 
     return is_digit(code)
 }
+
+

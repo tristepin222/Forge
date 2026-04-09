@@ -42,3 +42,5 @@ function skip_whitespace(self: Lexer) {
         self.next_char()
     }
 }
+
+

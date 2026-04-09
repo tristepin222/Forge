@@ -79,12 +79,16 @@ TEST_NAMES=(
   control_for_range
   control_for_expr_range
   control_for_break_continue
+  control_for_array
+  control_for_array_literal
+  control_for_array_param
   func_zero_arg
   func_call_expr
   func_forward_ref
   func_expr_body
   func_params
   func_methods
+  func_method_expr_base
   func_call_arg_expr
   func_nested_call_args
   syntax_return_type
@@ -132,7 +136,12 @@ TEST_NAMES=(
   syntax_struct_enum
   syntax_class_interface
   syntax_implement_methods
+  semantic_implement_missing_method
+  semantic_implement_param_count_mismatch
+  semantic_implement_param_type_mismatch
+  semantic_implement_return_type_mismatch
   data_class_methods
+  data_class_methods_same_name
   data_array_index
   data_array_index_expr
   data_array_index_assign
@@ -143,6 +152,7 @@ TEST_NAMES=(
   data_array_len
   func_array_param
   func_array_param_expr
+  func_array_param_literal
   func_array_param_len
   func_array_param_len_mixed
   func_array_param_assign
@@ -181,6 +191,7 @@ TEST_NAMES=(
   integration_struct_enum_flow
   integration_control_calls
   integration_class_interface_flow
+  integration_implement_method_same_name
 )
 
 log() {

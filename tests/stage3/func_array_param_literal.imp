@@ -1,0 +1,13 @@
+module app.main
+
+function sum(xs: array_i32) -> i32 {
+    variable total: i32 = 0
+    for n in xs {
+        total += n
+    }
+    return total
+}
+
+function main() {
+    print(sum([2, 3, 4]))
+}

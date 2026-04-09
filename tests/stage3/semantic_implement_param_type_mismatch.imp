@@ -1,0 +1,15 @@
+interface Score {
+    function add(self, delta: bool) -> i32
+}
+
+struct Counter {
+    value: i32
+}
+
+implement Score for Counter {
+    function add(self, delta: i32) -> i32 => self.value
+}
+
+function main() {
+    print(0)
+}

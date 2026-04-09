@@ -1,0 +1,16 @@
+struct Point {
+    x: i32
+    y: i32
+}
+
+function sum(self: Point) -> i32 => self.x + self.y
+
+function make(a: i32, b: i32) -> Point {
+    value p: Point = Point { x: a, y: b }
+    return p
+}
+
+function main() {
+    print(make(2, 4).sum())
+    print(make(7, 8).x)
+}

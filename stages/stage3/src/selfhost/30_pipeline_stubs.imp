@@ -85,6 +85,67 @@ function emit_missing_return(expected_hash: i32, line: i32, function_hash: i32) 
     emitc(10)
 }
 
+function emit_missing_interface_method(line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("missing interface method")
+    emitc(10)
+}
+
+function emit_interface_method_param_count_mismatch(line: i32, expected_count: i32, actual_count: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("interface method parameter count mismatch")
+    emitc(10)
+    emits("expected: ")
+    emiti(expected_count)
+    emitc(10)
+    emits("got: ")
+    emiti(actual_count)
+    emitc(10)
+}
+
+function emit_interface_method_param_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32, parameter_index: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("interface method parameter type mismatch")
+    emitc(10)
+    emits("parameter: ")
+    emiti(parameter_index)
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_interface_method_return_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("interface method return type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
 function emit_hash_suffix(hash: i32) {
     if hash < 0 {
         emits("N_")
@@ -280,3 +341,5 @@ function emit_program_footer() {
     emits("print_buf: resb 32")
     emitc(10)
 }
+
+

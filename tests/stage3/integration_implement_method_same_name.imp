@@ -1,0 +1,26 @@
+interface Score {
+    function get(self) -> i32
+}
+
+class SmallCounter {
+    private variable value: i32
+}
+
+class BigCounter {
+    private variable value: i32
+}
+
+implement Score for SmallCounter {
+    function get(self) -> i32 => self.value
+}
+
+implement Score for BigCounter {
+    function get(self) -> i32 => self.value + 100
+}
+
+function main() {
+    value small: SmallCounter = SmallCounter { value: 4 }
+    value big: BigCounter = BigCounter { value: 6 }
+    print(small.get())
+    print(big.get())
+}

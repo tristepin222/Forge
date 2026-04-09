@@ -517,3 +517,5 @@ function scan_string(self: Lexer) -> i32 {
     }
     return self.token_kind
 }
+
+

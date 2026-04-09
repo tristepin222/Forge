@@ -1,0 +1,5 @@
+type error
+line: 10
+interface method parameter count mismatch
+expected: 2
+got: 1

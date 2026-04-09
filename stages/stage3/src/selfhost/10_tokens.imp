@@ -113,3 +113,5 @@ function identifier_hash_bool() -> i32 => 222232438
 function identifier_hash_str() -> i32 => 1988825
 function identifier_hash_array_i32() -> i32 => 2109876543
 function identifier_text_hash_array_i32() -> i32 => 8488884799549109734
+
+
