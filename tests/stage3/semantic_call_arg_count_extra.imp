@@ -1,0 +1,9 @@
+module app.main
+
+function id(a: i32) -> i32 {
+    return a
+}
+
+function main() {
+    print(id(1, 2))
+}

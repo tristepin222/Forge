@@ -1,0 +1,11 @@
+module app.main
+
+from app.main import takes as alias
+
+function takes(flag: bool) -> i32 {
+    return 1
+}
+
+function main() {
+    print(alias(1))
+}

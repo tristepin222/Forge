@@ -91,6 +91,27 @@ TEST_NAMES=(
   func_method_expr_base
   func_call_arg_expr
   func_nested_call_args
+  semantic_call_arg_count_missing
+  semantic_call_arg_count_extra
+  semantic_call_arg_count_zero_extra
+  semantic_from_import_call_arg_count_missing
+  semantic_import_group_call_arg_count_extra
+  semantic_method_call_arg_count_missing
+  semantic_method_call_arg_count_extra
+  semantic_from_import_method_call_arg_count_missing
+  semantic_import_group_method_call_arg_count_extra
+  semantic_call_arg_i32_to_bool
+  semantic_from_import_call_arg_i32_to_bool
+  semantic_import_group_call_arg_i32_to_bool
+  semantic_method_call_arg_i32_to_bool
+  semantic_from_import_method_call_arg_i32_to_bool
+  semantic_import_group_method_call_arg_i32_to_bool
+  semantic_immutable_value_assign
+  semantic_immutable_value_compound
+  semantic_immutable_array_index_assign
+  semantic_immutable_field_assign
+  semantic_array_index_assign_bool
+  semantic_struct_field_assign_bool
   syntax_return_type
   semantic_return_bool_to_i32
   semantic_return_i32_to_bool
@@ -108,6 +129,7 @@ TEST_NAMES=(
   semantic_return_call_bool
   semantic_return_call_bool_to_i32
   semantic_return_call_i32_to_bool
+  semantic_return_param_bool_to_i32
   semantic_return_import_call_i32
   semantic_return_import_call_bool
   semantic_return_import_call_bool_to_i32

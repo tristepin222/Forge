@@ -1,0 +1,5 @@
+type error
+line: 9
+assignment type mismatch
+expected: i32
+got: bool

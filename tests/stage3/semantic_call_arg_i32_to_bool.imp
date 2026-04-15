@@ -1,0 +1,9 @@
+module app.main
+
+function takes(flag: bool) -> i32 {
+    return 1
+}
+
+function main() {
+    print(takes(1))
+}

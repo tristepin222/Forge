@@ -69,6 +69,93 @@ function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32, line: i
     emitc(10)
 }
 
+function emit_binding_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("binding type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_assignment_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("assignment type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_immutable_binding(line: i32) {
+    emits("parse error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("immutable binding")
+    emitc(10)
+}
+
+function emit_immutable_field_target(line: i32) {
+    emits("parse error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("immutable field target")
+    emitc(10)
+}
+
+function emit_argument_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32, parameter_index: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("argument type mismatch")
+    emitc(10)
+    emits("parameter: ")
+    emiti(parameter_index)
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_argument_count_mismatch(expected_count: i32, actual_count: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("argument count mismatch")
+    emitc(10)
+    emits("expected: ")
+    emiti(expected_count)
+    emitc(10)
+    emits("got: ")
+    emiti(actual_count)
+    emitc(10)
+}
+
 function emit_missing_return(expected_hash: i32, line: i32, function_hash: i32) {
     emits("type error")
     emitc(10)

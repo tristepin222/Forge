@@ -39,6 +39,7 @@ VAR struct_hash_tbl
 VAR struct_field_start_tbl
 VAR struct_field_count_tbl
 VAR struct_field_hash_tbl
+VAR struct_field_type_tbl
 VAR sym_count
 VAR sym_scan
 VAR found_off
@@ -83,6 +84,7 @@ VAR func_hash_tbl
 VAR func_param_count_tbl
 VAR func_param_start_tbl
 VAR func_param_slot_tbl
+VAR func_param_type_tbl
 VAR func_return_type_tbl
 VAR func_count
 VAR param_slot_count
@@ -263,6 +265,7 @@ VAR current_struct_base_mode
 VAR pending_struct_base_off
 VAR pending_struct_field_mode
 VAR pending_struct_field_off
+VAR pending_struct_field_type_hash
 VAR pending_array_element_off
 VAR current_field_hash
 VAR current_field_index
@@ -333,10 +336,12 @@ ALLOC struct_hash_tbl 512
 ALLOC struct_field_start_tbl 512
 ALLOC struct_field_count_tbl 512
 ALLOC struct_field_hash_tbl 2048
+ALLOC struct_field_type_tbl 512
 ALLOC func_hash_tbl 4096
 ALLOC func_param_count_tbl 4096
 ALLOC func_param_start_tbl 4096
 ALLOC func_param_slot_tbl 32768
+ALLOC func_param_type_tbl 1024
 ALLOC func_return_type_tbl 4096
 ALLOC current_sig_param_type_tbl 128
 ALLOC saved_expr_target_tbl 16
@@ -446,6 +451,7 @@ LET expr_group_depth 0
 LET current_struct_base_mode 0
 LET pending_struct_base_off 0
 LET pending_struct_field_mode 0
+LET pending_struct_field_type_hash 0
 LET cached_symbol_valid 0
 LET cached_func_valid 0
 LET cached_struct_valid 0
@@ -1933,6 +1939,12 @@ WHILE 1 == 1
                     MUL temp 8
                     ADD temp struct_field_hash_tbl
                     POKE temp current_field_hash
+
+                    LET temp struct_field_entry_count
+                    MUL temp 8
+                    ADD temp struct_field_type_tbl
+                    POKE temp tok_hash
+
                     ADD struct_field_entry_count 1
                     LET cached_field_valid 0
 
@@ -3261,10 +3273,24 @@ _start:
         IF emit_handled == 0
             IF parser_state == 46
                 IF tok_type == 1
+                    LET temp current_symbol_index
+                    MUL temp 8
+                    ADD temp symbol_str_label_tbl
+                    POKE temp tok_hash
+
                     LET temp current_sig_param_index
                     MUL temp 8
                     ADD temp current_sig_param_type_tbl
                     POKE temp tok_hash
+
+                    LET temp current_param_start
+                    ADD temp current_param_count
+                    SUB temp 1
+                    IF temp < 1024
+                        MUL temp 8
+                        ADD temp func_param_type_tbl
+                        POKE temp tok_hash
+                    END
 
                     IF tok_hash == 8488884799549109734
                         LET temp current_symbol_index
@@ -6286,6 +6312,7 @@ LET expr_numeric_flag 0
 
                     IF emit_handled == 0
                         IF current_hash == 2477826978740163167
+                            LET expr_type_hash 1808636
                             LET current_enum_type_hash 0
                             WRITE_STR "    call read_char_rax"
                             WRITE_CHAR 10
@@ -6352,6 +6379,7 @@ LET expr_numeric_flag 0
                                 MUL temp 8
                                 ADD temp symbol_str_label_tbl
                                 PEEK current_enum_type_hash temp
+                                LET expr_type_hash current_enum_type_hash
 
                                 WRITE_STR "    mov rax, [vars + "
                                 WRITE_INT found_off
@@ -6379,6 +6407,56 @@ LET expr_numeric_flag 0
 
                         IF emit_handled == 0
                         IF found_flag == 1
+                            LET expr_type_hash 0
+                            LET call_array_length_mode 0
+                            LET call_array_length_value 0
+                            IF temp2 == 0
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_str_label_tbl
+                                PEEK expr_type_hash temp
+                            END
+                            IF temp2 == 1
+                                LET expr_type_hash 1988825
+                            END
+                            IF temp2 == 5
+                                LET expr_type_hash 8488884799549109734
+                                LET call_array_length_mode 1
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_str_len_tbl
+                                PEEK call_array_length_value temp
+                                LET expr_array_base_mode 0
+                                LET expr_array_base_off found_off
+                            END
+                            IF temp2 == 6
+                                LET expr_type_hash 8488884799549109734
+                                LET call_array_length_mode 2
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_str_len_tbl
+                                PEEK call_array_length_value temp
+                                LET expr_array_base_mode 1
+                                LET expr_array_base_off found_off
+                            END
+                            IF temp2 == 2
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_str_label_tbl
+                                PEEK temp temp
+                                MUL temp 8
+                                ADD temp struct_hash_tbl
+                                PEEK expr_type_hash temp
+                            END
+                            IF temp2 == 3
+                                LET temp found_index
+                                MUL temp 8
+                                ADD temp symbol_str_label_tbl
+                                PEEK temp temp
+                                MUL temp 8
+                                ADD temp struct_hash_tbl
+                                PEEK expr_type_hash temp
+                            END
                             LET current_enum_type_hash 0
                             IF temp2 == 2
                                 WRITE_STR "    mov rax, "
@@ -6468,6 +6546,12 @@ LET expr_numeric_flag 0
                             LET temp current_field_index
                             MUL temp 8
                             ADD current_field_off temp
+
+                            LET temp current_struct_field_start
+                            ADD temp current_field_index
+                            MUL temp 8
+                            ADD temp struct_field_type_tbl
+                            PEEK pending_struct_field_type_hash temp
                         END
 
                         IF found_flag == 1
@@ -6561,6 +6645,12 @@ LET expr_numeric_flag 0
                             LET current_field_off current_field_index
                             MUL current_field_off 8
                         END
+
+                        LET temp current_struct_field_start
+                        ADD temp current_field_index
+                        MUL temp 8
+                        ADD temp struct_field_type_tbl
+                        PEEK pending_struct_field_type_hash temp
                     END
 
                     LET parser_state 104
@@ -6908,6 +6998,11 @@ LET expr_numeric_flag 0
         IF emit_handled == 0
             IF parser_state == 12
                 IF tok_type == 1
+                    LET temp current_symbol_index
+                    MUL temp 8
+                    ADD temp symbol_str_label_tbl
+                    POKE temp tok_hash
+
                     LET found_flag 0
                     IF cached_struct_valid == 1
                         IF tok_hash == cached_struct_hash
@@ -7613,6 +7708,29 @@ LET expr_numeric_flag 0
         IF emit_handled == 0
             IF parser_state == 48
                 IF tok_type == 2
+                    IF tok_value == 44
+                        IF call_param_count > -1
+                            IF call_arg_index == call_param_count
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
+                                WRITE_STR "argument count mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                WRITE_INT call_param_count
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                LET temp call_arg_index
+                                ADD temp 1
+                                WRITE_INT temp
+                                WRITE_CHAR 10
+                                EXIT
+                            END
+                        END
+                    END
+
                     IF tok_value == 41
                         IF call_param_count < 0
                             LET temp call_func_index
@@ -7620,6 +7738,32 @@ LET expr_numeric_flag 0
                             ADD temp func_param_count_tbl
                             POKE temp call_arg_index
                             LET call_param_count call_arg_index
+                        END
+
+                        IF call_param_count > -1
+                            LET temp2 0
+                            IF call_arg_index < call_param_count
+                                LET temp2 1
+                            END
+                            IF call_arg_index > call_param_count
+                                LET temp2 1
+                            END
+                            IF temp2 == 1
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
+                                WRITE_STR "argument count mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                WRITE_INT call_param_count
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                WRITE_INT call_arg_index
+                                WRITE_CHAR 10
+                                EXIT
+                            END
                         END
 
                         IF call_arg_index == call_param_count
@@ -7737,6 +7881,37 @@ LET expr_numeric_flag 0
                 END
 
                 IF emit_handled == 0
+                    IF call_param_count > -1
+                        IF call_arg_index == call_param_count
+                            LET temp 0
+                            IF tok_type == 2
+                                IF tok_value == 41
+                                    LET temp 1
+                                END
+                            END
+                            IF temp == 0
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
+                                WRITE_STR "argument count mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                WRITE_INT call_param_count
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                LET temp call_arg_index
+                                ADD temp 1
+                                WRITE_INT temp
+                                WRITE_CHAR 10
+                                EXIT
+                            END
+                        END
+                    END
+                END
+
+                IF emit_handled == 0
                     IF call_param_count < 0
                         IF call_arg_index < 8
                             LET expr_target 6
@@ -7766,12 +7941,59 @@ LET expr_numeric_flag 0
             IF parser_state == 49
                 IF tok_type == 2
                     IF tok_value == 44
+                        IF call_param_count > -1
+                            IF call_arg_index == call_param_count
+                                WRITE_STR "type error"
+                                WRITE_CHAR 10
+                                WRITE_STR "line: "
+                                WRITE_INT tok_line
+                                WRITE_CHAR 10
+                                WRITE_STR "argument count mismatch"
+                                WRITE_CHAR 10
+                                WRITE_STR "expected: "
+                                WRITE_INT call_param_count
+                                WRITE_CHAR 10
+                                WRITE_STR "got: "
+                                LET temp call_arg_index
+                                ADD temp 1
+                                WRITE_INT temp
+                                WRITE_CHAR 10
+                                EXIT
+                            END
+                        END
+
                         LET parser_state 48
                         LET emit_handled 1
                     END
 
                     IF emit_handled == 0
                         IF tok_value == 41
+                            IF call_param_count > -1
+                                LET temp2 0
+                                IF call_arg_index < call_param_count
+                                    LET temp2 1
+                                END
+                                IF call_arg_index > call_param_count
+                                    LET temp2 1
+                                END
+                                IF temp2 == 1
+                                    WRITE_STR "type error"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "line: "
+                                    WRITE_INT tok_line
+                                    WRITE_CHAR 10
+                                    WRITE_STR "argument count mismatch"
+                                    WRITE_CHAR 10
+                                    WRITE_STR "expected: "
+                                    WRITE_INT call_param_count
+                                    WRITE_CHAR 10
+                                    WRITE_STR "got: "
+                                    WRITE_INT call_arg_index
+                                    WRITE_CHAR 10
+                                    EXIT
+                                END
+                            END
+
                             IF call_arg_index == call_param_count
                                 IF call_hash == 246720401
                                     WRITE_STR "    call main"
@@ -9353,6 +9575,7 @@ LET expr_numeric_flag 0
                             LET expr_pending_add 0
                             LET expr_mul_pending 0
                             LET current_enum_type_hash 0
+                            LET expr_type_hash 222232438
                             WRITE_STR "    mov rax, 1"
                             WRITE_CHAR 10
                             LET expr_line tok_line
@@ -9370,6 +9593,7 @@ LET expr_numeric_flag 0
                             LET expr_pending_add 0
                             LET expr_mul_pending 0
                             LET current_enum_type_hash 0
+                            LET expr_type_hash 222232438
                             WRITE_STR "    mov rax, 0"
                             WRITE_CHAR 10
                             LET expr_line tok_line
@@ -10434,6 +10658,7 @@ LET expr_numeric_flag 0
                             MUL temp 8
                             ADD temp symbol_str_label_tbl
                             PEEK current_enum_type_hash temp
+                            LET expr_type_hash current_enum_type_hash
 
                             WRITE_STR "    mov rax, [vars + "
                             WRITE_INT found_off
@@ -10464,6 +10689,12 @@ LET expr_numeric_flag 0
                         LET expr_type_hash 0
                         LET call_array_length_mode 0
                         LET call_array_length_value 0
+                        IF temp2 == 0
+                            LET temp found_index
+                            MUL temp 8
+                            ADD temp symbol_str_label_tbl
+                            PEEK expr_type_hash temp
+                        END
                         IF temp2 == 1
                             LET expr_type_hash 1988825
                         END
@@ -10684,6 +10915,12 @@ LET expr_numeric_flag 0
                             LET current_field_off current_field_index
                             MUL current_field_off 8
                         END
+
+                        LET temp current_struct_field_start
+                        ADD temp current_field_index
+                        MUL temp 8
+                        ADD temp struct_field_type_tbl
+                        PEEK expr_type_hash temp
                     END
 
                     LET parser_state 103
@@ -11295,6 +11532,7 @@ LET expr_numeric_flag 0
                                 WRITE_STR "    mov [enum_expr_payload], rax"
                                 WRITE_CHAR 10
                                 LET current_enum_type_hash current_enum_construct_hash
+                                LET expr_type_hash current_enum_construct_hash
                                 WRITE_STR "    mov rax, "
                                 WRITE_INT current_enum_tag
                                 WRITE_CHAR 10
@@ -11314,6 +11552,134 @@ LET expr_numeric_flag 0
                     IF expr_end_mode == 2
                         IF tok_type == 2
                             IF tok_value == 41
+                                IF expr_numeric_flag == 1
+                                    LET expr_type_hash 1808636
+                                END
+
+                                IF expr_target == 11
+                                    LET found_off pending_struct_field_type_hash
+                                    IF found_off > 0
+                                        IF expr_type_hash > 0
+                                            LET temp2 0
+                                            IF found_off < expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF found_off > expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF temp2 == 1
+                                                WRITE_STR "type error"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "line: "
+                                                LET temp expr_line
+                                                IF temp == 0
+                                                    LET temp tok_line
+                                                END
+                                                WRITE_INT temp
+                                                WRITE_CHAR 10
+                                                WRITE_STR "assignment type mismatch"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "expected: "
+                                                LET found_flag 0
+                                                IF found_off == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                WRITE_STR "got: "
+                                                LET found_flag 0
+                                                IF expr_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                EXIT
+                                            END
+                                        END
+                                    END
+                                END
+
+                                IF expr_target == 16
+                                    LET found_off 1808636
+                                    IF expr_type_hash > 0
+                                        LET temp2 0
+                                        IF found_off < expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF found_off > expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF temp2 == 1
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp expr_line
+                                            IF temp == 0
+                                                LET temp tok_line
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "assignment type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: i32"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
+
                                 IF expr_target == 1
                                     LET found_off current_symbol_index
                                     MUL found_off 8
@@ -11571,6 +11937,134 @@ LET expr_numeric_flag 0
                 IF emit_handled == 0
                     IF expr_end_mode == 2
                         IF tok_line > expr_line
+                            IF expr_numeric_flag == 1
+                                LET expr_type_hash 1808636
+                            END
+
+                            IF expr_target == 11
+                                LET found_off pending_struct_field_type_hash
+                                IF found_off > 0
+                                    IF expr_type_hash > 0
+                                        LET temp2 0
+                                        IF found_off < expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF found_off > expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF temp2 == 1
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp expr_line
+                                            IF temp == 0
+                                                LET temp tok_line
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "assignment type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF found_off == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
+                            END
+
+                            IF expr_target == 16
+                                LET found_off 1808636
+                                IF expr_type_hash > 0
+                                    LET temp2 0
+                                    IF found_off < expr_type_hash
+                                        LET temp2 1
+                                    END
+                                    IF found_off > expr_type_hash
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 1
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        LET temp expr_line
+                                        IF temp == 0
+                                            LET temp tok_line
+                                        END
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        WRITE_STR "assignment type mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: i32"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET found_flag 0
+                                        IF expr_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 8488884799549109734
+                                            WRITE_STR "array_i32"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+                            END
+
                             IF expr_target == 1
                                 LET found_off current_symbol_index
                                 MUL found_off 8
@@ -12587,6 +13081,92 @@ LET expr_numeric_flag 0
                             IF tok_value == 44
                                 LET temp call_param_start
                                 ADD temp call_arg_index
+                                IF temp < 1024
+                                    MUL temp 8
+                                    ADD temp func_param_type_tbl
+                                    PEEK found_off temp
+
+                                    LET found_flag 0
+                                    IF found_off == 1808636
+                                        LET found_flag 1
+                                    END
+                                    IF found_off == 222232438
+                                        LET found_flag 1
+                                    END
+                                    IF found_off == 1988825
+                                        LET found_flag 1
+                                    END
+                                    IF found_off == 8488884799549109734
+                                        LET found_flag 1
+                                    END
+
+                                    IF found_flag == 1
+                                        IF expr_type_hash > 0
+                                            LET temp2 0
+                                            IF found_off < expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF found_off > expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF temp2 == 1
+                                                WRITE_STR "type error"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "line: "
+                                                WRITE_INT tok_line
+                                                WRITE_CHAR 10
+                                                WRITE_STR "argument type mismatch"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "parameter: "
+                                                LET temp2 call_arg_index
+                                                ADD temp2 1
+                                                WRITE_INT temp2
+                                                WRITE_CHAR 10
+                                                WRITE_STR "expected: "
+                                                IF found_off == 1808636
+                                                    WRITE_STR "i32"
+                                                END
+                                                IF found_off == 222232438
+                                                    WRITE_STR "bool"
+                                                END
+                                                IF found_off == 1988825
+                                                    WRITE_STR "str"
+                                                END
+                                                IF found_off == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                END
+                                                WRITE_CHAR 10
+                                                WRITE_STR "got: "
+                                                LET found_flag 0
+                                                IF expr_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                EXIT
+                                            END
+                                        END
+                                    END
+                                END
+                                LET found_flag 0
+
+                                LET temp call_param_start
+                                ADD temp call_arg_index
                                 MUL temp 8
                                 ADD temp func_param_slot_tbl
                                 PEEK temp2 temp
@@ -12626,6 +13206,34 @@ LET expr_numeric_flag 0
                                     ADD call_arg_index 1
                                 END
 
+                                IF call_param_count > -1
+                                    LET temp2 0
+                                    IF call_arg_index == call_param_count
+                                        LET temp2 1
+                                    END
+                                    IF call_arg_index > call_param_count
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 1
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        WRITE_INT tok_line
+                                        WRITE_CHAR 10
+                                        WRITE_STR "argument count mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: "
+                                        WRITE_INT call_param_count
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET temp call_arg_index
+                                        ADD temp 1
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+
                                 LET expr_line 0
                                 LET parser_state 48
                                 LET emit_handled 1
@@ -12633,6 +13241,92 @@ LET expr_numeric_flag 0
 
                             IF emit_handled == 0
                                 IF tok_value == 41
+                                    LET temp call_param_start
+                                    ADD temp call_arg_index
+                                    IF temp < 1024
+                                        MUL temp 8
+                                        ADD temp func_param_type_tbl
+                                        PEEK found_off temp
+
+                                        LET found_flag 0
+                                        IF found_off == 1808636
+                                            LET found_flag 1
+                                        END
+                                        IF found_off == 222232438
+                                            LET found_flag 1
+                                        END
+                                        IF found_off == 1988825
+                                            LET found_flag 1
+                                        END
+                                        IF found_off == 8488884799549109734
+                                            LET found_flag 1
+                                        END
+
+                                        IF found_flag == 1
+                                            IF expr_type_hash > 0
+                                                LET temp2 0
+                                                IF found_off < expr_type_hash
+                                                    LET temp2 1
+                                                END
+                                                IF found_off > expr_type_hash
+                                                    LET temp2 1
+                                                END
+                                                IF temp2 == 1
+                                                    WRITE_STR "type error"
+                                                    WRITE_CHAR 10
+                                                    WRITE_STR "line: "
+                                                    WRITE_INT tok_line
+                                                    WRITE_CHAR 10
+                                                    WRITE_STR "argument type mismatch"
+                                                    WRITE_CHAR 10
+                                                    WRITE_STR "parameter: "
+                                                    LET temp2 call_arg_index
+                                                    ADD temp2 1
+                                                    WRITE_INT temp2
+                                                    WRITE_CHAR 10
+                                                    WRITE_STR "expected: "
+                                                    IF found_off == 1808636
+                                                        WRITE_STR "i32"
+                                                    END
+                                                    IF found_off == 222232438
+                                                        WRITE_STR "bool"
+                                                    END
+                                                    IF found_off == 1988825
+                                                        WRITE_STR "str"
+                                                    END
+                                                    IF found_off == 8488884799549109734
+                                                        WRITE_STR "array_i32"
+                                                    END
+                                                    WRITE_CHAR 10
+                                                    WRITE_STR "got: "
+                                                    LET found_flag 0
+                                                    IF expr_type_hash == 1808636
+                                                        WRITE_STR "i32"
+                                                        LET found_flag 1
+                                                    END
+                                                    IF expr_type_hash == 222232438
+                                                        WRITE_STR "bool"
+                                                        LET found_flag 1
+                                                    END
+                                                    IF expr_type_hash == 1988825
+                                                        WRITE_STR "str"
+                                                        LET found_flag 1
+                                                    END
+                                                    IF expr_type_hash == 8488884799549109734
+                                                        WRITE_STR "array_i32"
+                                                        LET found_flag 1
+                                                    END
+                                                    IF found_flag == 0
+                                                        WRITE_STR "unknown"
+                                                    END
+                                                    WRITE_CHAR 10
+                                                    EXIT
+                                                END
+                                            END
+                                        END
+                                    END
+                                    LET found_flag 0
+
                                     LET temp call_param_start
                                     ADD temp call_arg_index
                                     MUL temp 8
@@ -12682,6 +13376,32 @@ LET expr_numeric_flag 0
                                         ADD temp func_param_count_tbl
                                         POKE temp call_arg_index
                                         LET call_param_count call_arg_index
+                                    END
+
+                                    IF call_param_count > -1
+                                        LET temp2 0
+                                        IF call_arg_index < call_param_count
+                                            LET temp2 1
+                                        END
+                                        IF call_arg_index > call_param_count
+                                            LET temp2 1
+                                        END
+                                        IF temp2 == 1
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            WRITE_INT tok_line
+                                            WRITE_CHAR 10
+                                            WRITE_STR "argument count mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            WRITE_INT call_param_count
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            WRITE_INT call_arg_index
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
                                     END
 
                                     IF call_arg_index == call_param_count
@@ -12805,6 +13525,134 @@ LET expr_numeric_flag 0
                     IF expr_end_mode == 1
                         IF tok_type == 2
                             IF tok_value == 125
+                                IF expr_numeric_flag == 1
+                                    LET expr_type_hash 1808636
+                                END
+
+                                IF expr_target == 11
+                                    LET found_off pending_struct_field_type_hash
+                                    IF found_off > 0
+                                        IF expr_type_hash > 0
+                                            LET temp2 0
+                                            IF found_off < expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF found_off > expr_type_hash
+                                                LET temp2 1
+                                            END
+                                            IF temp2 == 1
+                                                WRITE_STR "type error"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "line: "
+                                                LET temp expr_line
+                                                IF temp == 0
+                                                    LET temp tok_line
+                                                END
+                                                WRITE_INT temp
+                                                WRITE_CHAR 10
+                                                WRITE_STR "assignment type mismatch"
+                                                WRITE_CHAR 10
+                                                WRITE_STR "expected: "
+                                                LET found_flag 0
+                                                IF found_off == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_off == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                WRITE_STR "got: "
+                                                LET found_flag 0
+                                                IF expr_type_hash == 1808636
+                                                    WRITE_STR "i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 222232438
+                                                    WRITE_STR "bool"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 1988825
+                                                    WRITE_STR "str"
+                                                    LET found_flag 1
+                                                END
+                                                IF expr_type_hash == 8488884799549109734
+                                                    WRITE_STR "array_i32"
+                                                    LET found_flag 1
+                                                END
+                                                IF found_flag == 0
+                                                    WRITE_STR "unknown"
+                                                END
+                                                WRITE_CHAR 10
+                                                EXIT
+                                            END
+                                        END
+                                    END
+                                END
+
+                                IF expr_target == 16
+                                    LET found_off 1808636
+                                    IF expr_type_hash > 0
+                                        LET temp2 0
+                                        IF found_off < expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF found_off > expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF temp2 == 1
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp expr_line
+                                            IF temp == 0
+                                                LET temp tok_line
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "assignment type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: i32"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
+
                                 IF expr_target == 1
                                     LET found_off current_symbol_index
                                     MUL found_off 8
@@ -13065,6 +13913,134 @@ LET expr_numeric_flag 0
                 IF emit_handled == 0
                     IF expr_end_mode == 1
                         IF tok_line > expr_line
+                            IF expr_numeric_flag == 1
+                                LET expr_type_hash 1808636
+                            END
+
+                            IF expr_target == 11
+                                LET found_off pending_struct_field_type_hash
+                                IF found_off > 0
+                                    IF expr_type_hash > 0
+                                        LET temp2 0
+                                        IF found_off < expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF found_off > expr_type_hash
+                                            LET temp2 1
+                                        END
+                                        IF temp2 == 1
+                                            WRITE_STR "type error"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "line: "
+                                            LET temp expr_line
+                                            IF temp == 0
+                                                LET temp tok_line
+                                            END
+                                            WRITE_INT temp
+                                            WRITE_CHAR 10
+                                            WRITE_STR "assignment type mismatch"
+                                            WRITE_CHAR 10
+                                            WRITE_STR "expected: "
+                                            LET found_flag 0
+                                            IF found_off == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF found_off == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            WRITE_STR "got: "
+                                            LET found_flag 0
+                                            IF expr_type_hash == 1808636
+                                                WRITE_STR "i32"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 222232438
+                                                WRITE_STR "bool"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 1988825
+                                                WRITE_STR "str"
+                                                LET found_flag 1
+                                            END
+                                            IF expr_type_hash == 8488884799549109734
+                                                WRITE_STR "array_i32"
+                                                LET found_flag 1
+                                            END
+                                            IF found_flag == 0
+                                                WRITE_STR "unknown"
+                                            END
+                                            WRITE_CHAR 10
+                                            EXIT
+                                        END
+                                    END
+                                END
+                            END
+
+                            IF expr_target == 16
+                                LET found_off 1808636
+                                IF expr_type_hash > 0
+                                    LET temp2 0
+                                    IF found_off < expr_type_hash
+                                        LET temp2 1
+                                    END
+                                    IF found_off > expr_type_hash
+                                        LET temp2 1
+                                    END
+                                    IF temp2 == 1
+                                        WRITE_STR "type error"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "line: "
+                                        LET temp expr_line
+                                        IF temp == 0
+                                            LET temp tok_line
+                                        END
+                                        WRITE_INT temp
+                                        WRITE_CHAR 10
+                                        WRITE_STR "assignment type mismatch"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "expected: i32"
+                                        WRITE_CHAR 10
+                                        WRITE_STR "got: "
+                                        LET found_flag 0
+                                        IF expr_type_hash == 1808636
+                                            WRITE_STR "i32"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 222232438
+                                            WRITE_STR "bool"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 1988825
+                                            WRITE_STR "str"
+                                            LET found_flag 1
+                                        END
+                                        IF expr_type_hash == 8488884799549109734
+                                            WRITE_STR "array_i32"
+                                            LET found_flag 1
+                                        END
+                                        IF found_flag == 0
+                                            WRITE_STR "unknown"
+                                        END
+                                        WRITE_CHAR 10
+                                        EXIT
+                                    END
+                                END
+                            END
+
                             IF expr_target == 1
                                 LET found_off current_symbol_index
                                 MUL found_off 8

@@ -1,0 +1,6 @@
+module app.main
+
+function main() {
+    value xs = [1, 2]
+    xs[0] = 3
+}

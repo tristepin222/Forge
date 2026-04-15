@@ -1,0 +1,5 @@
+type error
+line: 15
+argument count mismatch
+expected: 1
+got: 2

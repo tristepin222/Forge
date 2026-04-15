@@ -1,0 +1,4 @@
+argument type mismatch
+parameter: 2
+expected: bool
+got: i32

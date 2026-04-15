@@ -1,0 +1,6 @@
+module app.main
+
+function main() {
+    value x: i32 = 1
+    x += 2
+}

@@ -12,7 +12,7 @@ struct Lexer {
     index: i32
     line: i32
     peeked_char: i32
-    has_peeked: i32
+    has_peeked: bool
     token_kind: i32
     token_value: i32
     token_hash: i32
@@ -39,7 +39,7 @@ struct Lexer {
     pushed_hash: i32
     pushed_line: i32
     pushed_length: i32
-    has_pushed: i32
+    has_pushed: bool
 }
 
 

@@ -136,7 +136,7 @@ struct Lexer {
     index: i32
     line: i32
     peeked_char: i32
-    has_peeked: i32
+    has_peeked: bool
     token_kind: i32
     token_value: i32
     token_hash: i32
@@ -163,7 +163,7 @@ struct Lexer {
     pushed_hash: i32
     pushed_line: i32
     pushed_length: i32
-    has_pushed: i32
+    has_pushed: bool
 }
 
 
@@ -936,6 +936,93 @@ function emit_return_type_mismatch(expected_hash: i32, actual_hash: i32, line: i
     emitc(10)
     emits("got: ")
     emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_binding_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("binding type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_assignment_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("assignment type mismatch")
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_immutable_binding(line: i32) {
+    emits("parse error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("immutable binding")
+    emitc(10)
+}
+
+function emit_immutable_field_target(line: i32) {
+    emits("parse error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("immutable field target")
+    emitc(10)
+}
+
+function emit_argument_type_mismatch(expected_hash: i32, actual_hash: i32, line: i32, parameter_index: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("argument type mismatch")
+    emitc(10)
+    emits("parameter: ")
+    emiti(parameter_index)
+    emitc(10)
+    emits("expected: ")
+    emit_type_name(expected_hash)
+    emitc(10)
+    emits("got: ")
+    emit_type_name(actual_hash)
+    emitc(10)
+}
+
+function emit_argument_count_mismatch(expected_count: i32, actual_count: i32, line: i32) {
+    emits("type error")
+    emitc(10)
+    emits("line: ")
+    emiti(line)
+    emitc(10)
+    emits("argument count mismatch")
+    emitc(10)
+    emits("expected: ")
+    emiti(expected_count)
+    emitc(10)
+    emits("got: ")
+    emiti(actual_count)
     emitc(10)
 }
 
@@ -3190,6 +3277,22 @@ struct CompileState {
     type_hash_5: i32
     type_hash_6: i32
     type_hash_7: i32
+    impl_interface_0: i32
+    impl_interface_1: i32
+    impl_interface_2: i32
+    impl_interface_3: i32
+    impl_interface_4: i32
+    impl_interface_5: i32
+    impl_interface_6: i32
+    impl_interface_7: i32
+    impl_type_0: i32
+    impl_type_1: i32
+    impl_type_2: i32
+    impl_type_3: i32
+    impl_type_4: i32
+    impl_type_5: i32
+    impl_type_6: i32
+    impl_type_7: i32
     type_field_0_0: i32
     type_field_0_1: i32
     type_field_0_2: i32
@@ -3222,6 +3325,38 @@ struct CompileState {
     type_field_7_1: i32
     type_field_7_2: i32
     type_field_7_3: i32
+    type_field_type_0_0: i32
+    type_field_type_0_1: i32
+    type_field_type_0_2: i32
+    type_field_type_0_3: i32
+    type_field_type_1_0: i32
+    type_field_type_1_1: i32
+    type_field_type_1_2: i32
+    type_field_type_1_3: i32
+    type_field_type_2_0: i32
+    type_field_type_2_1: i32
+    type_field_type_2_2: i32
+    type_field_type_2_3: i32
+    type_field_type_3_0: i32
+    type_field_type_3_1: i32
+    type_field_type_3_2: i32
+    type_field_type_3_3: i32
+    type_field_type_4_0: i32
+    type_field_type_4_1: i32
+    type_field_type_4_2: i32
+    type_field_type_4_3: i32
+    type_field_type_5_0: i32
+    type_field_type_5_1: i32
+    type_field_type_5_2: i32
+    type_field_type_5_3: i32
+    type_field_type_6_0: i32
+    type_field_type_6_1: i32
+    type_field_type_6_2: i32
+    type_field_type_6_3: i32
+    type_field_type_7_0: i32
+    type_field_type_7_1: i32
+    type_field_type_7_2: i32
+    type_field_type_7_3: i32
     enum_payload_0_0: i32
     enum_payload_0_1: i32
     enum_payload_0_2: i32
@@ -3318,6 +3453,22 @@ struct CompileState {
     var_mode_13: i32
     var_mode_14: i32
     var_mode_15: i32
+    var_mut_0: i32
+    var_mut_1: i32
+    var_mut_2: i32
+    var_mut_3: i32
+    var_mut_4: i32
+    var_mut_5: i32
+    var_mut_6: i32
+    var_mut_7: i32
+    var_mut_8: i32
+    var_mut_9: i32
+    var_mut_10: i32
+    var_mut_11: i32
+    var_mut_12: i32
+    var_mut_13: i32
+    var_mut_14: i32
+    var_mut_15: i32
     print_alias_hash: i32
     len_alias_hash: i32
     import_call_alias_hash_0: i32
@@ -3628,6 +3779,22 @@ function new_compile_state() -> CompileState {
         type_hash_5: 0,
         type_hash_6: 0,
         type_hash_7: 0,
+        impl_interface_0: 0,
+        impl_interface_1: 0,
+        impl_interface_2: 0,
+        impl_interface_3: 0,
+        impl_interface_4: 0,
+        impl_interface_5: 0,
+        impl_interface_6: 0,
+        impl_interface_7: 0,
+        impl_type_0: 0,
+        impl_type_1: 0,
+        impl_type_2: 0,
+        impl_type_3: 0,
+        impl_type_4: 0,
+        impl_type_5: 0,
+        impl_type_6: 0,
+        impl_type_7: 0,
         type_field_0_0: 0,
         type_field_0_1: 0,
         type_field_0_2: 0,
@@ -3660,6 +3827,38 @@ function new_compile_state() -> CompileState {
         type_field_7_1: 0,
         type_field_7_2: 0,
         type_field_7_3: 0,
+        type_field_type_0_0: 0,
+        type_field_type_0_1: 0,
+        type_field_type_0_2: 0,
+        type_field_type_0_3: 0,
+        type_field_type_1_0: 0,
+        type_field_type_1_1: 0,
+        type_field_type_1_2: 0,
+        type_field_type_1_3: 0,
+        type_field_type_2_0: 0,
+        type_field_type_2_1: 0,
+        type_field_type_2_2: 0,
+        type_field_type_2_3: 0,
+        type_field_type_3_0: 0,
+        type_field_type_3_1: 0,
+        type_field_type_3_2: 0,
+        type_field_type_3_3: 0,
+        type_field_type_4_0: 0,
+        type_field_type_4_1: 0,
+        type_field_type_4_2: 0,
+        type_field_type_4_3: 0,
+        type_field_type_5_0: 0,
+        type_field_type_5_1: 0,
+        type_field_type_5_2: 0,
+        type_field_type_5_3: 0,
+        type_field_type_6_0: 0,
+        type_field_type_6_1: 0,
+        type_field_type_6_2: 0,
+        type_field_type_6_3: 0,
+        type_field_type_7_0: 0,
+        type_field_type_7_1: 0,
+        type_field_type_7_2: 0,
+        type_field_type_7_3: 0,
         enum_payload_0_0: 0,
         enum_payload_0_1: 0,
         enum_payload_0_2: 0,
@@ -3756,6 +3955,22 @@ function new_compile_state() -> CompileState {
         var_mode_13: 0,
         var_mode_14: 0,
         var_mode_15: 0,
+        var_mut_0: 0,
+        var_mut_1: 0,
+        var_mut_2: 0,
+        var_mut_3: 0,
+        var_mut_4: 0,
+        var_mut_5: 0,
+        var_mut_6: 0,
+        var_mut_7: 0,
+        var_mut_8: 0,
+        var_mut_9: 0,
+        var_mut_10: 0,
+        var_mut_11: 0,
+        var_mut_12: 0,
+        var_mut_13: 0,
+        var_mut_14: 0,
+        var_mut_15: 0,
         print_alias_hash: 0,
         len_alias_hash: 0,
         import_call_alias_hash_0: 0,
@@ -4172,6 +4387,71 @@ function resolve_member_call_hash(self: CompileState, type_hash: i32, member_has
     return member_hash
 }
 
+function register_interface_impl(self: CompileState, interface_hash: i32, type_hash: i32) -> i32 {
+    if self.impl_interface_0 == interface_hash { if self.impl_type_0 == type_hash { return 0 } }
+    if self.impl_interface_1 == interface_hash { if self.impl_type_1 == type_hash { return 0 } }
+    if self.impl_interface_2 == interface_hash { if self.impl_type_2 == type_hash { return 0 } }
+    if self.impl_interface_3 == interface_hash { if self.impl_type_3 == type_hash { return 0 } }
+    if self.impl_interface_4 == interface_hash { if self.impl_type_4 == type_hash { return 0 } }
+    if self.impl_interface_5 == interface_hash { if self.impl_type_5 == type_hash { return 0 } }
+    if self.impl_interface_6 == interface_hash { if self.impl_type_6 == type_hash { return 0 } }
+    if self.impl_interface_7 == interface_hash { if self.impl_type_7 == type_hash { return 0 } }
+
+    if self.impl_interface_0 == 0 { self.impl_interface_0 = interface_hash
+        self.impl_type_0 = type_hash
+        return 0
+    }
+    if self.impl_interface_1 == 0 { self.impl_interface_1 = interface_hash
+        self.impl_type_1 = type_hash
+        return 0
+    }
+    if self.impl_interface_2 == 0 { self.impl_interface_2 = interface_hash
+        self.impl_type_2 = type_hash
+        return 0
+    }
+    if self.impl_interface_3 == 0 { self.impl_interface_3 = interface_hash
+        self.impl_type_3 = type_hash
+        return 0
+    }
+    if self.impl_interface_4 == 0 { self.impl_interface_4 = interface_hash
+        self.impl_type_4 = type_hash
+        return 0
+    }
+    if self.impl_interface_5 == 0 { self.impl_interface_5 = interface_hash
+        self.impl_type_5 = type_hash
+        return 0
+    }
+    if self.impl_interface_6 == 0 { self.impl_interface_6 = interface_hash
+        self.impl_type_6 = type_hash
+        return 0
+    }
+    if self.impl_interface_7 == 0 { self.impl_interface_7 = interface_hash
+        self.impl_type_7 = type_hash
+        return 0
+    }
+    return -1
+}
+
+function type_implements_interface(self: CompileState, type_hash: i32, interface_hash: i32) -> bool {
+    if self.impl_interface_0 == interface_hash { if self.impl_type_0 == type_hash { return true } }
+    if self.impl_interface_1 == interface_hash { if self.impl_type_1 == type_hash { return true } }
+    if self.impl_interface_2 == interface_hash { if self.impl_type_2 == type_hash { return true } }
+    if self.impl_interface_3 == interface_hash { if self.impl_type_3 == type_hash { return true } }
+    if self.impl_interface_4 == interface_hash { if self.impl_type_4 == type_hash { return true } }
+    if self.impl_interface_5 == interface_hash { if self.impl_type_5 == type_hash { return true } }
+    if self.impl_interface_6 == interface_hash { if self.impl_type_6 == type_hash { return true } }
+    if self.impl_interface_7 == interface_hash { if self.impl_type_7 == type_hash { return true } }
+    return false
+}
+
+function types_compatible(self: CompileState, expected_hash: i32, actual_hash: i32) -> bool {
+    if expected_hash == 0 { return true }
+    if actual_hash == 0 { return true }
+    if expected_hash == actual_hash { return true }
+    if self.type_implements_interface(actual_hash, expected_hash) == true { return true }
+    return false
+}
+
 function lookup_function_param_count(self: CompileState, hash: i32) -> i32 {
     if self.func_return_hash_0 == hash {
         return self.func_param_count_0
@@ -4206,6 +4486,18 @@ function lookup_function_param_count(self: CompileState, hash: i32) -> i32 {
     }
 
     return 0
+}
+
+function function_registered(self: CompileState, hash: i32) -> bool {
+    if self.func_return_hash_0 == hash { return true }
+    if self.func_return_hash_1 == hash { return true }
+    if self.func_return_hash_2 == hash { return true }
+    if self.func_return_hash_3 == hash { return true }
+    if self.func_return_hash_4 == hash { return true }
+    if self.func_return_hash_5 == hash { return true }
+    if self.func_return_hash_6 == hash { return true }
+    if self.func_return_hash_7 == hash { return true }
+    return false
 }
 
 function register_function_param_count(self: CompileState, hash: i32, param_count: i32) -> i32 {
@@ -6100,6 +6392,25 @@ function current_call_arg_count(self: CompileState) -> i32 {
     return -1
 }
 
+function current_call_hash(self: CompileState) -> i32 {
+    variable depth: i32 = self.call_depth - 1
+
+    if depth == 0 {
+        return self.call_hash_0
+    }
+    if depth == 1 {
+        return self.call_hash_1
+    }
+    if depth == 2 {
+        return self.call_hash_2
+    }
+    if depth == 3 {
+        return self.call_hash_3
+    }
+
+    return 0
+}
+
 function pop_call_frame(self: CompileState) -> i32 {
     variable depth: i32 = self.call_depth - 1
 
@@ -6544,6 +6855,250 @@ function type_field_hash(self: CompileState, type_hash: i32, index: i32) -> i32 
     if index == 2 { return self.type_field_7_2 }
     if index == 3 { return self.type_field_7_3 }
     return 0
+}
+
+function lookup_type_field_type(self: CompileState, type_hash: i32, field_hash: i32) -> i32 {
+    variable slot: i32 = self.find_type_slot(type_hash)
+    variable offset: i32 = self.lookup_type_field_offset(type_hash, field_hash)
+
+    if slot < 0 {
+        return 0
+    }
+    if offset < 0 {
+        return 0
+    }
+
+    if slot == 0 {
+        if offset == 0 { return self.type_field_type_0_0 }
+        if offset == 8 { return self.type_field_type_0_1 }
+        if offset == 16 { return self.type_field_type_0_2 }
+        if offset == 24 { return self.type_field_type_0_3 }
+        return 0
+    }
+
+    if slot == 1 {
+        if offset == 0 { return self.type_field_type_1_0 }
+        if offset == 8 { return self.type_field_type_1_1 }
+        if offset == 16 { return self.type_field_type_1_2 }
+        if offset == 24 { return self.type_field_type_1_3 }
+        return 0
+    }
+
+    if slot == 2 {
+        if offset == 0 { return self.type_field_type_2_0 }
+        if offset == 8 { return self.type_field_type_2_1 }
+        if offset == 16 { return self.type_field_type_2_2 }
+        if offset == 24 { return self.type_field_type_2_3 }
+        return 0
+    }
+
+    if slot == 3 {
+        if offset == 0 { return self.type_field_type_3_0 }
+        if offset == 8 { return self.type_field_type_3_1 }
+        if offset == 16 { return self.type_field_type_3_2 }
+        if offset == 24 { return self.type_field_type_3_3 }
+        return 0
+    }
+
+    if slot == 4 {
+        if offset == 0 { return self.type_field_type_4_0 }
+        if offset == 8 { return self.type_field_type_4_1 }
+        if offset == 16 { return self.type_field_type_4_2 }
+        if offset == 24 { return self.type_field_type_4_3 }
+        return 0
+    }
+
+    if slot == 5 {
+        if offset == 0 { return self.type_field_type_5_0 }
+        if offset == 8 { return self.type_field_type_5_1 }
+        if offset == 16 { return self.type_field_type_5_2 }
+        if offset == 24 { return self.type_field_type_5_3 }
+        return 0
+    }
+
+    if slot == 6 {
+        if offset == 0 { return self.type_field_type_6_0 }
+        if offset == 8 { return self.type_field_type_6_1 }
+        if offset == 16 { return self.type_field_type_6_2 }
+        if offset == 24 { return self.type_field_type_6_3 }
+        return 0
+    }
+
+    if offset == 0 { return self.type_field_type_7_0 }
+    if offset == 8 { return self.type_field_type_7_1 }
+    if offset == 16 { return self.type_field_type_7_2 }
+    if offset == 24 { return self.type_field_type_7_3 }
+    return 0
+}
+
+function register_type_field_type(self: CompileState, type_hash: i32, field_hash: i32, field_type_hash: i32) -> i32 {
+    variable slot: i32 = self.find_type_slot(type_hash)
+    variable offset: i32 = self.lookup_type_field_offset(type_hash, field_hash)
+
+    if slot < 0 {
+        return -1
+    }
+    if offset < 0 {
+        return -2
+    }
+
+    if slot == 0 {
+        if offset == 0 {
+            self.type_field_type_0_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_0_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_0_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_0_3 = field_type_hash
+            return 0
+        }
+        return -3
+    }
+
+    if slot == 1 {
+        if offset == 0 {
+            self.type_field_type_1_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_1_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_1_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_1_3 = field_type_hash
+            return 0
+        }
+        return -4
+    }
+
+    if slot == 2 {
+        if offset == 0 {
+            self.type_field_type_2_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_2_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_2_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_2_3 = field_type_hash
+            return 0
+        }
+        return -5
+    }
+
+    if slot == 3 {
+        if offset == 0 {
+            self.type_field_type_3_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_3_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_3_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_3_3 = field_type_hash
+            return 0
+        }
+        return -6
+    }
+
+    if slot == 4 {
+        if offset == 0 {
+            self.type_field_type_4_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_4_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_4_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_4_3 = field_type_hash
+            return 0
+        }
+        return -7
+    }
+
+    if slot == 5 {
+        if offset == 0 {
+            self.type_field_type_5_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_5_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_5_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_5_3 = field_type_hash
+            return 0
+        }
+        return -8
+    }
+
+    if slot == 6 {
+        if offset == 0 {
+            self.type_field_type_6_0 = field_type_hash
+            return 0
+        }
+        if offset == 8 {
+            self.type_field_type_6_1 = field_type_hash
+            return 0
+        }
+        if offset == 16 {
+            self.type_field_type_6_2 = field_type_hash
+            return 0
+        }
+        if offset == 24 {
+            self.type_field_type_6_3 = field_type_hash
+            return 0
+        }
+        return -9
+    }
+
+    if offset == 0 {
+        self.type_field_type_7_0 = field_type_hash
+        return 0
+    }
+    if offset == 8 {
+        self.type_field_type_7_1 = field_type_hash
+        return 0
+    }
+    if offset == 16 {
+        self.type_field_type_7_2 = field_type_hash
+        return 0
+    }
+    if offset == 24 {
+        self.type_field_type_7_3 = field_type_hash
+        return 0
+    }
+    return -10
 }
 
 function register_type_field(self: CompileState, type_hash: i32, field_hash: i32) -> i32 {
@@ -7546,6 +8101,126 @@ function register_variable_mode(self: CompileState, function_hash: i32, variable
     return -1
 }
 
+function lookup_variable_mutability(self: CompileState, function_hash: i32, variable_hash: i32) -> i32 {
+    if self.var_owner_0 == function_hash { if self.var_hash_0 == variable_hash { return self.var_mut_0 } }
+    if self.var_owner_1 == function_hash { if self.var_hash_1 == variable_hash { return self.var_mut_1 } }
+    if self.var_owner_2 == function_hash { if self.var_hash_2 == variable_hash { return self.var_mut_2 } }
+    if self.var_owner_3 == function_hash { if self.var_hash_3 == variable_hash { return self.var_mut_3 } }
+    if self.var_owner_4 == function_hash { if self.var_hash_4 == variable_hash { return self.var_mut_4 } }
+    if self.var_owner_5 == function_hash { if self.var_hash_5 == variable_hash { return self.var_mut_5 } }
+    if self.var_owner_6 == function_hash { if self.var_hash_6 == variable_hash { return self.var_mut_6 } }
+    if self.var_owner_7 == function_hash { if self.var_hash_7 == variable_hash { return self.var_mut_7 } }
+    if self.var_owner_8 == function_hash { if self.var_hash_8 == variable_hash { return self.var_mut_8 } }
+    if self.var_owner_9 == function_hash { if self.var_hash_9 == variable_hash { return self.var_mut_9 } }
+    if self.var_owner_10 == function_hash { if self.var_hash_10 == variable_hash { return self.var_mut_10 } }
+    if self.var_owner_11 == function_hash { if self.var_hash_11 == variable_hash { return self.var_mut_11 } }
+    if self.var_owner_12 == function_hash { if self.var_hash_12 == variable_hash { return self.var_mut_12 } }
+    if self.var_owner_13 == function_hash { if self.var_hash_13 == variable_hash { return self.var_mut_13 } }
+    if self.var_owner_14 == function_hash { if self.var_hash_14 == variable_hash { return self.var_mut_14 } }
+    if self.var_owner_15 == function_hash { if self.var_hash_15 == variable_hash { return self.var_mut_15 } }
+    return 0
+}
+
+function register_variable_mutability(self: CompileState, function_hash: i32, variable_hash: i32, variable_mutability: i32) -> i32 {
+    if self.var_owner_0 == function_hash {
+        if self.var_hash_0 == variable_hash {
+            self.var_mut_0 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_1 == function_hash {
+        if self.var_hash_1 == variable_hash {
+            self.var_mut_1 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_2 == function_hash {
+        if self.var_hash_2 == variable_hash {
+            self.var_mut_2 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_3 == function_hash {
+        if self.var_hash_3 == variable_hash {
+            self.var_mut_3 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_4 == function_hash {
+        if self.var_hash_4 == variable_hash {
+            self.var_mut_4 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_5 == function_hash {
+        if self.var_hash_5 == variable_hash {
+            self.var_mut_5 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_6 == function_hash {
+        if self.var_hash_6 == variable_hash {
+            self.var_mut_6 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_7 == function_hash {
+        if self.var_hash_7 == variable_hash {
+            self.var_mut_7 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_8 == function_hash {
+        if self.var_hash_8 == variable_hash {
+            self.var_mut_8 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_9 == function_hash {
+        if self.var_hash_9 == variable_hash {
+            self.var_mut_9 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_10 == function_hash {
+        if self.var_hash_10 == variable_hash {
+            self.var_mut_10 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_11 == function_hash {
+        if self.var_hash_11 == variable_hash {
+            self.var_mut_11 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_12 == function_hash {
+        if self.var_hash_12 == variable_hash {
+            self.var_mut_12 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_13 == function_hash {
+        if self.var_hash_13 == variable_hash {
+            self.var_mut_13 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_14 == function_hash {
+        if self.var_hash_14 == variable_hash {
+            self.var_mut_14 = variable_mutability
+            return 0
+        }
+    }
+    if self.var_owner_15 == function_hash {
+        if self.var_hash_15 == variable_hash {
+            self.var_mut_15 = variable_mutability
+            return 0
+        }
+    }
+    return -1
+}
+
 function emit_function_label(function_hash: i32) {
     emit_function_name(function_hash)
     emits(":")
@@ -8171,7 +8846,7 @@ function check_return_expression_type(state: CompileState, line: i32) -> i32 {
         return 0
     }
 
-    if state.current_return_type_hash == state.last_expression_type_hash {
+    if state.types_compatible(state.current_return_type_hash, state.last_expression_type_hash) == true {
         return 0
     }
 
@@ -8230,6 +8905,7 @@ function compile_struct_literal_into_variable(self: Lexer, state: CompileState, 
     variable kind: i32 = self.next_token()
     variable field_hash: i32 = 0
     variable field_offset: i32 = 0
+    variable field_type_hash: i32 = 0
 
     emit_initialize_struct_storage_pointer(function_hash, variable_hash)
 
@@ -8251,6 +8927,7 @@ function compile_struct_literal_into_variable(self: Lexer, state: CompileState, 
         if field_offset < 0 {
             return -2
         }
+        field_type_hash = state.lookup_type_field_type(type_hash, field_hash)
 
         if self.expect_symbol(58) != 0 {
             return -3
@@ -8258,6 +8935,11 @@ function compile_struct_literal_into_variable(self: Lexer, state: CompileState, 
 
         if self.compile_expression(state, function_hash) != 0 {
             return -4
+        }
+
+        if state.types_compatible(field_type_hash, state.last_expression_type_hash) == false {
+            emit_assignment_type_mismatch(field_type_hash, state.last_expression_type_hash, self.token_line)
+            return -7
         }
 
         emit_store_struct_field(function_hash, variable_hash, field_offset)
@@ -8319,6 +9001,7 @@ function compile_array_literal_into_variable(self: Lexer, state: CompileState, f
 
 function compile_factor(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
     variable kind: i32 = self.next_token()
+    variable field_type_hash: i32 = 0
     state.last_array_argument_hash = 0
     state.last_array_argument_mode = 0
 
@@ -8470,7 +9153,8 @@ function compile_factor(self: Lexer, state: CompileState, function_hash: i32) ->
                 }
 
                 emit_load_struct_field(function_hash, name_hash, field_offset)
-                state.last_expression_type_hash = 0
+                field_type_hash = state.lookup_type_field_type(type_hash, member_hash)
+                state.last_expression_type_hash = field_type_hash
                 return 0
             }
 
@@ -8554,6 +9238,7 @@ function compile_expression_member_chain(self: Lexer, state: CompileState, funct
     variable kind: i32 = 0
     variable member_hash: i32 = 0
     variable field_offset: i32 = 0
+    variable field_type_hash: i32 = 0
     variable call_hash: i32 = 0
     variable arg_count: i32 = 0
     variable base_type: i32 = 0
@@ -8626,7 +9311,8 @@ function compile_expression_member_chain(self: Lexer, state: CompileState, funct
         emiti(field_offset)
         emits("]")
         emitc(10)
-        state.last_expression_type_hash = 0
+        field_type_hash = state.lookup_type_field_type(base_type, member_hash)
+        state.last_expression_type_hash = field_type_hash
     }
     return 0
 }
@@ -8635,12 +9321,44 @@ function compile_call_arguments(self: Lexer, state: CompileState, function_hash:
     variable kind: i32 = self.next_token()
     variable arg_count: i32 = 0
     variable pop_index: i32 = 0
+    variable source_arg_index: i32 = 0
+    variable expected_hash: i32 = 0
+    variable next_expected_hash: i32 = 0
+    variable actual_kind: i32 = 0
+    variable call_hash: i32 = 0
+    variable expected_count: i32 = 0
+    variable expected_slot_count: i32 = 0
+    variable expected_index: i32 = 0
+    variable source_arg_count: i32 = 0
 
     if kind == token_symbol() {
         if self.token_value == 41 {
             arg_count = state.current_call_arg_count()
             if arg_count < 0 {
                 return -8
+            }
+
+            source_arg_count = arg_count
+            expected_count = lookup_function_param_count(state, state.current_call_hash())
+            if function_registered(state, state.current_call_hash()) == true {
+                expected_slot_count = expected_count
+                expected_index = 0
+                loop {
+                    if expected_index == expected_count {
+                        break
+                    }
+
+                    expected_hash = lookup_function_param_type(state, state.current_call_hash(), expected_index)
+                    if expected_hash == identifier_hash_array_i32() {
+                        expected_slot_count += 1
+                    }
+                    expected_index += 1
+                }
+
+                if expected_slot_count != arg_count {
+                    emit_argument_count_mismatch(expected_count, source_arg_count, self.token_line)
+                    return -15
+                }
             }
 
             if arg_count > 6 {
@@ -8669,16 +9387,52 @@ function compile_call_arguments(self: Lexer, state: CompileState, function_hash:
     }
 
     self.push_token()
+    source_arg_count = state.current_call_arg_count()
 
     loop {
         if self.compile_expression(state, function_hash) != 0 {
             return -1
         }
 
+        call_hash = state.current_call_hash()
+        expected_hash = lookup_function_param_type(state, call_hash, source_arg_index)
+        kind = 0
+        if expected_hash == identifier_hash_i32() { kind = 1 }
+        if expected_hash == identifier_hash_bool() { kind = 1 }
+        if expected_hash == identifier_hash_str() { kind = 1 }
+        if expected_hash == identifier_hash_array_i32() { kind = 1 }
+        if kind == 0 {
+            if source_arg_index == 0 {
+                actual_kind = 0
+                if state.last_expression_type_hash == identifier_hash_i32() { actual_kind = 1 }
+                if state.last_expression_type_hash == identifier_hash_bool() { actual_kind = 1 }
+                if state.last_expression_type_hash == identifier_hash_str() { actual_kind = 1 }
+                if state.last_expression_type_hash == identifier_hash_array_i32() { actual_kind = 1 }
+                if actual_kind == 1 {
+                    next_expected_hash = lookup_function_param_type(state, call_hash, 1)
+                    if next_expected_hash == identifier_hash_i32() { kind = 1 }
+                    if next_expected_hash == identifier_hash_bool() { kind = 1 }
+                    if next_expected_hash == identifier_hash_str() { kind = 1 }
+                    if next_expected_hash == identifier_hash_array_i32() { kind = 1 }
+                    if kind == 1 {
+                        expected_hash = next_expected_hash
+                        source_arg_index += 1
+                    }
+                }
+            }
+        }
+        if kind == 1 {
+            if state.types_compatible(expected_hash, state.last_expression_type_hash) == false {
+                emit_argument_type_mismatch(expected_hash, state.last_expression_type_hash, self.token_line, source_arg_index + 1)
+                return -13
+            }
+        }
+
         emit_push_rax()
         if state.increment_call_arg_count() != 0 {
             return -4
         }
+        source_arg_count += 1
 
         if state.last_expression_type_hash == identifier_hash_array_i32() {
             if state.last_array_argument_hash == 0 {
@@ -8704,11 +9458,35 @@ function compile_call_arguments(self: Lexer, state: CompileState, function_hash:
         if self.token_value != 44 {
             return -3
         }
+
+        source_arg_index += 1
     }
 
     arg_count = state.current_call_arg_count()
     if arg_count < 0 {
         return -5
+    }
+
+    expected_count = lookup_function_param_count(state, state.current_call_hash())
+    if function_registered(state, state.current_call_hash()) == true {
+        expected_slot_count = expected_count
+        expected_index = 0
+        loop {
+            if expected_index == expected_count {
+                break
+            }
+
+            expected_hash = lookup_function_param_type(state, state.current_call_hash(), expected_index)
+            if expected_hash == identifier_hash_array_i32() {
+                expected_slot_count += 1
+            }
+            expected_index += 1
+        }
+
+        if expected_slot_count != arg_count {
+            emit_argument_count_mismatch(expected_count, source_arg_count, self.token_line)
+            return -15
+        }
     }
 
     if arg_count > 6 {
@@ -8822,7 +9600,7 @@ function compile_expression(self: Lexer, state: CompileState, function_hash: i32
 function peek_compare_operator(self: Lexer) -> bool {
     variable saved_index: i32 = self.index
     variable saved_line: i32 = self.line
-    variable saved_has_peeked: i32 = self.has_peeked
+    variable saved_has_peeked: bool = self.has_peeked
     variable saved_peeked_char: i32 = self.peeked_char
     variable result: bool = false
 
@@ -8913,17 +9691,19 @@ function compile_condition_jump_false(self: Lexer, state: CompileState, function
     return 0
 }
 
-function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i32) -> i32 {
+function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i32, variable_mutability: i32) -> i32 {
     variable type_hash: i32 = 0
     variable field_count: i32 = 0
     variable kind: i32 = 0
     variable source_hash: i32 = 0
     variable variant_hash: i32 = 0
+    variable binding_line: i32 = 0
 
     if self.expect_identifier() != 0 {
         return -1
     }
     variable variable_hash: i32 = self.token_hash
+    binding_line = self.token_line
 
     kind = self.next_token()
     if kind != token_symbol() {
@@ -8952,10 +9732,12 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
         }
     }
 
-    if type_hash != 0 {
-        if state.register_variable_type(function_hash, variable_hash, type_hash) != 0 {
-            return -6
-        }
+    if state.register_variable_type(function_hash, variable_hash, type_hash) != 0 {
+        return -6
+    }
+
+    if register_variable_mutability(state, function_hash, variable_hash, variable_mutability) != 0 {
+        return -7
     }
 
     kind = self.next_token()
@@ -9055,6 +9837,11 @@ function compile_binding_tail(self: Lexer, state: CompileState, function_hash: i
         return -13
     }
 
+    if state.types_compatible(type_hash, state.last_expression_type_hash) == false {
+        emit_binding_type_mismatch(type_hash, state.last_expression_type_hash, binding_line)
+        return -14
+    }
+
     emit_store_variable(function_hash, variable_hash)
     return 0
 }
@@ -9063,12 +9850,15 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     variable kind: i32 = self.next_token()
     variable type_hash: i32 = state.lookup_variable_type(function_hash, name_hash)
     variable variable_mode: i32 = lookup_variable_mode(state, function_hash, name_hash)
+    variable variable_mutability: i32 = lookup_variable_mutability(state, function_hash, name_hash)
     variable member_hash: i32 = 0
     variable field_offset: i32 = 0
+    variable field_type_hash: i32 = 0
     variable arg_count: i32 = 0
     variable call_hash: i32 = 0
     variable string_hash: i32 = 0
     variable variant_hash: i32 = 0
+    variable assignment_line: i32 = self.token_line
 
     if kind != token_symbol() {
         return -1
@@ -9181,8 +9971,14 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
         if field_offset < 0 {
             return -13
         }
+        field_type_hash = state.lookup_type_field_type(type_hash, member_hash)
 
         if self.token_value == 61 {
+            if variable_mutability != 1 {
+                emit_immutable_field_target(assignment_line)
+                return -41
+            }
+
             kind = self.next_token()
             if kind == token_identifier() {
                 if self.token_hash == type_hash {
@@ -9204,11 +10000,21 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
                 return -16
             }
 
+            if state.types_compatible(field_type_hash, state.last_expression_type_hash) == false {
+                emit_assignment_type_mismatch(field_type_hash, state.last_expression_type_hash, assignment_line)
+                return -44
+            }
+
             emit_store_struct_field(function_hash, name_hash, field_offset)
             return 0
         }
 
         if self.token_value == 43 {
+            if variable_mutability != 1 {
+                emit_immutable_field_target(assignment_line)
+                return -42
+            }
+
             if self.expect_symbol(61) != 0 {
                 return -17
             }
@@ -9219,6 +10025,16 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
                 return -18
             }
 
+            if state.types_compatible(field_type_hash, identifier_hash_i32()) == false {
+                emit_assignment_type_mismatch(field_type_hash, identifier_hash_i32(), assignment_line)
+                return -45
+            }
+
+            if state.types_compatible(identifier_hash_i32(), state.last_expression_type_hash) == false {
+                emit_assignment_type_mismatch(identifier_hash_i32(), state.last_expression_type_hash, assignment_line)
+                return -46
+            }
+
             emit_pop_rbx()
             emits("    add rax, rbx")
             emitc(10)
@@ -9227,6 +10043,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
         }
 
         if self.token_value == 45 {
+            if variable_mutability != 1 {
+                emit_immutable_field_target(assignment_line)
+                return -43
+            }
+
             if self.expect_symbol(61) != 0 {
                 return -19
             }
@@ -9235,6 +10056,16 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
             emit_push_rax()
             if self.compile_expression(state, function_hash) != 0 {
                 return -20
+            }
+
+            if state.types_compatible(field_type_hash, identifier_hash_i32()) == false {
+                emit_assignment_type_mismatch(field_type_hash, identifier_hash_i32(), assignment_line)
+                return -47
+            }
+
+            if state.types_compatible(identifier_hash_i32(), state.last_expression_type_hash) == false {
+                emit_assignment_type_mismatch(identifier_hash_i32(), state.last_expression_type_hash, assignment_line)
+                return -48
             }
 
             emit_pop_rbx()
@@ -9251,6 +10082,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
 
     if self.token_value == 91 {
         variable op_value: i32 = 0
+
+        if variable_mutability != 1 {
+            emit_immutable_binding(assignment_line)
+            return -40
+        }
 
         if type_hash != identifier_hash_array_i32() {
             return -30
@@ -9296,6 +10132,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
                 return -35
             }
 
+            if state.types_compatible(identifier_hash_i32(), state.last_expression_type_hash) == false {
+                emit_assignment_type_mismatch(identifier_hash_i32(), state.last_expression_type_hash, assignment_line)
+                return -44
+            }
+
             emit_pop_rbx()
             emits("    add rax, rbx")
             emitc(10)
@@ -9327,6 +10168,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
                 return -37
             }
 
+            if state.types_compatible(identifier_hash_i32(), state.last_expression_type_hash) == false {
+                emit_assignment_type_mismatch(identifier_hash_i32(), state.last_expression_type_hash, assignment_line)
+                return -45
+            }
+
             emit_pop_rbx()
             emits("    sub rbx, rax")
             emitc(10)
@@ -9348,6 +10194,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
             return -39
         }
 
+        if state.types_compatible(identifier_hash_i32(), state.last_expression_type_hash) == false {
+            emit_assignment_type_mismatch(identifier_hash_i32(), state.last_expression_type_hash, assignment_line)
+            return -46
+        }
+
         emit_pop_rbx()
         emits("    pop rcx")
         emitc(10)
@@ -9357,6 +10208,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     }
 
     if self.token_value == 61 {
+        if variable_mutability != 1 {
+            emit_immutable_binding(assignment_line)
+            return -41
+        }
+
         kind = self.next_token()
 
         if kind == token_keyword() {
@@ -9428,11 +10284,21 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
             return -25
         }
 
+        if state.types_compatible(type_hash, state.last_expression_type_hash) == false {
+            emit_assignment_type_mismatch(type_hash, state.last_expression_type_hash, assignment_line)
+            return -40
+        }
+
         emit_store_variable(function_hash, name_hash)
         return 0
     }
 
     if self.token_value == 43 {
+        if variable_mutability != 1 {
+            emit_immutable_binding(assignment_line)
+            return -42
+        }
+
         if self.expect_symbol(61) != 0 {
             return -25
         }
@@ -9451,6 +10317,11 @@ function compile_identifier_statement_tail(self: Lexer, state: CompileState, fun
     }
 
     if self.token_value == 45 {
+        if variable_mutability != 1 {
+            emit_immutable_binding(assignment_line)
+            return -43
+        }
+
         if self.expect_symbol(61) != 0 {
             return -27
         }
@@ -10884,23 +11755,23 @@ function compile_statement(self: Lexer, state: CompileState, function_hash: i32)
         }
 
         if self.token_value == keyword_value() {
-            return self.compile_binding_tail(state, function_hash)
+            return self.compile_binding_tail(state, function_hash, 0)
         }
 
         if self.token_value == keyword_variable() {
-            return self.compile_binding_tail(state, function_hash)
+            return self.compile_binding_tail(state, function_hash, 1)
         }
 
         if self.token_value == keyword_constant() {
-            return self.compile_binding_tail(state, function_hash)
+            return self.compile_binding_tail(state, function_hash, 0)
         }
 
         if self.token_value == keyword_let() {
-            return self.compile_binding_tail(state, function_hash)
+            return self.compile_binding_tail(state, function_hash, 0)
         }
 
         if self.token_value == keyword_var() {
-            return self.compile_binding_tail(state, function_hash)
+            return self.compile_binding_tail(state, function_hash, 1)
         }
 
         if self.token_value == keyword_if() {
@@ -10995,6 +11866,10 @@ function compile_register_field_declaration_tail(self: Lexer, state: CompileStat
         return -4
     }
 
+    if state.register_type_field_type(type_hash, field_hash, parsed_type) != 0 {
+        return -5
+    }
+
     return 0
 }
 
@@ -11012,6 +11887,10 @@ function compile_register_named_field_tail(self: Lexer, state: CompileState, typ
     parsed_type = self.parse_type_name_hash()
     if parsed_type < 0 {
         return -3
+    }
+
+    if state.register_type_field_type(type_hash, field_hash, parsed_type) != 0 {
+        return -4
     }
 
     return 0
@@ -11097,6 +11976,9 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
             if store_last_compiled_param_type(state, parameter_count, parameter_type_hash) != 0 {
                 return -6
             }
+            if register_variable_mutability(state, function_hash, parameter_hash, 1) != 0 {
+                return -6
+            }
 
             if parameter_type_hash == identifier_hash_array_i32() {
                 if register_variable_mode(state, function_hash, parameter_hash, 1) != 0 {
@@ -11151,6 +12033,14 @@ function compile_function_definition_tail(self: Lexer, state: CompileState, impl
     if register_function_return_type(state, function_hash, return_type_hash) != 0 {
         return -17
     }
+    if parameter_count > 0 { if register_function_param_type(state, function_hash, 0, state.last_compiled_param_type_0) != 0 { return -18 } }
+    if parameter_count > 1 { if register_function_param_type(state, function_hash, 1, state.last_compiled_param_type_1) != 0 { return -18 } }
+    if parameter_count > 2 { if register_function_param_type(state, function_hash, 2, state.last_compiled_param_type_2) != 0 { return -18 } }
+    if parameter_count > 3 { if register_function_param_type(state, function_hash, 3, state.last_compiled_param_type_3) != 0 { return -18 } }
+    if parameter_count > 4 { if register_function_param_type(state, function_hash, 4, state.last_compiled_param_type_4) != 0 { return -18 } }
+    if parameter_count > 5 { if register_function_param_type(state, function_hash, 5, state.last_compiled_param_type_5) != 0 { return -18 } }
+    if parameter_count > 6 { if register_function_param_type(state, function_hash, 6, state.last_compiled_param_type_6) != 0 { return -18 } }
+    if parameter_count > 7 { if register_function_param_type(state, function_hash, 7, state.last_compiled_param_type_7) != 0 { return -18 } }
     state.current_func_hash = function_hash
     state.missing_enum_active = 0
     state.missing_enum_hash_1 = 0
@@ -11660,8 +12550,12 @@ function compile_implement_declaration_tail(self: Lexer, state: CompileState) ->
     }
     type_hash = self.token_hash
 
-    if self.expect_symbol(123) != 0 {
+    if state.register_interface_impl(interface_hash, type_hash) != 0 {
         return -5
+    }
+
+    if self.expect_symbol(123) != 0 {
+        return -6
     }
 
     loop {
@@ -12161,6 +13055,22 @@ function compile_translation_unit() -> i32 {
         type_hash_5: 0,
         type_hash_6: 0,
         type_hash_7: 0,
+        impl_interface_0: 0,
+        impl_interface_1: 0,
+        impl_interface_2: 0,
+        impl_interface_3: 0,
+        impl_interface_4: 0,
+        impl_interface_5: 0,
+        impl_interface_6: 0,
+        impl_interface_7: 0,
+        impl_type_0: 0,
+        impl_type_1: 0,
+        impl_type_2: 0,
+        impl_type_3: 0,
+        impl_type_4: 0,
+        impl_type_5: 0,
+        impl_type_6: 0,
+        impl_type_7: 0,
         type_field_0_0: 0,
         type_field_0_1: 0,
         type_field_0_2: 0,
@@ -12193,6 +13103,38 @@ function compile_translation_unit() -> i32 {
         type_field_7_1: 0,
         type_field_7_2: 0,
         type_field_7_3: 0,
+        type_field_type_0_0: 0,
+        type_field_type_0_1: 0,
+        type_field_type_0_2: 0,
+        type_field_type_0_3: 0,
+        type_field_type_1_0: 0,
+        type_field_type_1_1: 0,
+        type_field_type_1_2: 0,
+        type_field_type_1_3: 0,
+        type_field_type_2_0: 0,
+        type_field_type_2_1: 0,
+        type_field_type_2_2: 0,
+        type_field_type_2_3: 0,
+        type_field_type_3_0: 0,
+        type_field_type_3_1: 0,
+        type_field_type_3_2: 0,
+        type_field_type_3_3: 0,
+        type_field_type_4_0: 0,
+        type_field_type_4_1: 0,
+        type_field_type_4_2: 0,
+        type_field_type_4_3: 0,
+        type_field_type_5_0: 0,
+        type_field_type_5_1: 0,
+        type_field_type_5_2: 0,
+        type_field_type_5_3: 0,
+        type_field_type_6_0: 0,
+        type_field_type_6_1: 0,
+        type_field_type_6_2: 0,
+        type_field_type_6_3: 0,
+        type_field_type_7_0: 0,
+        type_field_type_7_1: 0,
+        type_field_type_7_2: 0,
+        type_field_type_7_3: 0,
         enum_payload_0_0: 0,
         enum_payload_0_1: 0,
         enum_payload_0_2: 0,
@@ -12289,6 +13231,22 @@ function compile_translation_unit() -> i32 {
         var_mode_13: 0,
         var_mode_14: 0,
         var_mode_15: 0,
+        var_mut_0: 0,
+        var_mut_1: 0,
+        var_mut_2: 0,
+        var_mut_3: 0,
+        var_mut_4: 0,
+        var_mut_5: 0,
+        var_mut_6: 0,
+        var_mut_7: 0,
+        var_mut_8: 0,
+        var_mut_9: 0,
+        var_mut_10: 0,
+        var_mut_11: 0,
+        var_mut_12: 0,
+        var_mut_13: 0,
+        var_mut_14: 0,
+        var_mut_15: 0,
         print_alias_hash: 0,
         len_alias_hash: 0,
         import_call_alias_hash_0: 0,

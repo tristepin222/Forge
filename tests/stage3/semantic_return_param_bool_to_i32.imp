@@ -1,0 +1,7 @@
+function bad(flag: bool) -> i32 {
+    return flag
+}
+
+function main() {
+    print(0)
+}

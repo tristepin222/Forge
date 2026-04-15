@@ -211,16 +211,17 @@ It currently supports:
 - expression-bodied functions with `=> expr`
 - optional typed parameters in function definitions
 - optional return-type syntax in function definitions, with first-cut semantic checks for inferable `i32` and `bool` return expressions, including direct same-unit call expressions, method-call expressions, direct imported-function alias call expressions, and imported method-call alias expressions
-- function calls with zero or more arithmetic-expression arguments
+- function calls with zero or more arithmetic-expression arguments, including first-cut direct same-unit, imported-alias, method-call, and imported method-call alias argument type checks for builtin parameter types when the argument expression type is inferable, plus known-callee argument-count checks across direct calls, imported function aliases, method calls, imported method aliases, and zero-parameter functions
 - forward references for function calls
 - call expressions like `value x = add(1, 2)` or `print(helper())`
 - nested function calls inside call arguments like `add(id(1), id(2 + 1))`
-- optional type annotation parsing in declarations, ignored semantically for now
+- optional type annotation parsing in declarations, with declared type metadata now preserved for later inference and narrow semantic checks
 - identifier, integer-literal, and function-call factors in expressions
 
 Current limitation:
-- return types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, arithmetic expressions, direct same-unit call expressions with declared return types, method-call expressions with declared return types, direct imported-function alias call expressions with declared return types, and imported method-call alias expressions with declared return types
+- return and direct same-unit/imported-alias/method-call/imported method-call alias argument types are only checked when the compiler can already infer the expression type from the current narrow surface, such as integer literals, boolean literals, arithmetic expressions, typed parameter references, direct same-unit call expressions with declared return types, method-call expressions with declared return types, direct imported-function alias call expressions with declared return types, and imported method-call alias expressions with declared return types
 - return-flow completeness is still shallow: typed block-bodied functions require either a top-level `return`, a top-level `if`/`else` with returns in both branches, or a top-level `match` with a `default` arm and returns in all arms; arbitrary call-return inference is still not checked yet
+- call argument-count checks are currently limited to callees whose parameter count is already known; unresolved forward calls still keep the older permissive placeholder behavior
 - imports are still mostly syntax-only; only builtin `print` and `len` aliases currently have semantics, including grouped aliases tracked independently
 - non-builtin import semantics are currently narrow: imported aliases only rewrite direct function calls and method-call member names, and the module path is still ignored in favor of same-translation-unit function names
 - `public` / `private` are currently syntax-only top-level modifiers for `function`, `struct`, `enum`, `class`, and `interface`

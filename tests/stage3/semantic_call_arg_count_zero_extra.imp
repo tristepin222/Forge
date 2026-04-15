@@ -1,0 +1,9 @@
+module app.main
+
+function ping() -> i32 {
+    return 7
+}
+
+function main() {
+    print(ping(1))
+}

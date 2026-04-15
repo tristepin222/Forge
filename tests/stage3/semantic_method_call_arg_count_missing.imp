@@ -1,0 +1,14 @@
+module app.main
+
+struct Box {
+    value: i32
+}
+
+function takes(self: Box, flag: bool) -> i32 {
+    return self.value
+}
+
+function main() {
+    value box: Box = Box { value: 7 }
+    print(box.takes())
+}

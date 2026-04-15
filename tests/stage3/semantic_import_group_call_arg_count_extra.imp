@@ -1,0 +1,11 @@
+module app.main
+
+import app.main.{id as alias}
+
+function id(a: i32) -> i32 {
+    return a
+}
+
+function main() {
+    print(alias(1, 2))
+}
