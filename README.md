@@ -419,3 +419,40 @@ Forge supports the following primitives required for bootstrapping:
 * [ ] Imperium Syntax Front-end (Stage 3A)
 
 ---
+
+### Project Retrospective & Post-Mortem
+
+#### Why I Built This
+I built Forge to explore the absolute fundamentals of software construction and bootstrapping. By writing Stage 0 entirely in x86-64 assembly, I wanted to understand how compiler infrastructures can be established without relying on pre-existing compilers.
+
+Designing the bootstrapping sequence and writing code generators targeting the direct hardware instruction set provided a solid foundation in low-level systems architecture and execution mechanics.
+
+#### Multi-Tier Bootstrapping Architecture
+Forge translates Imperium, a structured, type-safe systems language, directly to Linux x86-64 assembly instructions through the following compiler stages:
+
+*   **Stage 0 (Assembly Bootstrap):** Written in pure x86-64 assembly. It compiles the first compiler written in the Imperium bootstrap subset, producing the initial executable.
+*   **Stage 1 & 2 (Bootstrap Language):** The Stage 0 compiler builds the Stage 1 compiler binary. The Stage 1 binary then compiles the Stage 2 source code to produce the Stage 2 compiler. Parity checks are run to ensure outputs match exactly across generations.
+*   **Stage 3 (Extended Language):** The trusted Stage 2 compiler compiles the Stage 3 source code, introducing advanced syntax definitions, structural data models, and checking features.
+*   **Stage 3 Self-Hosting:** The Stage 3 compiler compiles the full, bundled Imperium self-host codebase. This creates a compiler completely written in Imperium that is capable of building itself.
+
+#### The Imperium Language Features
+The language compiled by Forge evolves across the stages, ultimately supporting a structured, type-safe programming model:
+*   **Variables and Mutability:** Explicit value, constant, and variable declarations with compile-time mutability enforcement, preventing modifications to read-only assignments.
+*   **Structures and Enumerations:** User-defined structs with field accessors and enum variants, including enums with single payloads and pattern-matching `match` statements.
+*   **Control Flow Structures:** Standard control flows including conditional statements, while loops, infinite loops with break checks, and exclusive-range for loops.
+*   **Object-Oriented Foundations:** Parses classes, field layouts, and implementation blocks, compiling class methods and interface declarations into functional code.
+
+#### Key Challenges & Resolutions
+*   **The Bootstrap Validation Loop:** The main obstacle was the bootstrap validation loop. A single code-generator bug compiles forward, corrupting subsequent compiler binary generations hours later, which makes tracking down errors extremely difficult. I resolved this by designing strict generation-to-generation output comparisons and compiling modular self-host segments.
+*   **System V AMD64 ABI Compliance:** Another blocker was ensuring full compliance with the System V AMD64 ABI calling conventions. Passing arguments in specific registers, preserving required states, and maintaining 16-byte stack alignment boundaries for external library calls required mapping functions exactly to hardware assembly templates.
+
+#### Compiler Internals: How it Works
+The compiler translates Imperium code through structured phases:
+1.  **Lexical Analysis & Parsing:** Processes source characters into tokens, assembling them into an Abstract Syntax Tree (AST).
+2.  **Type Checking & Mutability:** Verifies syntax structures, constant rules, and type layouts.
+3.  **Code Generation:** Emits low-level NASM assembly instructions mapping structures and functions to hardware registers.
+4.  **Verification:** Runs regression tests and validation checks to verify correctness. Timings are checked against a performance warm baseline via benchmarking suites writing out to JSON logs.
+
+#### Future Improvements
+*   **Graph-Coloring Register Allocation:** Currently, register assignment is simple and stack-heavy. I plan to implement a graph-coloring register allocation algorithm to optimize register reuse and reduce CPU memory transactions.
+*   **Enhanced Parsing Diagnosis:** I would also like to enhance parsing diagnosis. Providing detailed compiler error highlights with source file coordinates, line displays, and correction hints would improve the development workflow.
