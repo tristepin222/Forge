@@ -1,0 +1,58 @@
+@startuml
+title Imperium Compiler Bootstrapping Pipeline (Forge)
+
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam shadowing true
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+box "Stage 0: Assembly Bootstrap" #LightGray
+    actor Developer as Dev
+    participant "stages/stage0/compiler.asm" as S0_ASM
+    participant "nasm & ld" as HostTools
+    participant "output/compiler (Stage 0 Bin)" as S0_BIN
+end box
+
+box "Stage 1 & 2: Bootstrap Language" #LightBlue
+    participant "stages/stage2/compiler.ium" as S2_SRC
+    participant "output/stage1 (Stage 1 Bin)" as S1_BIN
+    participant "output/stage2 (Stage 2 Bin)" as S2_BIN
+end box
+
+box "Stage 3: Front-End Scaffold" #LightGreen
+    participant "stages/stage3/compiler.ium" as S3_SRC
+    participant "output/stage3 (Stage 3 Bin)" as S3_BIN
+end box
+
+box "Stage 3 Self-Host: Imperium Language" #LightGoldenRodYellow
+    participant "stages/stage3/src/selfhost/*" as SH_PARTS
+    participant "stages/stage3/compiler.imp" as S3_IMP
+    participant "output/stage3_gen2 (Self-host Bin)" as S3_GEN2
+end box
+
+== Build Stage 0 ==
+Dev -> S0_ASM : writes assembly
+HostTools -> S0_ASM : compiles
+S0_ASM -> S0_BIN : produces binary
+
+== Build Stage 1 ==
+S0_BIN -> S2_SRC : compiles
+S2_SRC -> S1_BIN : produces binary
+
+== Verify Stage 2 (Self-Compile) ==
+S1_BIN -> S2_SRC : compiles
+S2_SRC -> S2_BIN : produces binary
+Dev -> S2_BIN : verifies parity with Stage 1
+
+== Build Stage 3 ==
+S2_BIN -> S3_SRC : compiles
+S3_SRC -> S3_BIN : produces binary (Stage 3)
+
+== Build Stage 3 Self-Host ==
+Dev -> SH_PARTS : writes Imperium code
+SH_PARTS -> S3_IMP : bundles parts
+S3_BIN -> S3_IMP : compiles
+S3_IMP -> S3_GEN2 : produces Stage 3 Self-host Binary
+
+@endum

@@ -12,14 +12,14 @@ It is **not** the full language manifesto. Its job is:
 - keep bootstrap risk low
 
 For the long-term language design, see
-[imperium-reference-v1.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\imperium-reference-v1.md).
+[imperium-reference-v1.md](file:///f:/GitHub/Forge/docs/imperium-reference-v1.md).
 
 ## Compiler layering
 
-- Stage 0: [compiler.asm](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage0\compiler.asm)
-- Stage 2 trust base: [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage2\compiler.ium)
-- Stage 3 front-end: [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.ium)
-- Stage 3 self-host scaffold: [compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp)
+- Stage 0: [compiler.asm](file:///f:/GitHub/Forge/stages/stage0/compiler.asm)
+- Stage 2 trust base: [compiler.ium](file:///f:/GitHub/Forge/stages/stage2/compiler.ium)
+- Stage 3 front-end: [compiler.ium](file:///f:/GitHub/Forge/stages/stage3/compiler.ium)
+- Stage 3 self-host scaffold: [compiler.imp](file:///f:/GitHub/Forge/stages/stage3/compiler.imp)
 - Stage 3 self-host parts: `stages/stage3/src/selfhost/*.imp`
 - Stage 3 self-host sample input: `stages/stage3/src/selfhost/sample.imp`
 
@@ -141,10 +141,10 @@ function main() {
 
 ## Current status
 
-The current [compiler.ium](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.ium) is the bootstrap-language Stage 3 compiler.
+The current [compiler.ium](file:///f:/GitHub/Forge/stages/stage3/compiler.ium) is the bootstrap-language Stage 3 compiler.
 
 There is also a self-host source scaffold at
-[compiler.imp](C:\Users\trist\OneDrive\Documents\GitHub\Forge\stages\stage3\compiler.imp).
+[compiler.imp](file:///f:/GitHub/Forge/stages/stage3/compiler.imp).
 That file is an architectural starting point for the port, not a bootstrap-ready compiler yet.
 It is bundled from the split source parts under `stages/stage3/src/selfhost/`.
 It now includes a first real lexer slice plus a minimal top-level parser for a generated sample program from `stages/stage3/src/selfhost/sample.imp`, with `module`, `import`, `from ... import ... as ...`, parser-only `@name` / `@name(...)` annotations, `private`, `class`, `interface`, and `implement ... for ... { ... }`, `async fn`, `await`, `unsafe { ... }`, `try` / `catch` / `finally`, generic function parameter lists like `[T]`, `where`, `requires`, and `ensures`, top-level `enum` / `struct`, `public function` plus `pub fn`, `value` / `variable` / `constant` plus `let` / `var`, multiple `function` definitions, typed parameters, optional return types, expression-bodied helpers, simple block statements, assignment, call expressions, arithmetic expressions, grouped expressions, string literals, boolean literals, negative literals, struct literals, field access/assignment, `if` / `else`, `while`, `loop`, `for name in start..end { ... }`, `break`, `continue`, `match ... { ... default => ... }`, `<` / `<=` / `>` / `>=` / `==` / `!=` comparisons, and a required `main`.
@@ -240,12 +240,12 @@ It does **not** represent a self-hosted Stage 3 compiler yet.
 
 That means:
 
-- [build_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\build_stage3.sh) is valid now
-- [test_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3.sh) is valid now
-- [test_stage3_selfhost_sample.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost_sample.sh) is the quick compile-only self-host syntax smoke for `stages/stage3/src/selfhost/sample.imp`
-- [test_stage3_selfhost_parts.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost_parts.sh) compiles cumulative self-host bundle prefixes to find the first expensive or broken section
-- [test_stage3_selfhost.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\test_stage3_selfhost.sh) compiles, assembles, and links a lean bundled self-host scaffold
-- [bootstrap_stage3.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\bootstrap_stage3.sh) and [compare_stage3_generations.sh](C:\Users\trist\OneDrive\Documents\GitHub\Forge\scripts\compare_stage3_generations.sh) stay gated until the self-host source is genuinely ready; that gate is the marker file `stages/stage3/compiler.bootstrap-ready`
+- [build_stage3.sh](file:///f:/GitHub/Forge/scripts/build_stage3.sh) is valid now
+- [test_stage3.sh](file:///f:/GitHub/Forge/scripts/test_stage3.sh) is valid now
+- [test_stage3_selfhost_sample.sh](file:///f:/GitHub/Forge/scripts/test_stage3_selfhost_sample.sh) is the quick compile-only self-host syntax smoke for `stages/stage3/src/selfhost/sample.imp`
+- [test_stage3_selfhost_parts.sh](file:///f:/GitHub/Forge/scripts/test_stage3_selfhost_parts.sh) compiles cumulative self-host bundle prefixes to find the first expensive or broken section
+- [test_stage3_selfhost.sh](file:///f:/GitHub/Forge/scripts/test_stage3_selfhost.sh) compiles, assembles, and links a lean bundled self-host scaffold
+- [bootstrap_stage3.sh](file:///f:/GitHub/Forge/scripts/bootstrap_stage3.sh) and [compare_stage3_generations.sh](file:///f:/GitHub/Forge/scripts/compare_stage3_generations.sh) stay gated until the self-host source is genuinely ready; that gate is the marker file `stages/stage3/compiler.bootstrap-ready`
 - once that marker exists, `bootstrap_stage3.sh` reruns `test_stage3_selfhost_sample.sh` and `test_stage3_selfhost.sh` automatically before attempting the second-generation build
 - after the second-generation binary is built, `bootstrap_stage3.sh` now runs a small compiler smoke on `tests/stage3/basic_empty_main.imp`; passing the scaffold smoke gates alone is not enough yet
 - `compare_stage3_generations.sh` now treats behavioral parity as the required gate by default; exact ASM parity is optional via `STRICT_ASM=1`

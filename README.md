@@ -6,8 +6,8 @@ Forge is a minimal, self-contained bootstrap compiler written in x86-64 NASM for
 
 ### Language Docs
 
-- Current implemented subset: [docs/stage3a.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\stage3a.md)
-- Long-term design reference: [docs/imperium-reference-v1.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\imperium-reference-v1.md)
+- Current implemented subset: [docs/stage3a.md](file:///f:/GitHub/Forge/docs/stage3a.md)
+- Long-term design reference: [docs/imperium-reference-v1.md](file:///f:/GitHub/Forge/docs/imperium-reference-v1.md)
 
 ### Repository Layout
 
@@ -70,7 +70,64 @@ sudo apt install nasm build-essential
 
 *Note: Forge targets the x86-64 Linux ABI (`elf64` / `syscall`).*
 
+### Bootstrapping Pipeline
+
+Forge bootstraps itself through a series of stages to transition from pure x86-64 assembly to the high-level Imperium language:
+
+```mermaid
+graph TD
+    subgraph Stage0 [Stage 0: Assembly Bootstrap]
+        S0_ASM[stages/stage0/compiler.asm] -->|nasm & ld| S0_BIN[output/compiler]
+    end
+
+    subgraph Stage1_2 [Stage 1 & 2: Bootstrap Language]
+        S2_SRC[stages/stage2/compiler.ium]
+        S0_BIN -->|compiles| S2_SRC
+        S2_SRC --> S1_BIN[output/stage1]
+        S1_BIN -->|compiles| S2_SRC
+        S2_SRC --> S2_BIN[output/stage2]
+        S1_BIN -.->|parity check| S2_BIN
+    end
+
+    subgraph Stage3 [Stage 3: Extended Language]
+        S3_SRC[stages/stage3/compiler.ium]
+        S2_BIN -->|compiles| S3_SRC
+        S3_SRC --> S3_BIN[output/stage3]
+    end
+
+    subgraph Stage3_SH [Stage 3 Self-Host: Imperium]
+        SH_PARTS[stages/stage3/src/selfhost/*] -->|bundle| S3_IMP[stages/stage3/compiler.imp]
+        S3_BIN -->|compiles| S3_IMP
+        S3_IMP --> S3_GEN2[output/stage3_gen2]
+    end
+
+    style Stage0 fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style Stage1_2 fill:#e6f2ff,stroke:#333,stroke-width:2px
+    style Stage3 fill:#e6ffe6,stroke:#333,stroke-width:2px
+    style Stage3_SH fill:#fff2e6,stroke:#333,stroke-width:2px
+```
+
+*Note: For a detailed sequence flow, see the PlantUML diagram in [docs/compilation_pipeline.puml](file:///f:/GitHub/Forge/docs/compilation_pipeline.puml).*
+
+### Troubleshooting Windows / WSL Line Endings
+
+Since the compiler targets Linux `elf64` and is tested under WSL/Linux, all source code, shell scripts, and test expectations (`*.out`) **must use Unix-style LF line endings**.
+
+If you clone the repository on Windows with Git's default `core.autocrlf = true`, Git may automatically convert text files to Windows-style CRLF (`\r\n`). This causes test runners in WSL to fail because Linux `diff` registers carriage returns as a mismatch.
+
+We enforce LF line endings via [.gitattributes](file:///f:/GitHub/Forge/.gitattributes). If you run into line-ending issues on Windows/WSL:
+1. Ensure `.gitattributes` has `* text eol=lf` configured.
+2. Force Git to write out files with correct line endings:
+   ```bash
+   # In Windows PowerShell:
+   git add .gitattributes
+   git add --renormalize .
+   Remove-Item -Recurse -Force tests, scripts, stages, *.sh
+   git checkout -- tests scripts stages *.sh
+   ```
+
 ### Building the Compiler
+
 
 To build the Forge compiler itself:
 
@@ -235,7 +292,7 @@ Use the benchmark harness to measure trusted rebuilds, self-host smoke, and warm
 - `--json` writes machine-readable results to `output/benchmarks/stage3_benchmark_latest.json`
 - JSON aggregates include `avg_ms`, `median_ms`, `min_ms`, and `max_ms`
 
-The committed warm baseline lives at [stage3_warm_baseline.json](C:\Users\trist\OneDrive\Documents\GitHub\Forge\perf\stage3_warm_baseline.json).
+The committed warm baseline lives at [stage3_warm_baseline.json](file:///f:/GitHub/Forge/perf/stage3_warm_baseline.json).
 To compare the current machine against that baseline:
 
 ```bash

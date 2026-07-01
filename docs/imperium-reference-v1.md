@@ -3,7 +3,7 @@
 This document is the long-term Imperium language reference and design target.
 
 It is not the current implemented compiler subset. The executable Stage 3 subset
-lives in [stage3a.md](C:\Users\trist\OneDrive\Documents\GitHub\Forge\docs\stage3a.md).
+lives in [stage3a.md](file:///f:/GitHub/Forge/docs/stage3a.md).
 
 A programming language designed to be:
 - Typed
